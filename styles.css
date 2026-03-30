@@ -1,0 +1,662 @@
+/* ============================================
+   Camp 8 — Global Styles
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+/* ---- CSS Variables ---- */
+:root {
+  --bg-primary:    #080810;
+  --bg-secondary:  #0f0f1c;
+  --bg-card:       #131320;
+  --bg-card-hover: #18182a;
+  --border-color:  rgba(255,255,255,0.07);
+  --border-hover:  rgba(255,255,255,0.14);
+  --gold:          #d4a843;
+  --gold-bright:   #f0c855;
+  --gold-dim:      rgba(212,168,67,0.15);
+  --red:           #c41e3a;
+  --orange:        #e8872b;
+  --blue:          #4a90d9;
+  --text-primary:  #eeeef8;
+  --text-secondary:#8888a8;
+  --text-muted:    #484868;
+  --font-display:  'Bebas Neue', sans-serif;
+  --font-body:     'DM Sans', sans-serif;
+  --space-xs:      4px;
+  --space-sm:      8px;
+  --space-md:      16px;
+  --space-lg:      24px;
+  --space-xl:      40px;
+  --transition-fast: 0.15s ease;
+  --transition-med:  0.25s ease;
+  --radius-sm:     6px;
+  --radius-md:     10px;
+  --radius-lg:     16px;
+  --nav-height:    54px;
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: var(--font-body); cursor: pointer; border: none; background: none; }
+ul { list-style: none; }
+img { display: block; max-width: 100%; }
+
+/* ============================================
+   Navigation
+   ============================================ */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  height: var(--nav-height);
+  background: rgba(8,8,16,0.96);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-lg);
+  gap: var(--space-md);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.nav-brand svg {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.nav-brand-text {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.nav-brand-text span {
+  color: var(--gold);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.nav-links a svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.nav-links a:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.05);
+}
+
+.nav-links a.active {
+  color: var(--gold);
+  background: var(--gold-dim);
+}
+
+.nav-links a.active svg {
+  opacity: 1;
+}
+
+/* Mobile Nav Toggle */
+.nav-toggle {
+  display: none;
+  margin-left: auto;
+  padding: 6px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+.nav-toggle:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+
+/* ============================================
+   Main Content (Map Pages)
+   ============================================ */
+.main-content {
+  position: fixed;
+  top: var(--nav-height);
+  left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+/* ============================================
+   Sidebar (Overlay on Map)
+   ============================================ */
+.sidebar {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  z-index: 500;
+  width: 260px;
+  max-height: calc(100% - 32px);
+  background: rgba(12,12,20,0.94);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.sidebar-header {
+  padding: var(--space-md) var(--space-md) var(--space-sm);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.sidebar-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  line-height: 1.1;
+}
+
+.sidebar-header p {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.sidebar-body {
+  padding: var(--space-md);
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hover) transparent;
+}
+
+.sidebar-body::-webkit-scrollbar { width: 4px; }
+.sidebar-body::-webkit-scrollbar-track { background: transparent; }
+.sidebar-body::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
+
+/* ============================================
+   Filter Groups
+   ============================================ */
+.filter-group {
+  margin-bottom: var(--space-md);
+}
+
+.filter-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.filter-btn {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 100px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  background: rgba(255,255,255,0.07);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.filter-btn.active {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ============================================
+   Stat Groups
+   ============================================ */
+.stat-group {
+  margin-bottom: var(--space-lg);
+}
+
+.stat-group-title {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 0.78rem;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* ============================================
+   Legend
+   ============================================ */
+.legend {
+  position: absolute;
+  bottom: var(--space-md);
+  right: var(--space-md);
+  z-index: 500;
+  background: rgba(12,12,20,0.94);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  min-width: 180px;
+}
+
+.legend h4 {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 2px 0;
+}
+
+.legend-circle {
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* ============================================
+   Recruit List (Popup)
+   ============================================ */
+.recruit-list {
+  max-height: 240px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hover) transparent;
+}
+
+.recruit-item {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.recruit-item:last-child { border-bottom: none; }
+
+.recruit-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.recruit-meta {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.stars {
+  font-size: 0.75rem;
+  letter-spacing: -1px;
+}
+
+/* ============================================
+   Leaflet Dark Popup
+   ============================================ */
+.leaflet-popup-content-wrapper {
+  background: rgba(14,14,24,0.97) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+  backdrop-filter: blur(12px);
+}
+
+.leaflet-popup-tip {
+  background: rgba(14,14,24,0.97) !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  color: var(--text-primary);
+  font-family: var(--font-body) !important;
+}
+
+.popup-content h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--gold);
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+}
+
+.popup-detail {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.popup-detail strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.popup-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.popup-badge.elite      { background: rgba(255,215,0,0.15);   color: #FFD700; }
+.popup-badge.powerhouse { background: rgba(196,30,58,0.15);   color: #e05068; }
+.popup-badge.contender  { background: rgba(232,135,43,0.15);  color: #e8872b; }
+.popup-badge.playoff    { background: rgba(74,144,217,0.15);  color: #6aadea; }
+.popup-badge.developing { background: rgba(102,102,102,0.12); color: #8888a0; }
+
+/* ============================================
+   Marker Clusters
+   ============================================ */
+.marker-cluster {
+  background: rgba(212,168,67,0.18) !important;
+  border: 2px solid rgba(212,168,67,0.5) !important;
+}
+.marker-cluster div {
+  background: rgba(212,168,67,0.3) !important;
+  color: var(--gold-bright) !important;
+  font-weight: 700 !important;
+  font-family: var(--font-body) !important;
+}
+.marker-cluster-small { background: rgba(74,144,217,0.18) !important; border-color: rgba(74,144,217,0.5) !important; }
+.marker-cluster-small div { background: rgba(74,144,217,0.3) !important; color: #6aadea !important; }
+.marker-cluster-medium { background: rgba(232,135,43,0.18) !important; border-color: rgba(232,135,43,0.5) !important; }
+.marker-cluster-medium div { background: rgba(232,135,43,0.3) !important; color: #e8872b !important; }
+.marker-cluster-large { background: rgba(212,168,67,0.18) !important; border-color: rgba(212,168,67,0.5) !important; }
+.marker-cluster-large div { background: rgba(212,168,67,0.3) !important; color: var(--gold-bright) !important; }
+
+/* ============================================
+   Table Panel
+   ============================================ */
+.table-panel {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 400;
+  background: rgba(10,10,18,0.96);
+  border-top: 1px solid var(--border-color);
+  backdrop-filter: blur(16px);
+  max-height: 45%;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-med);
+}
+
+.table-panel.collapsed {
+  transform: translateY(calc(100% - 44px));
+}
+
+.table-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-lg);
+  cursor: pointer;
+  height: 44px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-toggle h3 {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.table-toggle svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.table-panel.collapsed .table-toggle svg {
+  transform: rotate(180deg);
+}
+
+.table-scroll {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hover) transparent;
+}
+
+/* ============================================
+   Data Table
+   ============================================ */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.data-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.data-table th:hover { color: var(--text-primary); }
+
+.data-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.data-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+  color: var(--text-primary);
+}
+
+.school-name {
+  font-weight: 600;
+}
+
+/* ============================================
+   Mobile Sidebar Collapse
+   ============================================ */
+@media (max-width: 768px) {
+  .nav {
+    padding: 0 var(--space-md);
+  }
+
+  .nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: var(--nav-height);
+    left: 0; right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    background: rgba(8,8,16,0.98);
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--space-sm) 0;
+    backdrop-filter: blur(16px);
+    margin-left: 0;
+  }
+
+  .nav-links.open { display: flex; }
+
+  .nav-links a {
+    border-radius: 0;
+    padding: 12px var(--space-lg);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.88rem;
+  }
+
+  .nav-links li:last-child a { border-bottom: none; }
+
+  .sidebar {
+    width: calc(100% - 16px);
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    max-height: 55%;
+  }
+
+  .sidebar.mobile-collapsed .sidebar-body {
+    display: none;
+  }
+
+  .sidebar-header {
+    cursor: pointer;
+  }
+
+  .legend {
+    display: none;
+  }
+}
+
+/* ============================================
+   Profile Links (Recruit Popups)
+   ============================================ */
+.profile-links {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+
+.profile-link {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.profile-link:hover {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
