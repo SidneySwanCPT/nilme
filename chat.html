@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — AI Assistant</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+    .chat-page-wrap {
+      display: flex;
+      height: 100vh;
+      margin-top: var(--nav-height);
+      height: calc(100vh - var(--nav-height));
+    }
+
+    /* Sidebar */
+    .chat-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-sidebar-header {
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .chat-sidebar-title {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .chat-sidebar-title span { color: var(--gold); }
+
+    .chat-sidebar-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .chat-topics {
+      padding: var(--space-md);
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .topics-label {
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: var(--space-sm);
+      padding: 0 4px;
+    }
+
+    .topic-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 4px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+      font-family: var(--font-body);
+    }
+    .topic-btn:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); border-color: var(--border-color); }
+    .topic-btn.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+    .topic-icon { font-size: 1rem; flex-shrink: 0; }
+
+    .chat-sidebar-tools {
+      padding: var(--space-md);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .sidebar-tool-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      margin-bottom: 4px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .sidebar-tool-link:hover { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
+
+    /* Main chat area */
+    .chat-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-topic-header {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      flex-shrink: 0;
+    }
+
+    .chat-topic-icon { font-size: 1.3rem; }
+    .chat-topic-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+    .chat-topic-desc { font-size: 0.75rem; color: var(--text-muted); }
+
+    .chat-new-btn {
+      margin-left: auto;
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid var(--border-color);
+      border-radius: 100px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font-body);
+    }
+    .chat-new-btn:hover { color: var(--text-primary); border-color: var(--border-hover); }
+
+    #chatContainer { flex: 1; overflow: hidden; }
+
+    /* Suggested prompts */
+    .chat-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(255,255,255,0.01);
+    }
+
+    .chat-suggestion {
+      padding: 6px 12px;
+      font-size: 0.76rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 100px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font-body);
+    }
+    .chat-suggestion:hover { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
+
+    @media (max-width: 768px) {
+      .chat-sidebar { display: none; }
+      .chat-page-wrap { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<div class="chat-page-wrap">
+
+  <!-- Sidebar -->
+  <div class="chat-sidebar">
+    <div class="chat-sidebar-header">
+      <div class="chat-sidebar-title">Camp <span>8</span> AI</div>
+      <div class="chat-sidebar-sub">Your personal football recruiting & NIL assistant. Ask anything.</div>
+    </div>
+
+    <div class="chat-topics">
+      <div class="topics-label">Topics</div>
+      <button class="topic-btn active" onclick="setTopic('general', this)">
+        <span class="topic-icon">🏈</span>General Assistant
+      </button>
+      <button class="topic-btn" onclick="setTopic('nil', this)">
+        <span class="topic-icon">💰</span>NIL Advice
+      </button>
+      <button class="topic-btn" onclick="setTopic('recruiting', this)">
+        <span class="topic-icon">🎓</span>NCAA Recruiting Rules
+      </button>
+      <button class="topic-btn" onclick="setTopic('email', this)">
+        <span class="topic-icon">✉️</span>Write a Coach Email
+      </button>
+      <button class="topic-btn" onclick="setTopic('combine', this)">
+        <span class="topic-icon">⚡</span>Combine Prep
+      </button>
+      <button class="topic-btn" onclick="setTopic('camps', this)">
+        <span class="topic-icon">🏕️</span>Find a Camp
+      </button>
+      <button class="topic-btn" onclick="setTopic('transfer', this)">
+        <span class="topic-icon">🔄</span>Transfer Rules
+      </button>
+    </div>
+
+    <div class="chat-sidebar-tools">
+      <div class="topics-label" style="margin-bottom:8px">Quick Links</div>
+      <a href="nil-rating.html" class="sidebar-tool-link">⭐ NIL Rating Tool</a>
+      <a href="combine-eval.html" class="sidebar-tool-link">⚡ Combine Evaluator</a>
+      <a href="ncaa-rules.html" class="sidebar-tool-link">📋 NCAA Rules Guide</a>
+      <a href="camps.html" class="sidebar-tool-link">🏕️ Browse Camps</a>
+    </div>
+  </div>
+
+  <!-- Main chat -->
+  <div class="chat-main">
+    <div class="chat-topic-header">
+      <span class="chat-topic-icon" id="topicIcon">🏈</span>
+      <div>
+        <div class="chat-topic-title" id="topicTitle">General Assistant</div>
+        <div class="chat-topic-desc" id="topicDesc">Ask about recruiting, NIL, camps, or anything football</div>
+      </div>
+      <button class="chat-new-btn" onclick="newConversation()">New Chat</button>
+    </div>
+
+    <div class="chat-suggestions" id="chatSuggestions"></div>
+    <div id="chatContainer"></div>
+  </div>
+
+</div>
+
+<script src="ai-chat.js"></script>
+<script>
+// ============================================
+// TOPIC DEFINITIONS
+// ============================================
+const TOPICS = {
+  general: {
+    icon: '🏈',
+    title: 'General Assistant',
+    desc: 'Ask about recruiting, NIL, camps, or anything football',
+    accentColor: '#d4a843',
+    system: `You are Camp 8's AI football assistant — an expert on high school football recruiting, NIL (Name, Image, Likeness), college recruiting rules, prospect camps, and player development. You help athletes, parents, and coaches navigate every aspect of the recruiting and NIL landscape.
+
+You have deep knowledge of:
+- NIL rules for high school athletes in Georgia, Florida, Texas, and California (GHSA, FHSAA, UIL, CIF)
+- NCAA recruiting rules: contact periods, dead periods, official visits, verbal commitments, NLI
+- How to find and evaluate prospect camps
+- What college coaches look for in recruits
+- How to build a recruiting profile
+- The transfer portal process
+- Combine training and measurables
+
+Always be encouraging, direct, and practical. Give specific actionable advice. Keep responses concise but complete — use bullet points for lists. If asked about current rankings or specific recruiting news, note that your knowledge has a cutoff and they should verify with 247Sports, On3, or Rivals.`,
+    welcome: "Hey! I'm Camp 8's AI assistant 🏈 I can help with recruiting questions, NIL deals, writing coach emails, finding camps, or anything else about high school football. What's on your mind?",
+    suggestions: [
+      "How do I get noticed by college coaches?",
+      "What is NIL and can I do it in high school?",
+      "What should I include in a highlight tape?",
+      "How do college coaches evaluate players?",
+    ]
+  },
+
+  nil: {
+    icon: '💰',
+    title: 'NIL Advice',
+    desc: 'Navigate NIL deals, eligibility, and value',
+    accentColor: '#d4a843',
+    system: `You are a specialized NIL advisor for high school football athletes. You have deep expertise in:
+- NIL rules for high school athletes in Georgia (GHSA), Florida (FHSAA), Texas (UIL), and California (CIF)
+- What types of deals are allowed, prohibited categories, disclosure requirements
+- How to approach brands and negotiate deals
+- Tax implications of NIL income
+- How to protect eligibility while maximizing NIL value
+- Contract basics — what to look for, what red flags to watch for
+- The difference between NIL and pay-for-play
+
+Be specific, practical, and always emphasize eligibility protection first. Always recommend consulting an attorney or tax professional for specific legal/tax advice.`,
+    welcome: "I specialize in NIL for high school athletes 💰 I can help you understand the rules in your state, evaluate a deal, figure out your market value, or navigate a specific situation. What do you need to know?",
+    suggestions: [
+      "Is my NIL deal legal in Georgia?",
+      "How do I find brands to work with?",
+      "Do I need to pay taxes on NIL money?",
+      "Can a booster pay me NIL in Texas?",
+    ]
+  },
+
+  recruiting: {
+    icon: '🎓',
+    title: 'NCAA Recruiting Rules',
+    desc: 'Contact periods, visits, commitments, and more',
+    accentColor: '#50c878',
+    system: `You are an expert on NCAA recruiting rules for football. You know the complete rulebook including:
+- Contact periods vs. evaluation periods vs. dead periods vs. quiet periods
+- When college coaches can call, text, email, and visit recruits by division (FBS/FCS/D2/D3)
+- Official visit rules (when, how many, what's paid for)
+- Unofficial visit rules
+- Verbal commitment rules and what they mean legally
+- National Letter of Intent (NLI) — signing periods, early signing period
+- Transfer portal rules for high school athletes
+- How recruiting timelines differ by graduation year
+- What "academic certification" means and how to ensure eligibility
+
+Always cite which division the rule applies to. Be precise and thorough.`,
+    welcome: "Ask me anything about NCAA recruiting rules 🎓 I know the contact periods, visit rules, signing dates, and everything coaches are and aren't allowed to do at every division level. What do you need to know?",
+    suggestions: [
+      "When can coaches first contact a 2027 recruit?",
+      "What is an official visit and what's covered?",
+      "Is a verbal commitment binding?",
+      "What's the difference between a dead period and quiet period?",
+    ]
+  },
+
+  email: {
+    icon: '✉️',
+    title: 'Write a Coach Email',
+    desc: 'Get a personalized email draft to send to coaches',
+    accentColor: '#4a90d9',
+    system: `You are an expert at helping high school athletes write effective emails to college coaches. Your job is to ask a series of questions to gather the necessary information, then write a compelling, professional coach email.
+
+Start by asking:
+1. The athlete's name, position, and graduation year
+2. Their star rating or ranking (if they have one)
+3. Their key stats and measurables (height, weight, 40 time, GPA)
+4. Which school/coach they're emailing and why they're interested
+5. Any highlights, camps attended, or notable achievements
+
+Then write a personalized email that:
+- Has a strong subject line
+- Opens with genuine interest in the specific program
+- Highlights top measurables and achievements concisely
+- Shows knowledge of the school/program
+- Has a clear call to action
+- Is professional but not stiff — coaches appreciate authentic communication
+- Is under 200 words
+
+After writing it, offer to refine it further based on feedback.`,
+    welcome: "I'll help you write a great email to a college coach ✉️ Let's start with a few quick questions. What's your name, position, and graduation year?",
+    suggestions: [
+      "Help me write an email to a D1 coach",
+      "What should I include in a coach email?",
+      "How do I follow up after sending an email?",
+      "Write a thank-you email after a visit",
+    ]
+  },
+
+  combine: {
+    icon: '⚡',
+    title: 'Combine Prep',
+    desc: 'Train smarter for your next combine or camp',
+    accentColor: '#4a90d9',
+    system: `You are a combine preparation specialist for high school football players. You know:
+- What scores/times are needed at each position to impress at elite camps
+- Specific drills and training to improve 40-yard dash, vertical jump, broad jump, shuttle, and 3-cone
+- How to peak for a specific camp date
+- What coaches are actually looking at during combines
+- Common mistakes athletes make at combines
+- How to warm up properly on the day
+- Mental preparation and confidence building
+- Film evaluation — what scouts look for beyond the measurables
+
+Be specific with drill names, rep counts, and training timelines. Always tailor advice to the athlete's specific position.`,
+    welcome: "Let's get you ready for your next combine ⚡ Tell me your position and which stats you want to improve, and I'll build you a prep plan.",
+    suggestions: [
+      "How do I run a faster 40-yard dash?",
+      "What vertical jump is good for a WR?",
+      "How should I warm up on combine day?",
+      "What do coaches look for beyond measurables?",
+    ]
+  },
+
+  camps: {
+    icon: '🏕️',
+    title: 'Find a Camp',
+    desc: 'Get guidance on which camps are right for you',
+    accentColor: '#e8872b',
+    system: `You are a camp and exposure expert for high school football. You help athletes find the right camps based on their position, goals, star rating, and recruiting status. You know:
+- The difference between showcase camps, position camps, combine camps, and 7-on-7 events
+- Which camps have the best college coach attendance by state and region
+- Elite camps vs. regional camps and how to think about the tradeoffs
+- The right time in a recruit's career to attend each type of event
+- How to maximize exposure at a camp
+- What to bring, how to act, and how to stand out
+- Nike The Opening, Under Armour All-America, Rivals, 247Sports, and other elite camp circuits
+- Regional Southeast options especially in Georgia, Florida, Texas, and California
+
+Camp 8 has 755 camps in its database. Direct athletes to camps.html on the site to browse the full list with map and calendar views.`,
+    welcome: "I can help you find the right camps 🏕️ Tell me your position, graduation year, star rating (if you have one), and what state you're in — I'll point you in the right direction.",
+    suggestions: [
+      "Which camps have the most D1 coaches?",
+      "What's the difference between showcase and combine camps?",
+      "Best Georgia football camps in 2026?",
+      "How do I stand out at a camp?",
+    ]
+  },
+
+  transfer: {
+    icon: '🔄',
+    title: 'Transfer Rules',
+    desc: 'Navigate high school transfer rules and eligibility',
+    accentColor: '#c41e3a',
+    system: `You are an expert in high school football transfer rules. You know the specific rules for:
+- Georgia (GHSA) transfer eligibility and hardship waivers
+- Florida (FHSAA) transfer rules and the one-year waiting period
+- Texas (UIL) transfer rules — one of the strictest in the country
+- California (CIF) transfer rules and the transfer window
+- Common reasons transfers are approved vs. denied
+- What a hardship waiver is and when it applies
+- How NIL deals interact with transfer decisions
+- The general process for transferring and maintaining eligibility
+- What documentation is typically required
+
+Always clarify which state's rules you're discussing. Recommend athletes consult their athletic director and the governing body directly for their specific situation.`,
+    welcome: "Transfer rules vary a lot by state 🔄 Tell me which state you're in and what your situation is, and I'll walk you through the rules and your options.",
+    suggestions: [
+      "Can I transfer schools in Georgia without sitting out?",
+      "What is a hardship waiver?",
+      "How do Texas UIL transfer rules work?",
+      "Can an NIL deal cause transfer issues?",
+    ]
+  }
+};
+
+// ============================================
+// CHAT STATE
+// ============================================
+let currentTopic = 'general';
+let chatInstance = null;
+
+function setTopic(topicKey, btn) {
+  currentTopic = topicKey;
+  document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadTopic(topicKey);
+}
+
+function loadTopic(topicKey) {
+  const t = TOPICS[topicKey];
+  document.getElementById('topicIcon').textContent = t.icon;
+  document.getElementById('topicTitle').textContent = t.title;
+  document.getElementById('topicDesc').textContent = t.desc;
+
+  // Suggestions
+  const sugEl = document.getElementById('chatSuggestions');
+  sugEl.innerHTML = '';
+  t.suggestions.forEach(function(s) {
+    const btn = document.createElement('button');
+    btn.className = 'chat-suggestion';
+    btn.textContent = s;
+    btn.onclick = function() {
+      if (chatInstance) {
+        document.getElementById('c8input').value = s;
+        window._c8SendMsg();
+      }
+    };
+    sugEl.appendChild(btn);
+  });
+
+  // Build chat
+  const container = document.getElementById('chatContainer');
+  container.innerHTML = '';
+  chatInstance = CAMP8_AI.buildChatUI({
+    container,
+    system: t.system,
+    welcomeMsg: t.welcome,
+    placeholder: 'Ask anything…',
+    accentColor: t.accentColor,
+  });
+}
+
+function newConversation() {
+  if (chatInstance) chatInstance.reset();
+}
+
+// Boot
+document.addEventListener('DOMContentLoaded', function() {
+  loadTopic('general');
+});
+</script>
+</body>
+</html>

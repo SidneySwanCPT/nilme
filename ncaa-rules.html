@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — NCAA Recruiting Rules</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body { overflow-y: auto; height: auto; }
+    .ncaa-page { margin-top: var(--nav-height); max-width: 1100px; margin-left: auto; margin-right: auto; padding: var(--space-xl); }
+
+    .ncaa-header { padding-bottom: var(--space-xl); border-bottom: 1px solid var(--border-color); margin-bottom: var(--space-xl); }
+    .ncaa-eyebrow { font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; color:var(--gold); margin-bottom:8px; }
+    .ncaa-title { font-family:var(--font-display); font-size:clamp(2.5rem,5vw,4rem); letter-spacing:0.04em; color:var(--text-primary); margin-bottom:10px; }
+    .ncaa-title span { color:var(--gold); }
+    .ncaa-subtitle { font-size:0.95rem; color:var(--text-secondary); max-width:620px; line-height:1.6; margin-bottom:var(--space-lg); }
+    .ncaa-disclaimer { display:flex; gap:10px; padding:12px 16px; background:rgba(232,135,43,0.08); border:1px solid rgba(232,135,43,0.2); border-radius:var(--radius-md); font-size:0.8rem; color:#e8872b; line-height:1.5; }
+
+    /* Division tabs */
+    .div-tabs { display:flex; gap:6px; margin-bottom:var(--space-xl); flex-wrap:wrap; }
+    .div-tab { padding:8px 20px; font-size:0.85rem; font-weight:700; border:1px solid var(--border-color); border-radius:100px; color:var(--text-muted); background:transparent; cursor:pointer; transition:all 0.15s; font-family:var(--font-body); }
+    .div-tab:hover { color:var(--text-secondary); }
+    .div-tab.active { color:var(--gold); border-color:var(--gold); background:var(--gold-dim); }
+
+    /* Section */
+    .ncaa-section { margin-bottom:var(--space-xl); }
+    .ncaa-section-title { font-family:var(--font-display); font-size:1.6rem; letter-spacing:0.04em; color:var(--text-primary); margin-bottom:var(--space-md); display:flex; align-items:center; gap:10px; }
+    .ncaa-section-title span { color:var(--gold); }
+    .section-icon { font-size:1.4rem; }
+
+    /* Contact calendar */
+    .contact-calendar { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:var(--space-sm); margin-bottom:var(--space-lg); }
+    .period-card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:var(--space-md); border-top:3px solid; }
+    .period-name { font-size:0.82rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px; }
+    .period-dates { font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; }
+    .period-rules { display:flex; flex-direction:column; gap:4px; }
+    .period-rule { font-size:0.78rem; color:var(--text-secondary); display:flex; gap:6px; align-items:flex-start; line-height:1.4; }
+    .pr-icon { flex-shrink:0; margin-top:1px; }
+
+    /* Contact chart */
+    .contact-chart { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); overflow:hidden; margin-bottom:var(--space-lg); }
+    .contact-chart-header { background:rgba(255,255,255,0.04); padding:var(--space-md) var(--space-lg); border-bottom:1px solid var(--border-color); font-size:0.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; }
+    .contact-row { display:grid; padding:12px var(--space-lg); border-bottom:1px solid var(--border-color); align-items:start; gap:var(--space-md); }
+    .contact-row:last-child { border-bottom:none; }
+    .contact-row.header { background:rgba(255,255,255,0.03); font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; padding:10px var(--space-lg); }
+    .cr-year { font-weight:700; color:var(--text-primary); font-size:0.88rem; }
+    .cr-grade { font-size:0.8rem; color:var(--text-muted); }
+    .cr-action { font-size:0.8rem; color:var(--text-secondary); line-height:1.5; }
+    .allowed-tag { display:inline-block; padding:1px 7px; border-radius:100px; font-size:0.65rem; font-weight:700; margin-right:4px; }
+    .tag-yes { background:rgba(80,200,120,0.15); color:#50c878; }
+    .tag-no { background:rgba(196,30,58,0.12); color:#c41e3a; }
+    .tag-limited { background:rgba(232,135,43,0.12); color:#e8872b; }
+
+    /* Rules lists */
+    .rules-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md); margin-bottom:var(--space-lg); }
+    .rule-card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:var(--space-lg); }
+    .rule-card-title { font-size:0.9rem; font-weight:700; color:var(--text-primary); margin-bottom:var(--space-sm); display:flex; align-items:center; gap:8px; }
+    .rule-card-text { font-size:0.82rem; color:var(--text-secondary); line-height:1.6; }
+
+    /* Timeline */
+    .timeline { display:flex; flex-direction:column; gap:0; position:relative; }
+    .timeline::before { content:''; position:absolute; left:20px; top:0; bottom:0; width:2px; background:var(--border-color); }
+    .tl-item { display:flex; gap:var(--space-lg); padding-bottom:var(--space-lg); position:relative; }
+    .tl-dot { width:42px; height:42px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:800; position:relative; z-index:1; border:2px solid; }
+    .tl-content { flex:1; padding-top:8px; }
+    .tl-title { font-size:0.92rem; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+    .tl-desc { font-size:0.82rem; color:var(--text-secondary); line-height:1.6; }
+
+    .ncaa-cta { background:linear-gradient(135deg,rgba(212,168,67,0.08) 0%,rgba(212,168,67,0.03) 100%); border:1px solid rgba(212,168,67,0.2); border-radius:var(--radius-lg); padding:var(--space-xl); text-align:center; margin-top:var(--space-xl); }
+    .ncaa-cta h3 { font-family:var(--font-display); font-size:1.8rem; color:var(--gold); margin-bottom:var(--space-sm); }
+    .ncaa-cta p { font-size:0.9rem; color:var(--text-secondary); margin-bottom:var(--space-lg); max-width:480px; margin-left:auto; margin-right:auto; }
+    .ncaa-cta-btns { display:flex; gap:var(--space-md); justify-content:center; flex-wrap:wrap; }
+    .ncaa-cta-btn { padding:10px 22px; border-radius:100px; font-size:0.85rem; font-weight:700; text-decoration:none; transition:all 0.15s; }
+    .ncaa-cta-btn.primary { background:var(--gold); color:#0a0a12; }
+    .ncaa-cta-btn.primary:hover { background:var(--gold-bright); }
+    .ncaa-cta-btn.outline { border:1px solid var(--border-color); color:var(--text-secondary); }
+    .ncaa-cta-btn.outline:hover { color:var(--gold); border-color:var(--gold); }
+
+    @media(max-width:768px){
+      .ncaa-page { padding:var(--space-lg) var(--space-md); }
+      .rules-grid { grid-template-columns:1fr; }
+      .contact-calendar { grid-template-columns:1fr 1fr; }
+      .contact-row { grid-template-columns:1fr; }
+    }
+    @media(max-width:480px){
+      .contact-calendar { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<div class="ncaa-page">
+
+  <!-- Header -->
+  <div class="ncaa-header">
+    <div class="ncaa-eyebrow">Complete Recruiting Guide</div>
+    <h1 class="ncaa-title">NCAA <span>Recruiting Rules</span></h1>
+    <p class="ncaa-subtitle">Everything a high school athlete and their family needs to understand about NCAA recruiting — contact rules, visit types, commitment timelines, and what coaches can and can't do at every stage.</p>
+    <div class="ncaa-disclaimer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      NCAA rules change periodically. Always verify current rules at NCAA.org. This guide reflects rules as of 2025–2026.
+    </div>
+  </div>
+
+  <!-- Division filter -->
+  <div class="div-tabs">
+    <button class="div-tab active" onclick="setDiv('fbs',this)">FBS (D1)</button>
+    <button class="div-tab" onclick="setDiv('fcs',this)">FCS (D1-AA)</button>
+    <button class="div-tab" onclick="setDiv('d2',this)">Division II</button>
+    <button class="div-tab" onclick="setDiv('d3',this)">Division III</button>
+    <button class="div-tab" onclick="setDiv('juco',this)">JUCO</button>
+  </div>
+
+  <!-- Content (swapped by JS) -->
+  <div id="ncaaContent"></div>
+
+</div>
+
+<!-- Footer -->
+<footer class="site-footer" style="margin-top:var(--space-xl)">
+  <div class="footer-inner">
+    <a href="index.html" class="footer-brand">Camp <span>8</span></a>
+    <div class="footer-links">
+      <a href="recruits.html">Top Prospects</a>
+      <a href="camps.html">Prospect Camps</a>
+      <a href="nil-central.html">NIL Central</a>
+      <a href="chat.html">AI Assistant</a>
+    </div>
+    <a href="https://www.instagram.com/n.i.l.me" target="_blank" rel="noopener" class="ig-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+      @n.i.l.me
+    </a>
+  </div>
+</footer>
+
+<script>
+const DIVISIONS = {
+  fbs: {
+    label: 'FBS (Division I)',
+    contactPeriods: [
+      { name: 'Quiet Period', color: '#e8872b', dates: 'Most of year', rules: ['No in-person off-campus contact', 'Coaches can send letters & emails', 'Athletes can visit campus (unofficial)', 'Coaches can watch games/practice'] },
+      { name: 'Dead Period', color: '#c41e3a', dates: 'Varies (approx. 2–3 weeks/year)', rules: ['Zero in-person contact — anywhere', 'No campus visits (official or unofficial)', 'Written communication still allowed', 'Strictly enforced — violations costly'] },
+      { name: 'Evaluation Period', color: '#4a90d9', dates: 'Spring & fall evaluation windows', rules: ['Coaches can watch athletes in person', 'No direct contact with athlete', 'Can observe practices, games, workouts', 'Limited number of evaluations per year'] },
+      { name: 'Contact Period', color: '#50c878', dates: 'Early signing period windows', rules: ['In-person off-campus contact allowed', 'One contact per day max', 'Must be requested by athlete/family', 'Coaches can watch and speak to athlete'] },
+    ],
+    contactByYear: [
+      { grade: '9th Grade', year: 'Freshman', action: 'No contact', tags: ['no'], detail: 'Coaches may not contact or evaluate freshmen. They can send questionnaires and provide general camp invitations.' },
+      { grade: '10th Grade', year: 'Sophomore', action: 'No contact', tags: ['no'], detail: 'Still in no-contact period. Coaches can respond to athlete-initiated contact. Unofficial visits to campus are allowed year-round.' },
+      { grade: '11th Grade (Sep 1)', year: 'Junior', action: 'Contact begins', tags: ['yes', 'limited'], detail: 'September 1 of junior year is the first day coaches can call or text. Official visits can begin. National letters of intent are NOT yet available.' },
+      { grade: '11th Grade', year: 'Junior', action: 'Official visits allowed', tags: ['yes'], detail: 'Athletes can take official visits (school-paid) to campuses. Limited to 5 official visits total across all schools.' },
+      { grade: '12th Grade (Dec)', year: 'Senior — Early Signing', action: 'Early Signing Period', tags: ['yes'], detail: 'December signing period (typically Dec 4–6). Athletes who have committed early can sign National Letters of Intent.' },
+      { grade: '12th Grade (Feb)', year: 'Senior — NLI', action: 'Regular NLI Signing', tags: ['yes'], detail: 'Regular signing period in February. Athletes sign National Letter of Intent, binding them to the school for one year.' },
+    ],
+    visits: {
+      official: 'School pays for travel, lodging, and meals. Maximum 5 official visits total across all schools. Cannot begin before September 1 of junior year. 48-hour maximum per visit.',
+      unofficial: 'Athlete pays all costs. Unlimited number allowed. Can begin at any time. Great way to evaluate schools before official offers.',
+    },
+    keyRules: [
+      { title: 'Verbal Commitment', text: 'A verbal commitment is NOT binding for the athlete or the school. It is a public statement of intent. Athletes can decommit at any time. Schools can technically pull offers (though rare and frowned upon).' },
+      { title: 'National Letter of Intent (NLI)', text: 'The NLI IS binding. Once signed, the athlete must attend that school or sit out one year and lose a year of eligibility. It is a one-year commitment — not four years.' },
+      { title: 'Early Signing Period', text: 'FBS football has an early signing period in December (typically Dec 4–6). This allows committed athletes to sign before the traditional February signing day.' },
+      { title: 'Transfer Portal', text: 'Athletes can enter the transfer portal after their senior season. High school transfers between high schools are governed by state associations (GHSA, UIL, etc.), not the NCAA.' },
+      { title: '13 Contacts Rule', text: 'Coaches are limited to 13 "evaluations" per prospect. An evaluation is any time a coach watches the athlete in person. Phone calls and texts are unlimited during contact periods.' },
+      { title: 'Impermissible Benefits', text: 'Athletes cannot receive anything of value from coaches or boosters — including meals, gifts, merchandise, or transportation — outside of official visits. This can jeopardize eligibility.' },
+    ],
+    timeline: [
+      { dot: '8', color: '#888', textColor: '#888', label: '8th Grade', desc: 'Begin building highlight film. Attend local camps and 7-on-7 events. Create profiles on 247Sports, On3, Hudl.' },
+      { dot: '9', color: '#888', textColor: '#888', label: '9th Grade (Freshman)', desc: 'No coach contact allowed. Attend college camps — this is when coaches start building mental notes. Post consistently on Hudl and social media.' },
+      { dot: '10', color: '#4a90d9', textColor: '#4a90d9', label: '10th Grade (Sophomore)', desc: 'Unofficial visits allowed. Email coaches directly with your profile. Attend elite camps (Nike Opening, UA, etc.). Coaches may respond to your outreach.' },
+      { dot: '11', color: '#e8872b', textColor: '#e8872b', label: 'Sept 1, Junior Year', desc: 'First contact day. Coaches can now call, text, and officially contact you. Official visits become available. This is when scholarship offers typically arrive.' },
+      { dot: '▼', color: '#50c878', textColor: '#50c878', label: 'Junior Year (Spring)', desc: 'Evaluate offers and take official visits. Make campus trips. If committing early, announce before December signing period.' },
+      { dot: 'DEC', color: '#FFD700', textColor: '#0a0a12', label: 'December — Early Signing', desc: 'Early Signing Period (typically Dec 4–6). Sign your NLI if you are committed. This is binding for one year.' },
+      { dot: 'FEB', color: '#d4a843', textColor: '#0a0a12', label: 'February — Regular Signing', desc: 'Regular NLI Signing Day. Any uncommitted seniors can still sign. After signing, you are bound to the institution.' },
+    ]
+  },
+  fcs: {
+    label: 'FCS (Division I-AA)',
+    contactPeriods: [
+      { name: 'Quiet Period', color: '#e8872b', dates: 'Most of the year', rules: ['No off-campus in-person contact', 'Calls, texts, emails allowed', 'Unofficial visits allowed', 'Coaches can attend games to evaluate'] },
+      { name: 'Dead Period', color: '#c41e3a', dates: 'Approximately 2 weeks/year', rules: ['No in-person contact anywhere', 'No campus visits of any kind', 'Only written communication allowed', 'Violations are heavily penalized'] },
+      { name: 'Contact Period', color: '#50c878', dates: 'Defined by NCAA calendar', rules: ['Off-campus contact permitted', 'Home/school visits allowed', 'One contact per day', 'Athlete must initiate first contact'] },
+    ],
+    contactByYear: [
+      { grade: '9th–10th Grade', year: 'Freshman/Sophomore', action: 'No contact', tags: ['no'], detail: 'No in-person or phone contact from coaches. Athletes can visit campus unofficially anytime.' },
+      { grade: 'June 15 before Junior Year', year: 'Junior (start)', action: 'First contact date', tags: ['yes'], detail: 'FCS programs can begin contacting athletes on June 15 before their junior year — earlier than FBS.' },
+      { grade: '11th Grade', year: 'Junior', action: 'Official visits + calls', tags: ['yes'], detail: 'Official visits allowed. Coaches can call and text. Scholarship offers are common during this period.' },
+      { grade: '12th Grade (Feb)', year: 'Senior', action: 'NLI Signing Day', tags: ['yes'], detail: 'FCS has a spring signing day only (no early December window like FBS).' },
+    ],
+    visits: {
+      official: 'Same as FBS: school pays travel, lodging, meals. Max 5 official visits total. 48-hour limit. Available after June 15 of junior year.',
+      unofficial: 'Athlete pays all costs. Unlimited. Available at any time. Heavily used during sophomore and junior years.',
+    },
+    keyRules: [
+      { title: 'Earlier Contact Date', text: 'FCS can contact athletes on June 15 before junior year — about 2.5 months earlier than FBS (Sept 1). This matters: FCS programs recruit faster and earlier.' },
+      { title: 'Scholarship Limits', text: 'FCS programs are "equivalency" scholarship schools — they can divide scholarships among multiple players. Unlike FBS head-count schools, your FCS scholarship may be partial.' },
+      { title: 'Verbal Commitment', text: 'Same as FBS — verbal commitments are NOT binding. Signing an NLI is the only binding commitment.' },
+      { title: 'Spring Signing Only', text: 'FCS does not have the December early signing period. All FCS athletes sign NLIs in February/spring.' },
+    ],
+    timeline: [],
+  },
+  d2: {
+    label: 'Division II',
+    contactPeriods: [
+      { name: 'No Contact Period', color: '#c41e3a', dates: 'Before June 15 of junior year', rules: ['No phone, text, or in-person contact', 'Questionnaires allowed', 'Unofficial visits allowed', 'Athletes can initiate contact'] },
+      { name: 'Contact Allowed', color: '#50c878', dates: 'After June 15 of junior year', rules: ['Phone, text, email, in-person all allowed', 'Official visits available', 'Scholarship offers can be extended', 'Unlimited contacts (no period restrictions)'] },
+    ],
+    contactByYear: [
+      { grade: 'Before June 15, Junior Year', year: 'No contact period', action: 'No direct contact', tags: ['no'], detail: 'D2 coaches cannot call or text athletes before June 15 of junior year. Athletes can reach out first.' },
+      { grade: 'June 15, Junior Year', year: 'Contact begins', action: 'All contact methods open', tags: ['yes'], detail: 'Once June 15 hits, D2 coaches can call, text, email, and meet in person. Much simpler rules than D1.' },
+    ],
+    visits: {
+      official: 'School pays costs. Maximum 5 official visits. Available after June 15 junior year.',
+      unofficial: 'Athlete pays. Unlimited. Can start anytime — great for evaluating D2 schools early.',
+    },
+    keyRules: [
+      { title: 'Simpler Rules', text: 'D2 recruiting rules are significantly less complex than D1. Once June 15 of junior year arrives, coaches have much more flexibility to contact and recruit athletes.' },
+      { title: 'Equivalency Scholarships', text: 'D2 offers equivalency scholarships — typically 36 equivalencies spread across the roster. Most athletes receive partial scholarships, not full rides.' },
+      { title: 'Great Hidden Value', text: 'D2 can offer excellent football and education with less media pressure. Many D2 alumni have NFL careers. Programs like Valdosta State, Ferris State, and Carson-Newman are football powerhouses.' },
+    ],
+    timeline: [],
+  },
+  d3: {
+    label: 'Division III',
+    contactPeriods: [
+      { name: 'No Recruiting Calendar', color: '#4a90d9', dates: 'All year', rules: ['D3 has NO defined recruiting calendar', 'Coaches can contact anytime', 'No contact period restrictions', 'Only dead periods for official NCAA events'] },
+    ],
+    contactByYear: [
+      { grade: 'Any time', year: 'No restrictions', action: 'Open contact at any time', tags: ['yes'], detail: 'D3 has no contact period restrictions. Coaches can call, email, or meet athletes at any grade level.' },
+    ],
+    visits: {
+      official: 'D3 cannot offer athletic scholarships. Official visits are allowed but the school does not pay — financial aid and academic scholarships are how D3 programs attract athletes.',
+      unofficial: 'Unlimited, anytime. Strongly encouraged — D3 campus culture and fit matter a lot.',
+    },
+    keyRules: [
+      { title: 'No Athletic Scholarships', text: 'By NCAA rule, D3 schools cannot offer athletic scholarships. Athletes are recruited based on academic merit, financial need, and athletic talent — in that order. Many D3 athletes receive generous financial aid packages.' },
+      { title: 'No Contact Calendar', text: 'D3 coaches are not bound by the same recruiting calendar as D1 and D2. They can contact athletes at any grade level, any time of year.' },
+      { title: 'Still Great Football', text: 'D3 football is highly competitive. The NESCAC, UAA, Midwest Conference, and other leagues play excellent football. Many D3 athletes go on to professional careers.' },
+      { title: 'Academic Priority', text: 'D3 schools prioritize academic performance. Athletes who are borderline academically will not be recruited regardless of football talent. GPA and test scores matter.' },
+    ],
+    timeline: [],
+  },
+  juco: {
+    label: 'JUCO (Junior College)',
+    contactPeriods: [
+      { name: 'NJCAA Rules', color: '#d4a843', dates: 'Varies by college', rules: ['JUCO follows NJCAA rules (not NCAA)', 'Each school may set own policies', 'Generally less restricted than NCAA', 'Coaches can often contact any time'] },
+    ],
+    contactByYear: [
+      { grade: 'Any grade', year: 'Flexible', action: 'Contact rules vary by school', tags: ['yes', 'limited'], detail: 'JUCO programs follow NJCAA rules which are generally less restrictive. Most coaches can contact athletes much earlier than NCAA schools.' },
+    ],
+    visits: {
+      official: 'JUCO schools can offer official visits. Athletic scholarships are available through NJCAA programs. Rules vary by division (NJCAA D1, D2, D3).',
+      unofficial: 'Unlimited. Strongly encouraged to visit campus and meet coaches and players.',
+    },
+    keyRules: [
+      { title: 'Strategic Pathway', text: 'JUCO is often the best path for athletes who need to improve academically, develop physically, or gain film to attract D1 attention. Many D1 players came through JUCO.' },
+      { title: 'Two-Year Programs', text: 'JUCO programs are two-year colleges. Athletes typically play 1-2 seasons before transferring to a 4-year school. Eligibility clock management is critical.' },
+      { title: 'NJCAA, Not NCAA', text: 'Junior colleges operate under NJCAA rules, not NCAA. The recruiting, eligibility, and scholarship rules are completely different. Check with each school.' },
+      { title: 'Transfer to D1/D2/D3', text: 'Successfully completing JUCO opens doors to 4-year programs. D1 programs specifically recruit JUCO athletes who need immediate impact players.' },
+    ],
+    timeline: [],
+  }
+};
+
+let currentDiv = 'fbs';
+
+function setDiv(div, btn) {
+  currentDiv = div;
+  document.querySelectorAll('.div-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderContent();
+}
+
+function renderContent() {
+  const d = DIVISIONS[currentDiv];
+  const el = document.getElementById('ncaaContent');
+  let html = '';
+
+  // ---- Contact Periods ----
+  html += `<div class="ncaa-section">
+    <h2 class="ncaa-section-title"><span class="section-icon">📅</span>Contact <span>Periods</span></h2>
+    <div class="contact-calendar">`;
+  d.contactPeriods.forEach(function(p) {
+    html += `<div class="period-card" style="border-top-color:${p.color}">
+      <div class="period-name" style="color:${p.color}">${esc(p.name)}</div>
+      <div class="period-dates">${esc(p.dates)}</div>
+      <div class="period-rules">`;
+    p.rules.forEach(function(r) {
+      html += `<div class="period-rule"><span class="pr-icon">•</span>${esc(r)}</div>`;
+    });
+    html += `</div></div>`;
+  });
+  html += `</div></div>`;
+
+  // ---- When Can Coaches Contact You ----
+  if (d.contactByYear.length) {
+    html += `<div class="ncaa-section">
+      <h2 class="ncaa-section-title"><span class="section-icon">📞</span>When Can Coaches <span>Contact You?</span></h2>
+      <div class="contact-chart">
+        <div class="contact-chart-header">Contact Eligibility by Grade Year — ${esc(d.label)}</div>
+        <div class="contact-row header" style="grid-template-columns:160px 1fr 2fr">
+          <div>Grade</div><div>Can Contact?</div><div>What's Allowed</div>
+        </div>`;
+    d.contactByYear.forEach(function(row) {
+      html += `<div class="contact-row" style="grid-template-columns:160px 1fr 2fr">
+        <div><div class="cr-year">${esc(row.grade)}</div></div>
+        <div>${row.tags.map(function(t){ return `<span class="allowed-tag tag-${t==='yes'?'yes':t==='no'?'no':'limited'}">${t==='yes'?'✓ Yes':t==='no'?'✗ No':'⚠ Limited'}</span>`; }).join('')}</div>
+        <div class="cr-action">${esc(row.detail)}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // ---- Visits ----
+  if (d.visits) {
+    html += `<div class="ncaa-section">
+      <h2 class="ncaa-section-title"><span class="section-icon">🏫</span>Campus <span>Visits</span></h2>
+      <div class="rules-grid">
+        <div class="rule-card"><div class="rule-card-title" style="color:#50c878">✈️ Official Visit</div><div class="rule-card-text">${esc(d.visits.official)}</div></div>
+        <div class="rule-card"><div class="rule-card-title" style="color:#4a90d9">🚗 Unofficial Visit</div><div class="rule-card-text">${esc(d.visits.unofficial)}</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ---- Key Rules ----
+  if (d.keyRules && d.keyRules.length) {
+    html += `<div class="ncaa-section">
+      <h2 class="ncaa-section-title"><span class="section-icon">📋</span>Key <span>Rules</span></h2>
+      <div class="rules-grid">`;
+    d.keyRules.forEach(function(r) {
+      html += `<div class="rule-card"><div class="rule-card-title">${esc(r.title)}</div><div class="rule-card-text">${esc(r.text)}</div></div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // ---- Timeline (FBS only) ----
+  if (d.timeline && d.timeline.length) {
+    html += `<div class="ncaa-section">
+      <h2 class="ncaa-section-title"><span class="section-icon">⏱️</span>Recruiting <span>Timeline</span></h2>
+      <div class="timeline">`;
+    d.timeline.forEach(function(t) {
+      html += `<div class="tl-item">
+        <div class="tl-dot" style="background:${t.color}22;border-color:${t.color};color:${t.textColor}">${esc(t.dot)}</div>
+        <div class="tl-content">
+          <div class="tl-title">${esc(t.label)}</div>
+          <div class="tl-desc">${esc(t.desc)}</div>
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // ---- CTA ----
+  html += `<div class="ncaa-cta">
+    <h3>Have Questions? Ask Our AI</h3>
+    <p>Our AI recruiting assistant knows these rules inside and out. Ask it anything about contact periods, visits, commitments, or how to navigate your specific situation.</p>
+    <div class="ncaa-cta-btns">
+      <a href="chat.html" class="ncaa-cta-btn primary">Ask the AI Assistant →</a>
+      <a href="recruits.html" class="ncaa-cta-btn outline">Back to Top Prospects</a>
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+function esc(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+
+document.addEventListener('DOMContentLoaded', renderContent);
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

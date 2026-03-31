@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Combine Evaluator</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+    .ce-wrap {
+      display: flex;
+      height: calc(100vh - var(--nav-height));
+      margin-top: var(--nav-height);
+    }
+
+    /* Info panel */
+    .ce-info {
+      width: 320px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-color);
+      background: linear-gradient(180deg, rgba(74,144,217,0.07) 0%, var(--bg-secondary) 40%);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: var(--space-xl) var(--space-lg);
+    }
+
+    .ce-eyebrow { font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; color:#4a90d9; margin-bottom:8px; }
+    .ce-title { font-family:var(--font-display); font-size:2.2rem; letter-spacing:0.04em; color:var(--text-primary); margin-bottom:10px; line-height:1; }
+    .ce-title span { color:#4a90d9; }
+    .ce-desc { font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:var(--space-lg); }
+
+    .ce-grades { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:var(--space-lg); }
+    .ce-grade-pill { padding:8px 10px; border-radius:var(--radius-sm); border:1px solid var(--border-color); text-align:center; }
+    .ce-grade-letter { font-family:var(--font-display); font-size:1.3rem; line-height:1; }
+    .ce-grade-desc { font-size:0.65rem; color:var(--text-muted); margin-top:2px; }
+
+    .ce-stats { display:flex; flex-direction:column; gap:6px; margin-bottom:var(--space-lg); }
+    .ce-stat { display:flex; align-items:center; gap:10px; padding:9px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:var(--radius-sm); font-size:0.8rem; color:var(--text-secondary); }
+    .ce-stat-icon { font-size:1rem; flex-shrink:0; }
+    .ce-stat strong { color:var(--text-primary); display:block; font-size:0.82rem; margin-bottom:1px; }
+
+    .ce-tip { background:rgba(74,144,217,0.08); border:1px solid rgba(74,144,217,0.2); border-radius:var(--radius-md); padding:var(--space-md); margin-bottom:var(--space-lg); font-size:0.8rem; color:#6aadea; line-height:1.5; }
+    .ce-tip strong { display:block; margin-bottom:4px; color:#4a90d9; }
+
+    .ce-reset { margin-top:auto; padding-top:var(--space-lg); }
+    .ce-reset-btn { width:100%; padding:9px; font-size:0.78rem; font-family:var(--font-body); font-weight:600; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--text-muted); cursor:pointer; transition:all 0.15s; text-transform:uppercase; letter-spacing:0.05em; }
+    .ce-reset-btn:hover { color:var(--text-primary); border-color:var(--border-hover); }
+
+    /* Chat area */
+    .ce-chat { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    #ceContainer { flex:1; overflow:hidden; }
+
+    @media(max-width:768px){
+      .ce-info { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<div class="ce-wrap">
+  <!-- Info panel -->
+  <div class="ce-info">
+    <div class="ce-eyebrow">Free Athlete Tool</div>
+    <div class="ce-title">Combine <span>Evaluator</span></div>
+    <p class="ce-desc">Our AI evaluates your combine stats against real position benchmarks — grades every measurable and builds a training plan for what to improve before your next camp.</p>
+
+    <div class="ce-grades">
+      <div class="ce-grade-pill"><div class="ce-grade-letter" style="color:#FFD700">A+</div><div class="ce-grade-desc">Elite</div></div>
+      <div class="ce-grade-pill"><div class="ce-grade-letter" style="color:#50c878">A</div><div class="ce-grade-desc">Very Strong</div></div>
+      <div class="ce-grade-pill"><div class="ce-grade-letter" style="color:#4a90d9">B</div><div class="ce-grade-desc">Solid</div></div>
+      <div class="ce-grade-pill"><div class="ce-grade-letter" style="color:#e8872b">C</div><div class="ce-grade-desc">Developing</div></div>
+      <div class="ce-grade-pill"><div class="ce-grade-letter" style="color:#c41e3a">D</div><div class="ce-grade-desc">Needs Work</div></div>
+      <div class="ce-grade-pill"><div class="ce-grade-letter" style="color:#888">—</div><div class="ce-grade-desc">No Data</div></div>
+    </div>
+
+    <div class="ce-stats">
+      <div class="ce-stat"><span class="ce-stat-icon">⚡</span><div><strong>Required Stats</strong>40-yard dash, vertical, broad jump</div></div>
+      <div class="ce-stat"><span class="ce-stat-icon">🔍</span><div><strong>Optional Deep Dive</strong>Shuttle, cone, bench, strength</div></div>
+      <div class="ce-stat"><span class="ce-stat-icon">🎯</span><div><strong>Position-Specific</strong>Graded vs your position group</div></div>
+      <div class="ce-stat"><span class="ce-stat-icon">📋</span><div><strong>Action Plan</strong>What to train for each weak spot</div></div>
+    </div>
+
+    <div class="ce-tip">
+      <strong>Pro tip:</strong>
+      The more stats you share, the more accurate your grade. Start with the required three — the AI will ask for more if you want a deeper look.
+    </div>
+
+    <div class="ce-reset">
+      <button class="ce-reset-btn" onclick="resetCE()">↺ Start Over</button>
+    </div>
+  </div>
+
+  <!-- AI Chat -->
+  <div class="ce-chat">
+    <div id="ceContainer"></div>
+  </div>
+</div>
+
+<script src="ai-chat.js"></script>
+<script>
+const CE_SYSTEM = `You are Camp 8's Combine Evaluator AI. Your job is to interview a high school football athlete about their combine stats and give them a detailed evaluation with grades and training advice.
+
+GRADING BENCHMARKS BY POSITION:
+
+40-Yard Dash (lower = better, in seconds):
+- QB: Elite<4.55, Good<4.70, Avg<4.85, Below≥4.85
+- RB: Elite<4.40, Good<4.52, Avg<4.62, Below≥4.62
+- WR/CB: Elite<4.38, Good<4.48, Avg<4.58, Below≥4.58
+- TE/S/LB: Elite<4.50, Good<4.62, Avg<4.75, Below≥4.75
+- DL/EDGE: Elite<4.75, Good<4.88, Avg<5.00, Below≥5.00
+- OL: Elite<4.85, Good<5.00, Avg<5.15, Below≥5.15
+
+Vertical Jump (higher = better, in inches):
+- Skill positions (WR/CB/S/RB): Elite≥40, Good≥36, Avg≥32, Below<32
+- LB/EDGE/TE/QB: Elite≥37, Good≥33, Avg≥29, Below<29
+- OL/DL: Elite≥30, Good≥26, Avg≥22, Below<22
+
+Broad Jump (higher = better, in inches):
+- Skill: Elite≥126, Good≥118, Avg≥110, Below<110
+- LB/TE/EDGE: Elite≥120, Good≥112, Avg≥104, Below<104
+- OL/DL: Elite≥108, Good≥100, Avg≥92, Below<92
+
+Shuttle 5-10-5 (lower = better):
+- Skill: Elite<4.10, Good<4.25, Avg<4.40, Below≥4.40
+- LB/TE/EDGE: Elite<4.20, Good<4.35, Avg<4.50, Below≥4.50
+- OL/DL: Elite<4.55, Good<4.70, Avg<4.85, Below≥4.85
+
+Bench Press (225 lb reps, higher = better):
+- OL/DL: Elite≥28, Good≥22, Avg≥16, Below<16
+- LB/TE: Elite≥22, Good≥17, Avg≥12, Below<12
+- Skill: Elite≥15, Good≥11, Avg≥7, Below<7
+
+GRADING SCALE: A+ (top 5%), A (top 20%), B+ (top 35%), B (average), C+ (below average), C (needs work), D (significant improvement needed)
+
+INTERVIEW FLOW — Ask one thing at a time:
+1. Position and graduation year
+2. Height and weight
+3. 40-yard dash time
+4. Vertical jump (inches)
+5. Broad jump (inches)
+6. "Want to go deeper? I can also evaluate shuttle, cone drill, and bench press for a more complete picture."
+7. Optional: shuttle, cone, bench
+8. Optional: squat/power clean, GPA, offers
+
+After collecting at least 40/vert/broad:
+- Give a letter grade for each stat with A+/A/B+/B/C+/C/D scale
+- Give an overall combined grade
+- Write a detailed paragraph about what their numbers say about them as a prospect
+- List 2-4 specific training recommendations for the weakest stats
+- Recommend they browse camps.html on the site to find upcoming camps
+
+Be specific, honest, and encouraging. Use real examples of what coaches look for.`;
+
+const CE_WELCOME = `I'm going to evaluate your combine numbers and tell you exactly where you stand at your position ⚡
+
+I'll grade you on a real scale against what coaches actually see at elite camps — and tell you precisely what to train to improve before your next one.
+
+Let's start simple. **What position do you play and what year do you graduate?**`;
+
+let ceChat = null;
+
+function initCE() {
+  const container = document.getElementById('ceContainer');
+  ceChat = CAMP8_AI.buildChatUI({
+    container,
+    system: CE_SYSTEM,
+    welcomeMsg: CE_WELCOME,
+    placeholder: 'Type your answer…',
+    accentColor: '#4a90d9',
+  });
+}
+
+function resetCE() {
+  if (ceChat) ceChat.reset();
+}
+
+document.addEventListener('DOMContentLoaded', initCE);
+</script>
+</body>
+</html>

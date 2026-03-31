@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — NIL Rating Tool</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+    .nil-rate-wrap {
+      display: flex;
+      height: calc(100vh - var(--nav-height));
+      margin-top: var(--nav-height);
+    }
+
+    /* Info panel */
+    .nil-rate-info {
+      width: 320px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-color);
+      background: linear-gradient(180deg, rgba(212,168,67,0.07) 0%, var(--bg-secondary) 40%);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: var(--space-xl) var(--space-lg);
+    }
+
+    .nri-eyebrow { font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; color:var(--gold); margin-bottom:8px; }
+    .nri-title { font-family:var(--font-display); font-size:2.2rem; letter-spacing:0.04em; color:var(--text-primary); margin-bottom:10px; line-height:1; }
+    .nri-title span { color:var(--gold); }
+    .nri-desc { font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:var(--space-lg); }
+
+    .nri-factors { display:flex; flex-direction:column; gap:8px; margin-bottom:var(--space-lg); }
+    .nri-factor { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:var(--radius-sm); }
+    .nri-factor-icon { font-size:1.1rem; flex-shrink:0; }
+    .nri-factor-text { font-size:0.8rem; color:var(--text-secondary); }
+    .nri-factor-text strong { color:var(--text-primary); display:block; font-size:0.82rem; margin-bottom:2px; }
+
+    .nri-how { background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:var(--space-md); }
+    .nri-how-title { font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold); margin-bottom:10px; }
+    .nri-how-step { display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; font-size:0.78rem; color:var(--text-secondary); line-height:1.4; }
+    .nri-how-num { width:20px; height:20px; border-radius:50%; background:var(--gold-dim); border:1px solid rgba(212,168,67,0.3); display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:800; color:var(--gold); flex-shrink:0; }
+
+    .nri-reset { margin-top:auto; padding-top:var(--space-lg); }
+    .nri-reset-btn { width:100%; padding:9px; font-size:0.78rem; font-family:var(--font-body); font-weight:600; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--text-muted); cursor:pointer; transition:all 0.15s; text-transform:uppercase; letter-spacing:0.05em; }
+    .nri-reset-btn:hover { color:var(--text-primary); border-color:var(--border-hover); }
+
+    /* Chat area */
+    .nil-rate-chat { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    #nilRateContainer { flex:1; overflow:hidden; }
+
+    @media(max-width:768px){
+      .nil-rate-info { display:none; }
+      .nil-rate-wrap { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<div class="nil-rate-wrap">
+  <!-- Info panel -->
+  <div class="nil-rate-info">
+    <div class="nri-eyebrow">Free Athlete Tool</div>
+    <div class="nri-title">NIL <span>Rating</span></div>
+    <p class="nri-desc">Our AI asks you a series of questions about your profile and delivers a score out of 100 — your estimated NIL market value — with an action plan to improve it.</p>
+
+    <div class="nri-factors">
+      <div class="nri-factor"><span class="nri-factor-icon">📍</span><div class="nri-factor-text"><strong>Location</strong>Your city and market size</div></div>
+      <div class="nri-factor"><span class="nri-factor-icon">⭐</span><div class="nri-factor-text"><strong>Star Rating</strong>247/On3/Rivals ranking</div></div>
+      <div class="nri-factor"><span class="nri-factor-icon">📱</span><div class="nri-factor-text"><strong>Social Media</strong>Reach and engagement</div></div>
+      <div class="nri-factor"><span class="nri-factor-icon">🏈</span><div class="nri-factor-text"><strong>Position</strong>Marketability by position</div></div>
+      <div class="nri-factor"><span class="nri-factor-icon">🎓</span><div class="nri-factor-text"><strong>College Offers</strong>D1 interest level</div></div>
+      <div class="nri-factor"><span class="nri-factor-icon">🏆</span><div class="nri-factor-text"><strong>Achievements</strong>Awards, media coverage</div></div>
+    </div>
+
+    <div class="nri-how">
+      <div class="nri-how-title">How It Works</div>
+      <div class="nri-how-step"><span class="nri-how-num">1</span>Answer questions about your profile</div>
+      <div class="nri-how-step"><span class="nri-how-num">2</span>More detail = more accurate score</div>
+      <div class="nri-how-step"><span class="nri-how-num">3</span>Get your score out of 100</div>
+      <div class="nri-how-step"><span class="nri-how-num">4</span>Receive your personalized action plan</div>
+    </div>
+
+    <div class="nri-reset">
+      <button class="nri-reset-btn" onclick="resetNilChat()">↺ Start Over</button>
+    </div>
+  </div>
+
+  <!-- AI Chat -->
+  <div class="nil-rate-chat">
+    <div id="nilRateContainer"></div>
+  </div>
+</div>
+
+<script src="ai-chat.js"></script>
+<script>
+const NIL_SYSTEM = `You are Camp 8's NIL Rating AI. Your job is to interview a high school football athlete and calculate their NIL market value score (0-100), then give them a detailed action plan.
+
+SCORING FRAMEWORK (100 points total):
+- Location/Market (20 pts): Major metro (ATL, Miami, Dallas, LA) = 18-20; mid-size city = 12-17; small town = 5-11
+- Star Rating (25 pts): 5-star = 23-25; 4-star = 17-22; 3-star = 10-16; unranked = 3-9
+- Social Media (20 pts): 10k+ IG followers = 18-20; 5k-10k = 13-17; 1k-5k = 7-12; under 1k = 1-6
+- Position (10 pts): QB/WR/CB = 9-10; RB/S/DE = 7-8; TE/LB/OT = 5-6; IOL/DT = 3-4
+- College Offers (15 pts): 5+ P5 offers = 13-15; 1-4 P5 offers = 9-12; G5/FCS offers = 5-8; no offers = 1-4
+- Achievements/Media (10 pts): All-State/national coverage = 8-10; regional awards = 5-7; local = 2-4
+
+INTERVIEW FLOW:
+Ask ONE question at a time. Be conversational and encouraging. Progress through these topics:
+1. Name, position, graduation year, state
+2. City they play in (market size)
+3. Star rating or national ranking
+4. College offers (D1, D2, etc.)
+5. Social media following (Instagram, TikTok, Twitter)
+6. Notable achievements (All-State, awards, media features)
+7. Any existing NIL deals or brand relationships
+
+After gathering enough info (at least 5 topics covered), calculate the score and present:
+- Score out of 100 with letter grade (90+=A+, 80+=A, 70+=B+, 60+=B, 50+=C, 40+=C-, below=D)
+- Breakdown of each category with points earned
+- Specific action items to raise their score
+- Types of brands most likely to approach them
+- Recommended next steps
+
+Keep questions short and conversational. If they give partial info, ask for more detail. If they're nervous or unsure, encourage them.`;
+
+const NIL_WELCOME = `Hey! I'm your NIL Rating AI 🏈💰
+
+I'm going to ask you a few questions about your profile and then calculate your NIL market value — a score out of 100 that shows how attractive you are to brands right now, and what it would take to improve it.
+
+The more honest and detailed you are, the more accurate your score will be.
+
+Let's start: **What's your name, position, and what year do you graduate?**`;
+
+let nilChat = null;
+
+function initNilChat() {
+  const container = document.getElementById('nilRateContainer');
+  nilChat = CAMP8_AI.buildChatUI({
+    container,
+    system: NIL_SYSTEM,
+    welcomeMsg: NIL_WELCOME,
+    placeholder: 'Answer the question above…',
+    accentColor: '#d4a843',
+  });
+}
+
+function resetNilChat() {
+  if (nilChat) nilChat.reset();
+}
+
+document.addEventListener('DOMContentLoaded', initNilChat);
+</script>
+</body>
+</html>
