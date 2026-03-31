@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Powerhouse Central</title>
+  
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { overflow-y: auto; height: auto; }
+    .main-content { position: relative; flex-shrink: 0; height: 100vh; min-height: 600px; }
+
+    /* Trophy Hero */
+    .ph-hero { position: relative; overflow: hidden; }
+    .ph-hero-img { position: absolute; inset: 0; background-size: cover; background-position: center 30%; }
+    .ph-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(8,8,16,0.75) 0%, rgba(8,8,16,0.95) 100%); }
+    .ph-hero-content { position: relative; z-index: 1; padding: var(--space-xl) var(--space-xl) var(--space-lg); }
+    .ph-eyebrow { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 8px; }
+    .ph-title { font-family: var(--font-display); font-size: clamp(2.5rem,5vw,4rem); letter-spacing: 0.04em; color: #fff; margin-bottom: 8px; }
+    .ph-title span { color: var(--gold); }
+    .ph-sub { font-size: 0.9rem; color: rgba(255,255,255,0.65); max-width: 520px; line-height: 1.6; margin-bottom: var(--space-lg); }
+
+    /* Scrolling Ticker */
+    .ph-ticker-wrap { overflow: hidden; border-top: 1px solid rgba(212,168,67,0.2); border-bottom: 1px solid rgba(212,168,67,0.2); background: rgba(212,168,67,0.05); padding: 8px 0; margin-bottom: var(--space-lg); }
+    .ph-ticker { display: flex; gap: 0; white-space: nowrap; animation: tickerScroll 40s linear infinite; }
+    .ph-ticker:hover { animation-play-state: paused; }
+    .ph-ticker-item { display: inline-flex; align-items: center; gap: 8px; padding: 0 var(--space-xl); font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); border-right: 1px solid rgba(255,255,255,0.08); }
+    .ph-ticker-item .ti-rank { font-family: var(--font-display); font-size: 1rem; color: var(--gold); min-width: 28px; }
+    .ph-ticker-item .ti-school { color: var(--text-primary); font-weight: 700; }
+    .ph-ticker-item .ti-state { padding: 1px 6px; border-radius: 100px; font-size: 0.62rem; font-weight: 800; }
+    .ph-ticker-item .ti-trophies { color: var(--gold); }
+    @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* Leaderboard Cards */
+    .ph-leaderboard { padding: 0 var(--space-xl) var(--space-xl); }
+    .ph-lb-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); flex-wrap: wrap; gap: var(--space-sm); }
+    .ph-lb-title { font-family: var(--font-display); font-size: 1.4rem; letter-spacing: 0.04em; color: var(--text-primary); }
+    .ph-lb-title span { color: var(--gold); }
+    .ph-lb-filter { display: flex; gap: 4px; }
+    .ph-lb-btn { padding: 5px 12px; font-size: 0.74rem; font-weight: 600; border: 1px solid var(--border-color); border-radius: 100px; color: var(--text-muted); background: transparent; cursor: pointer; transition: all 0.15s ease; }
+    .ph-lb-btn:hover { color: var(--text-secondary); }
+    .ph-lb-btn.active { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
+
+    .ph-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-sm); }
+    .ph-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      transition: all 0.15s ease;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-top: 3px solid;
+    }
+    .ph-card:hover { background: var(--bg-card-hover); transform: translateY(-2px); }
+    .ph-card-rank { font-family: var(--font-display); font-size: 1.5rem; color: var(--text-muted); line-height: 1; }
+    .ph-card-school { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+    .ph-card-city { font-size: 0.72rem; color: var(--text-secondary); }
+    .ph-card-state { display: inline-block; padding: 2px 7px; border-radius: 100px; font-size: 0.62rem; font-weight: 800; width: fit-content; }
+    .ph-card-trophies { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+    .ph-card-trophy-num { font-family: var(--font-display); font-size: 1.6rem; line-height: 1; }
+    .ph-card-trophy-lbl { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+    .ph-card-natl { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+
+    @media (max-width: 1200px) { .ph-cards { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 900px) { .ph-cards { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 640px) {
+      .ph-cards { grid-template-columns: 1fr 1fr; }
+      .ph-hero-content { padding: var(--space-lg) var(--space-md) var(--space-md); }
+      .ph-leaderboard { padding: 0 var(--space-md) var(--space-lg); }
+    }
+  </style>
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+</head>
+<body>
+
+<!-- Navigation -->
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<!-- Trophy Hero + Leaderboard -->
+<div class="ph-hero">
+  <div class="ph-hero-img" style="background-image:url('powerhouse-hero.jpg')"></div>
+  <div class="ph-hero-overlay"></div>
+  <div class="ph-hero-content">
+    <div class="ph-eyebrow">High School Football</div>
+    <h1 class="ph-title">Powerhouse <span>Central</span></h1>
+    <p class="ph-sub">The most dominant programs in the country — ranked by combined state and national championships across GA, FL, TX &amp; CA.</p>
+  </div>
+
+  <!-- Scrolling Ticker -->
+  <div class="ph-ticker-wrap">
+    <div class="ph-ticker" id="phTicker"><!-- populated by JS --></div>
+  </div>
+
+  <!-- Leaderboard Cards -->
+  <div class="ph-leaderboard">
+    <div class="ph-lb-header">
+      <div class="ph-lb-title">Top Programs — <span>All-Time Championships</span></div>
+      <div class="ph-lb-filter">
+        <button class="ph-lb-btn active" onclick="renderLeaderboard('all',this)">All States</button>
+        <button class="ph-lb-btn" onclick="renderLeaderboard('GA',this)">Georgia</button>
+        <button class="ph-lb-btn" onclick="renderLeaderboard('FL',this)">Florida</button>
+        <button class="ph-lb-btn" onclick="renderLeaderboard('TX',this)">Texas</button>
+        <button class="ph-lb-btn" onclick="renderLeaderboard('CA',this)">California</button>
+      </div>
+    </div>
+    <div class="ph-cards" id="phCards"><!-- populated by JS --></div>
+  </div>
+</div>
+
+<!-- Main Content (Map) -->
+<div class="main-content">
+  <!-- View Toggle -->
+  <div class="view-toggle-bar" style="position:absolute;top:0;left:0;right:0;z-index:900;height:44px;background:var(--bg-primary);border-bottom:1px solid var(--border-color);display:flex;align-items:center;padding:0 var(--space-lg);gap:var(--space-sm);">
+    <button class="view-btn active" data-view="map" onclick="phSwitchView('map',this)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+      Map View
+    </button>
+    <button class="view-btn" data-view="list" onclick="phSwitchView('list',this)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+      List View
+    </button>
+    <span style="margin-left:auto;font-size:0.72rem;color:var(--text-muted);background:rgba(255,255,255,0.04);border:1px solid var(--border-color);padding:3px 10px;border-radius:100px;" id="phCount"></span>
+  </div>
+
+  <!-- Map View -->
+  <div id="phMapView" style="position:absolute;top:44px;left:0;right:0;bottom:0;">
+    <div class="map-container">
+      <div id="map"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>Powerhouse Central</h2>
+        <p>GA · FL · TX · CA Championships</p>
+      </div>
+      <div class="sidebar-body">
+        <!-- Search -->
+        <div class="filter-group">
+          <label class="filter-label">Search School</label>
+          <input type="text" id="programSearch" class="camp-search-input" placeholder="e.g. Colquitt, Valdosta…" oninput="filterPrograms(this.value)">
+        </div>
+        <!-- State Filter -->
+        <div class="filter-group">
+          <label class="filter-label">State</label>
+          <div class="filter-buttons" id="stateFilterBtns">
+            <button class="filter-btn active" data-state="all" onclick="setStateFilter('all',this)">All</button>
+            <button class="filter-btn" data-state="GA" onclick="setStateFilter('GA',this)">GA</button>
+            <button class="filter-btn" data-state="FL" onclick="setStateFilter('FL',this)">FL</button>
+            <button class="filter-btn" data-state="TX" onclick="setStateFilter('TX',this)">TX</button>
+            <button class="filter-btn" data-state="CA" onclick="setStateFilter('CA',this)">CA</button>
+          </div>
+        </div>
+        <div class="stat-group">
+          <div class="stat-group-title">Overview</div>
+          <div class="stat-row">
+            <span class="stat-label">Total Programs</span>
+            <span class="stat-value" id="total-programs">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Total Championships</span>
+            <span class="stat-value" id="total-championships">—</span>
+          </div>
+        </div>
+        
+        <div class="stat-group">
+          <div class="stat-group-title">By Tier</div>
+          <div class="stat-row">
+            <span class="stat-label"><span class="stat-dot" style="background:#FFD700"></span> Elite (8+)</span>
+            <span class="stat-value" id="count-elite">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label"><span class="stat-dot" style="background:#c41e3a"></span> Powerhouse (5-7)</span>
+            <span class="stat-value" id="count-powerhouse">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label"><span class="stat-dot" style="background:#e8872b"></span> Contender (3-4)</span>
+            <span class="stat-value" id="count-contender">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label"><span class="stat-dot" style="background:#4a90d9"></span> Playoff Regular (1-2)</span>
+            <span class="stat-value" id="count-playoff">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label"><span class="stat-dot" style="background:#666"></span> Developing (0)</span>
+            <span class="stat-value" id="count-developing">—</span>
+          </div>
+        </div>
+
+        <div class="stat-group">
+          <div class="stat-group-title">Top Programs</div>
+          <div id="top-programs"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Legend -->
+    <div class="legend">
+      <h4>Legend</h4>
+      <div class="legend-item">
+        <span class="legend-circle" style="width:18px;height:18px;background:rgba(255,215,0,0.5);"></span>
+        Elite (8+ titles)
+      </div>
+      <div class="legend-item">
+        <span class="legend-circle" style="width:15px;height:15px;background:rgba(196,30,58,0.5);"></span>
+        Powerhouse (5-7)
+      </div>
+      <div class="legend-item">
+        <span class="legend-circle" style="width:12px;height:12px;background:rgba(232,135,43,0.5);"></span>
+        Contender (3-4)
+      </div>
+      <div class="legend-item">
+        <span class="legend-circle" style="width:10px;height:10px;background:rgba(74,144,217,0.5);"></span>
+        Playoff Regular (1-2)
+      </div>
+      <div class="legend-item">
+        <span class="legend-circle" style="width:7px;height:7px;background:rgba(102,102,102,0.5);"></span>
+        Developing (0)
+      </div>
+    </div>
+  </div>
+    </div><!-- end map-container -->
+  </div><!-- end phMapView -->
+
+  <!-- List View -->
+  <div id="phListView" style="display:none;position:absolute;top:44px;left:0;right:0;bottom:0;background:var(--bg-primary);overflow:hidden;flex-direction:column;">
+    <div style="padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--border-color);display:flex;gap:var(--space-sm);flex-wrap:wrap;align-items:center;background:var(--bg-secondary);">
+      <div class="filter-pill-group" id="phListStateFilter" style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="filter-btn active" onclick="phListFilterState('all',this)">All</button>
+        <button class="filter-btn" onclick="phListFilterState('GA',this)">Georgia</button>
+        <button class="filter-btn" onclick="phListFilterState('FL',this)">Florida</button>
+        <button class="filter-btn" onclick="phListFilterState('TX',this)">Texas</button>
+        <button class="filter-btn" onclick="phListFilterState('CA',this)">California</button>
+      </div>
+      <input type="text" class="camp-search-input" id="phListSearch" placeholder="Search school or city…" oninput="renderPhList()" style="min-width:180px;flex:1;">
+    </div>
+    <div style="flex:1;overflow-y:auto;">
+      <table class="data-table" id="phListTable">
+        <thead>
+          <tr>
+            <th onclick="sortPhList('school')">School</th>
+            <th onclick="sortPhList('city')">City</th>
+            <th onclick="sortPhList('state')">State</th>
+            <th onclick="sortPhList('classification')">Class</th>
+            <th onclick="sortPhList('titles')">Titles</th>
+            <th>MaxPreps</th>
+          </tr>
+        </thead>
+        <tbody id="phListBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+var _stateFilter = 'all';
+var _phListState = 'all';
+var _phListSort  = { field: 'titles', asc: false };
+
+// ---- Map view switch ----
+window.phSwitchView = function(view, btn) {
+  document.querySelectorAll('.view-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  var mapV  = document.getElementById('phMapView');
+  var listV = document.getElementById('phListView');
+  if (view === 'map') {
+    mapV.style.display  = '';
+    listV.style.display = 'none';
+  } else {
+    mapV.style.display  = 'none';
+    listV.style.display = 'flex';
+    renderPhList();
+  }
+};
+
+// ---- List state filter ----
+window.phListFilterState = function(state, btn) {
+  _phListState = state;
+  document.querySelectorAll('#phListStateFilter .filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderPhList();
+};
+
+// ---- MaxPreps URL builder ----
+function maxprepsUrl(school, city, state) {
+  var slug = (school + '-' + city + '-' + state)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-');
+  return 'https://www.maxpreps.com/search/default.aspx?search=' + encodeURIComponent(school + ' ' + city + ' ' + state) + '&sport=football';
+}
+
+// ---- Render list ----
+window.renderPhList = function() {
+  if (typeof PROGRAMS === 'undefined') return;
+  var q = (document.getElementById('phListSearch').value || '').toLowerCase();
+  var data = PROGRAMS.filter(function(p) {
+    if (_phListState !== 'all' && p.state !== _phListState) return false;
+    if (q && ![p.school, p.city, p.state, p.classification].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  data.sort(function(a, b) {
+    var av = a[_phListSort.field], bv = b[_phListSort.field];
+    if (typeof av === 'string') return _phListSort.asc ? av.localeCompare(bv) : bv.localeCompare(av);
+    return _phListSort.asc ? av - bv : bv - av;
+  });
+
+  var countEl = document.getElementById('phCount');
+  if (countEl) countEl.textContent = data.length + ' programs';
+
+  var TIER_COLORS = function(titles) {
+    if (titles >= 8)  return '#FFD700';
+    if (titles >= 5)  return '#c41e3a';
+    if (titles >= 3)  return '#e8872b';
+    if (titles >= 1)  return '#4a90d9';
+    return '#666';
+  };
+
+  var STATE_COLORS = { GA:'#4caf50', FL:'#2196f3', TX:'#f44336', CA:'#ff9800' };
+
+  var tbody = document.getElementById('phListBody');
+  tbody.innerHTML = '';
+  data.forEach(function(p) {
+    var tc  = TIER_COLORS(p.titles);
+    var stc = STATE_COLORS[p.state] || '#888';
+    var mpUrl = maxprepsUrl(p.school, p.city, p.state);
+    var tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.innerHTML =
+      '<td style="font-weight:700;color:' + tc + '">' + esc(p.school) + '</td>' +
+      '<td>' + esc(p.city) + '</td>' +
+      '<td><span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:0.68rem;font-weight:700;background:' + stc + '22;color:' + stc + '">' + esc(p.state) + '</span></td>' +
+      '<td>' + esc(p.classification || '—') + '</td>' +
+      '<td style="font-weight:700;color:' + tc + '">' + p.titles + '</td>' +
+      '<td><a href="' + mpUrl + '" target="_blank" rel="noopener" class="profile-link" onclick="event.stopPropagation()">MaxPreps →</a></td>';
+    tbody.appendChild(tr);
+  });
+};
+
+window.sortPhList = function(field) {
+  if (_phListSort.field === field) _phListSort.asc = !_phListSort.asc;
+  else { _phListSort.field = field; _phListSort.asc = true; }
+  renderPhList();
+};
+
+function esc(s) { var d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
+
+// ---- Map filter (existing) ----
+window.filterPrograms = function(query) {
+  var q = (query || '').toLowerCase().trim();
+  if (typeof markers === 'undefined') return;
+  markers.forEach(function(m) {
+    var p = m.program;
+    var stateMatch = _stateFilter === 'all' || (p.state && p.state === _stateFilter);
+    var nameMatch  = !q || p.school.toLowerCase().includes(q) || p.city.toLowerCase().includes(q);
+    if (stateMatch && nameMatch) {
+      if (!map.hasLayer(m.marker)) m.marker.addTo(map);
+    } else {
+      if (map.hasLayer(m.marker)) map.removeLayer(m.marker);
+    }
+  });
+};
+
+window.setStateFilter = function(state, btn) {
+  _stateFilter = state;
+  document.querySelectorAll('#stateFilterBtns .filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  filterPrograms(document.getElementById('programSearch').value);
+};
+</script>
+<script src="shared.js"></script>
+<script src="programs-data.js"></script>
+<script src="programs-map.js"></script>
+<script>
+// ============================================
+// NATIONAL CHAMPIONSHIP DATA (curated)
+// Sources: Wikipedia / MaxPreps all-time records
+// ============================================
+var NATIONAL_TITLES = {
+  'Valdosta HS':       { titles: 6,  note: '6 national titles (1969,71,84,85,2002,2012)' },
+  'De La Salle HS':    { titles: 4,  note: '4 USA Today national titles' },
+  'Mater Dei HS':      { titles: 3,  note: '3 MaxPreps national titles' },
+  'St. Thomas Aquinas':{ titles: 3,  note: '3 USA Today national titles' },
+  'Buford HS':         { titles: 1,  note: '2012 MaxPreps national title' },
+  'Allen HS':          { titles: 2,  note: '2012, 2023 national recognition' },
+  'IMG Academy':       { titles: 3,  note: '3 MaxPreps national titles' },
+  'Bishop Gorman HS':  { titles: 5,  note: '5 USA Today national titles' }, // NV — included as nationally recognized
+};
+
+var STATE_COLORS = { GA:'#4caf50', FL:'#2196f3', TX:'#f44336', CA:'#ff9800' };
+
+// Build combined rankings: state titles + national titles
+function buildRankings(stateFilter) {
+  if (typeof PROGRAMS === 'undefined') return [];
+
+  var ranked = PROGRAMS
+    .filter(function(p) {
+      return stateFilter === 'all' || p.state === stateFilter;
+    })
+    .map(function(p) {
+      var natl = NATIONAL_TITLES[p.school] || { titles: 0, note: '' };
+      return {
+        school: p.school,
+        city: p.city,
+        state: p.state,
+        stateTitles: p.titles,
+        natlTitles: natl.titles,
+        natlNote: natl.note,
+        total: p.titles + natl.titles,
+        classification: p.classification || '',
+        lat: p.lat,
+        lng: p.lng
+      };
+    })
+    .sort(function(a, b) { return b.total - a.total; });
+
+  return ranked;
+}
+
+function tierColor(total) {
+  if (total >= 15) return '#FFD700';
+  if (total >= 8)  return '#c41e3a';
+  if (total >= 4)  return '#e8872b';
+  if (total >= 2)  return '#4a90d9';
+  return '#666';
+}
+
+// ---- LEADERBOARD CARDS ----
+var _lbState = 'all';
+
+window.renderLeaderboard = function(state, btn) {
+  _lbState = state;
+  if (btn) {
+    document.querySelectorAll('.ph-lb-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+  }
+
+  var data = buildRankings(state).slice(0, 10);
+  var container = document.getElementById('phCards');
+  if (!container) return;
+  container.innerHTML = '';
+
+  data.forEach(function(p, i) {
+    var color = tierColor(p.total);
+    var sc = STATE_COLORS[p.state] || '#888';
+    var mpUrl = 'https://www.maxpreps.com/search/default.aspx?search=' +
+      encodeURIComponent(p.school + ' ' + p.city + ' ' + p.state) + '&sport=football';
+
+    var card = document.createElement('a');
+    card.className = 'ph-card';
+    card.href = mpUrl;
+    card.target = '_blank';
+    card.rel = 'noopener';
+    card.style.borderTopColor = color;
+    card.innerHTML =
+      '<div class="ph-card-rank">' + (i + 1) + '</div>' +
+      '<div class="ph-card-school">' + esc(p.school) + '</div>' +
+      '<div class="ph-card-city">' + esc(p.city) + '</div>' +
+      '<div class="ph-card-state" style="background:' + sc + '22;color:' + sc + '">' + esc(p.state) + '</div>' +
+      '<div class="ph-card-trophies">' +
+        '<span class="ph-card-trophy-num" style="color:' + color + '">🏆 ' + p.total + '</span>' +
+        '<div><div class="ph-card-trophy-lbl">Total Titles</div></div>' +
+      '</div>' +
+      '<div class="ph-card-natl">State: ' + p.stateTitles +
+        (p.natlTitles ? ' &nbsp;|&nbsp; National: <span style="color:' + color + '">' + p.natlTitles + '</span>' : '') +
+      '</div>';
+
+    card.addEventListener('click', function(e) {
+      // If map is visible, also fly to it
+      if (typeof map !== 'undefined' && p.lat && p.lng) {
+        e.preventDefault();
+        var mapSection = document.querySelector('.main-content');
+        if (mapSection) mapSection.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(function() {
+          map.setView([p.lat, p.lng], 12);
+        }, 500);
+      }
+    });
+
+    container.appendChild(card);
+  });
+};
+
+// ---- TICKER ----
+function buildTicker() {
+  var data = buildRankings('all').slice(0, 25);
+  var ticker = document.getElementById('phTicker');
+  if (!ticker) return;
+
+  // Build ticker items (doubled for seamless loop)
+  var html = '';
+  [data, data].forEach(function(set) {
+    set.forEach(function(p, i) {
+      var color = tierColor(p.total);
+      var sc = STATE_COLORS[p.state] || '#888';
+      html +=
+        '<div class="ph-ticker-item">' +
+          '<span class="ti-rank">' + (i + 1) + '</span>' +
+          '<span class="ti-school">' + esc(p.school) + '</span>' +
+          '<span class="ti-state" style="background:' + sc + '22;color:' + sc + '">' + esc(p.state) + '</span>' +
+          '<span class="ti-trophies" style="color:' + color + '">🏆 ' + p.total + '</span>' +
+        '</div>';
+    });
+  });
+  ticker.innerHTML = html;
+
+  // Adjust animation speed to content width
+  var itemWidth = 200; // approx px per item
+  var duration = data.length * 2.5; // seconds
+  ticker.style.animationDuration = duration + 's';
+}
+
+function esc(s) {
+  var d = document.createElement('div');
+  d.textContent = String(s || '');
+  return d.innerHTML;
+}
+
+// ---- BOOT ----
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof PROGRAMS !== 'undefined') {
+    renderLeaderboard('all', null);
+    buildTicker();
+  }
+});
+</script>
+<script data-pplx-inline-edit>
+(function(){
+  if(window===window.top)return;
+  function inlineAll(orig,clone){
+    if(orig.nodeType!==1)return;
+    try{
+      var cs=getComputedStyle(orig);
+      var t='';
+      for(var i=0;i<cs.length;i++){t+=cs[i]+':'+cs.getPropertyValue(cs[i])+';';}
+      clone.style.cssText=t;
+    }catch(e){}
+    var oc=orig.children,cc=clone.children;
+    for(var j=0;j<oc.length&&j<cc.length;j++){inlineAll(oc[j],cc[j]);}
+  }
+  function stripExternal(clone){
+    var imgs=clone.querySelectorAll('img');
+    for(var i=0;i<imgs.length;i++){
+      var s=imgs[i].getAttribute('src');
+      if(s&&!s.startsWith('data:'))imgs[i].removeAttribute('src');
+    }
+    var all=clone.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var st=all[i].style.cssText;
+      if(st&&st.indexOf('url(')>=0){
+        all[i].style.cssText=st.replace(/url\(["']?(?!data:)[^)"']*["']?\)/gi,'none');
+      }
+    }
+  }
+  window.addEventListener('message',function(e){
+    if(!e.data||e.data.type!=='INLINE_EDIT_CAPTURE_REQUEST')return;
+    var scrollX=window.scrollX||window.pageXOffset||0;
+    var scrollY=window.scrollY||window.pageYOffset||0;
+    var w=window.innerWidth,h=window.innerHeight;
+    try{
+      var clone=document.documentElement.cloneNode(true);
+      var rm=clone.querySelectorAll('script,link[rel="stylesheet"],style');
+      for(var i=0;i<rm.length;i++){rm[i].remove();}
+      inlineAll(document.documentElement,clone);
+      stripExternal(clone);
+      var html=new XMLSerializer().serializeToString(clone);
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
+        +'<foreignObject width="100%" height="100%">'
+        +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px;overflow:hidden">'
+        +'<div style="transform:translate(-'+scrollX+'px,-'+scrollY+'px);transform-origin:top left">'
+        +html+'</div></div></foreignObject></svg>';
+      var svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0);
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:c.toDataURL('image/png'),scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.onerror=function(){
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.src=svgUrl;
+    }catch(err){
+      window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+    }
+  });
+})();
+</script></body>
+</html>
