@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — NIL Rating Tool</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="nil-styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+</head>
+<body class="nil-page">
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<!-- Tool Header -->
+<div class="nil-header" style="padding-bottom:0">
+  <div class="nil-header-inner" style="padding-bottom:var(--space-lg)">
+    <div class="nil-header-text">
+      <div class="nil-eyebrow">NIL Central</div>
+      <h1 class="nil-title">NIL <span>Rating Tool</span></h1>
+      <p class="nil-subtitle">Enter your profile to get a personalized NIL attractiveness score and action plan for camps, exposure, and your scholarship path.</p>
+    </div>
+    <a href="nil-central.html" class="back-to-nil">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to NIL Central
+    </a>
+  </div>
+</div>
+
+<!-- Main Tool -->
+<div class="rating-tool-wrap">
+
+  <!-- FORM -->
+  <div class="rating-form-panel" id="formPanel">
+    <h2 class="form-section-title">Your Profile</h2>
+
+    <div class="form-grid">
+      <!-- Name -->
+      <div class="form-group full-width">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" id="f_name" placeholder="e.g. Marcus Johnson">
+      </div>
+
+      <!-- State -->
+      <div class="form-group">
+        <label class="form-label">State <span class="req">*</span></label>
+        <select class="form-input" id="f_state">
+          <option value="">Select state…</option>
+          <option value="GA">Georgia</option>
+          <option value="FL">Florida</option>
+          <option value="TX">Texas</option>
+          <option value="CA">California</option>
+        </select>
+      </div>
+
+      <!-- City -->
+      <div class="form-group">
+        <label class="form-label">City <span class="req">*</span></label>
+        <input type="text" class="form-input" id="f_city" placeholder="e.g. Atlanta">
+      </div>
+
+      <!-- School -->
+      <div class="form-group">
+        <label class="form-label">High School <span class="req">*</span></label>
+        <input type="text" class="form-input" id="f_school" placeholder="e.g. Grayson HS">
+      </div>
+
+      <!-- Position -->
+      <div class="form-group">
+        <label class="form-label">Position <span class="req">*</span></label>
+        <select class="form-input" id="f_pos">
+          <option value="">Select position…</option>
+          <option value="QB">QB — Quarterback</option>
+          <option value="RB">RB — Running Back</option>
+          <option value="WR">WR — Wide Receiver</option>
+          <option value="TE">TE — Tight End</option>
+          <option value="OT">OT — Offensive Tackle</option>
+          <option value="IOL">IOL — Interior O-Line</option>
+          <option value="DL">DL — Defensive Line</option>
+          <option value="EDGE">EDGE — Edge Rusher</option>
+          <option value="LB">LB — Linebacker</option>
+          <option value="CB">CB — Cornerback</option>
+          <option value="S">S — Safety</option>
+          <option value="ATH">ATH — Athlete</option>
+          <option value="K">K — Kicker</option>
+          <option value="P">P — Punter</option>
+        </select>
+      </div>
+
+      <!-- Class Year -->
+      <div class="form-group">
+        <label class="form-label">Class Year <span class="req">*</span></label>
+        <select class="form-input" id="f_year">
+          <option value="">Select year…</option>
+          <option value="2026">Class of 2026</option>
+          <option value="2027">Class of 2027</option>
+          <option value="2028">Class of 2028</option>
+          <option value="2029">Class of 2029</option>
+        </select>
+      </div>
+
+      <!-- Star Rating -->
+      <div class="form-group">
+        <label class="form-label">Recruiting Star Rating</label>
+        <select class="form-input" id="f_stars">
+          <option value="0">Unranked / No rating yet</option>
+          <option value="3">3-Star</option>
+          <option value="4">4-Star</option>
+          <option value="5">5-Star</option>
+        </select>
+      </div>
+
+      <!-- GPA -->
+      <div class="form-group">
+        <label class="form-label">GPA (approx.)</label>
+        <select class="form-input" id="f_gpa">
+          <option value="4">4.0 — Dean's List</option>
+          <option value="3.5">3.5 – 3.9</option>
+          <option value="3">3.0 – 3.4</option>
+          <option value="2.5">2.5 – 2.9</option>
+          <option value="2">Below 2.5</option>
+        </select>
+      </div>
+
+      <!-- Hudl Profile -->
+      <div class="form-group">
+        <label class="form-label">Hudl Profile</label>
+        <select class="form-input" id="f_hudl">
+          <option value="full">Full highlights uploaded &amp; public</option>
+          <option value="partial">Partial / some highlights</option>
+          <option value="none">No Hudl profile yet</option>
+        </select>
+      </div>
+
+      <!-- Instagram -->
+      <div class="form-group">
+        <label class="form-label">Instagram Followers</label>
+        <select class="form-input" id="f_ig">
+          <option value="0">None / No account</option>
+          <option value="500">Under 1,000</option>
+          <option value="2500">1,000 – 4,999</option>
+          <option value="7500">5,000 – 9,999</option>
+          <option value="15000">10,000 – 24,999</option>
+          <option value="40000">25,000 – 74,999</option>
+          <option value="100000">75,000+</option>
+        </select>
+      </div>
+
+      <!-- TikTok -->
+      <div class="form-group">
+        <label class="form-label">TikTok Followers</label>
+        <select class="form-input" id="f_tiktok">
+          <option value="0">None / No account</option>
+          <option value="500">Under 1,000</option>
+          <option value="2500">1,000 – 4,999</option>
+          <option value="7500">5,000 – 9,999</option>
+          <option value="15000">10,000 – 24,999</option>
+          <option value="40000">25,000 – 74,999</option>
+          <option value="100000">75,000+</option>
+        </select>
+      </div>
+
+      <!-- Twitter/X -->
+      <div class="form-group">
+        <label class="form-label">Twitter / X Followers</label>
+        <select class="form-input" id="f_twitter">
+          <option value="0">None / No account</option>
+          <option value="500">Under 1,000</option>
+          <option value="2500">1,000 – 4,999</option>
+          <option value="7500">5,000 – 9,999</option>
+          <option value="15000">10,000+</option>
+        </select>
+      </div>
+
+      <!-- Offers -->
+      <div class="form-group">
+        <label class="form-label">College Offers</label>
+        <select class="form-input" id="f_offers">
+          <option value="0">No offers yet</option>
+          <option value="1">1 – 3 offers</option>
+          <option value="2">4 – 9 offers</option>
+          <option value="3">10 – 19 offers</option>
+          <option value="4">20+ offers</option>
+        </select>
+      </div>
+
+      <!-- Camps Attended -->
+      <div class="form-group">
+        <label class="form-label">Elite Camps Attended</label>
+        <select class="form-input" id="f_camps">
+          <option value="0">None yet</option>
+          <option value="1">1 – 2 camps</option>
+          <option value="2">3 – 5 camps</option>
+          <option value="3">6+ elite camps</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="rating-submit-btn" onclick="calculateRating()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Calculate My NIL Rating
+    </button>
+    <div class="form-error" id="formError" style="display:none">Please fill in all required fields (marked with *)</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="rating-results-panel" id="resultsPanel" style="display:none">
+
+    <!-- Score Header -->
+    <div class="results-header">
+      <div class="score-ring-wrap">
+        <svg class="score-ring" viewBox="0 0 120 120" width="120" height="120">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--gold)" stroke-width="10"
+            stroke-dasharray="326.7" stroke-dashoffset="326.7"
+            stroke-linecap="round" id="scoreArc"
+            transform="rotate(-90 60 60)"/>
+        </svg>
+        <div class="score-inner">
+          <div class="score-number" id="scoreNumber">0</div>
+          <div class="score-label">/ 100</div>
+        </div>
+      </div>
+      <div class="results-header-text">
+        <div class="results-name" id="resultsName">Your NIL Rating</div>
+        <div class="results-tier" id="resultsTier"></div>
+        <div class="results-summary" id="resultsSummary"></div>
+      </div>
+    </div>
+
+    <!-- Factor Breakdown -->
+    <div class="factors-grid" id="factorsGrid"></div>
+
+    <!-- Action Plan -->
+    <div class="action-plan">
+      <h3 class="action-plan-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Your Action Plan
+      </h3>
+      <div class="action-steps" id="actionSteps"></div>
+    </div>
+
+    <!-- Recommended Camps -->
+    <div class="rec-camps-section">
+      <h3 class="action-plan-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Recommended Camps For You
+      </h3>
+      <p class="rec-camps-note">Based on your state, class year, and rating — camps from our database most relevant to your profile.</p>
+      <div class="rec-camps-list" id="recCampsList"></div>
+      <a href="camps.html" class="rec-camps-cta">Browse All 755 Camps →</a>
+    </div>
+
+    <!-- Reset -->
+    <button class="rating-reset-btn" onclick="resetTool()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+      Re-calculate with different info
+    </button>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a href="index.html" class="footer-brand">Camp <span>8</span></a>
+    <div class="footer-links">
+      <a href="nil-central.html">NIL Central</a>
+      <a href="camps.html">Prospect Camps</a>
+      <a href="recruits.html">Recruiting Central</a>
+      <a href="powerhouse.html">Powerhouse Central</a>
+    </div>
+    <a href="https://www.instagram.com/n.i.l.me" target="_blank" rel="noopener" class="ig-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+      @n.i.l.me
+    </a>
+  </div>
+</footer>
+
+<script src="camps-data.js"></script>
+<script>
+// ============================================
+// NIL RATING ALGORITHM
+// ============================================
+
+// Market scores by city (bigger market + less competition = higher score)
+const CITY_MARKETS = {
+  // GA
+  'atlanta':12,'marietta':9,'athens':8,'savannah':8,'augusta':7,'columbus':7,
+  'gainesville':7,'macon':6,'valdosta':6,'brunswick':5,'carrollton':5,
+  // FL
+  'miami':14,'orlando':12,'tampa':12,'jacksonville':10,'fort lauderdale':11,
+  'hollywood':10,'plantation':10,'bradenton':8,'gainesville':8,'lakeland':7,
+  'venice':6,'vero beach':6,
+  // TX
+  'houston':14,'dallas':14,'austin':12,'san antonio':11,'fort worth':10,
+  'arlington':9,'plano':9,'frisco':9,'allen':8,'celina':7,'duncanville':8,
+  'conroe':7,'katy':8,'longview':6,'denton':8,
+  // CA
+  'los angeles':15,'san francisco':13,'san diego':12,'sacramento':10,
+  'santa ana':10,'bellflower':9,'gardena':9,'long beach':10,'concord':8,
+  'folsom':8,'mission viejo':8,'mission hills':8,'westlake village':8,
+};
+
+// How "crowded" each state is with top prospects (more competition = lower location score)
+const STATE_COMPETITION = { GA: 0.9, FL: 0.85, TX: 0.8, CA: 0.85 };
+
+// Position NIL marketability (QBs and skill positions get more attention)
+const POS_MARKETABILITY = {
+  QB:20, WR:18, RB:16, CB:15, S:14, EDGE:14, LB:13, ATH:13,
+  TE:12, DL:12, OT:10, IOL:9, K:7, P:6
+};
+
+function calculateRating() {
+  const state    = document.getElementById('f_state').value;
+  const city     = document.getElementById('f_city').value.trim();
+  const school   = document.getElementById('f_school').value.trim();
+  const pos      = document.getElementById('f_pos').value;
+  const year     = document.getElementById('f_year').value;
+  const stars    = parseInt(document.getElementById('f_stars').value) || 0;
+  const gpa      = parseFloat(document.getElementById('f_gpa').value) || 3;
+  const hudl     = document.getElementById('f_hudl').value;
+  const ig       = parseInt(document.getElementById('f_ig').value) || 0;
+  const tiktok   = parseInt(document.getElementById('f_tiktok').value) || 0;
+  const twitter  = parseInt(document.getElementById('f_twitter').value) || 0;
+  const offers   = parseInt(document.getElementById('f_offers').value) || 0;
+  const camps    = parseInt(document.getElementById('f_camps').value) || 0;
+  const name     = document.getElementById('f_name').value.trim() || 'Athlete';
+
+  if (!state || !city || !school || !pos || !year) {
+    document.getElementById('formError').style.display = 'block';
+    return;
+  }
+  document.getElementById('formError').style.display = 'none';
+
+  // ---- FACTOR 1: LOCATION (0–20) ----
+  const cityKey = city.toLowerCase();
+  const cityBase = CITY_MARKETS[cityKey] || 5;
+  const compFactor = STATE_COMPETITION[state] || 0.85;
+  const locationScore = Math.round(Math.min(20, cityBase * compFactor));
+
+  // ---- FACTOR 2: SCHOOL (0–10) ----
+  // Schools in bigger cities with better programs score higher
+  const schoolScore = locationScore >= 10 ? 9 : locationScore >= 7 ? 7 : locationScore >= 5 ? 5 : 3;
+
+  // ---- FACTOR 3: RECRUITING STARS (0–25) ----
+  const starScore = [0,2,5,15,20,25][Math.min(stars,5)];
+
+  // ---- FACTOR 4: POSITION MARKETABILITY (0–20) ----
+  const posScore = Math.round((POS_MARKETABILITY[pos] || 10) / 20 * 20);
+
+  // ---- FACTOR 5: SOCIAL MEDIA (0–15) ----
+  const totalFollowers = ig + tiktok * 0.8 + twitter * 0.6;
+  let socialScore = 0;
+  if (totalFollowers >= 100000) socialScore = 15;
+  else if (totalFollowers >= 40000) socialScore = 12;
+  else if (totalFollowers >= 15000) socialScore = 9;
+  else if (totalFollowers >= 5000)  socialScore = 6;
+  else if (totalFollowers >= 1000)  socialScore = 3;
+  else socialScore = 1;
+
+  // ---- FACTOR 6: EXPOSURE (0–10) ----
+  let exposureScore = 0;
+  if (hudl === 'full')    exposureScore += 4;
+  else if (hudl === 'partial') exposureScore += 2;
+  exposureScore += Math.min(3, offers);
+  exposureScore += Math.min(3, camps);
+
+  // ---- TOTAL ----
+  const total = Math.min(100, locationScore + schoolScore + starScore + posScore + socialScore + exposureScore);
+
+  // ---- TIER ----
+  let tier, tierColor, summary;
+  if (total >= 80) {
+    tier = '🏆 Elite NIL Prospect'; tierColor = '#FFD700';
+    summary = 'You are in prime position to attract meaningful NIL deals. Brands actively look for athletes at your visibility level. Focus on locking in quality deals that align with your personal brand.';
+  } else if (total >= 65) {
+    tier = '🔥 High-Value Prospect'; tierColor = '#e8872b';
+    summary = 'Strong NIL potential. You have the profile to attract local and regional brand partnerships. A few targeted improvements could push you into elite territory.';
+  } else if (total >= 45) {
+    tier = '📈 Emerging Prospect'; tierColor = '#4a90d9';
+    summary = 'You\'re on the right track. Growing your social media presence and attending higher-profile camps will significantly increase your NIL attractiveness over the next 6–12 months.';
+  } else if (total >= 25) {
+    tier = '🌱 Building Your Brand'; tierColor = '#50c878';
+    summary = 'You\'re early in the process. The action plan below gives you a clear roadmap to build your profile. Focus on the fundamentals — film, social media, and camp exposure.';
+  } else {
+    tier = '🎯 Starting Your Journey'; tierColor = '#888';
+    summary = 'Everyone starts somewhere. The plan below will walk you through the exact steps to build an NIL-ready profile from the ground up.';
+  }
+
+  // ---- ACTION STEPS ----
+  const steps = [];
+
+  if (!stars || stars < 3) steps.push({ priority: 'high', icon: '⭐', title: 'Get Ranked', text: 'Submit your profile to 247Sports, On3, and Rivals. Attend a combine or showcase to get evaluated. A star rating dramatically increases your NIL market value.' });
+  if (hudl !== 'full') steps.push({ priority: 'high', icon: '🎥', title: 'Build Your Hudl Profile', text: 'Upload a full highlight reel to Hudl. Make sure it\'s public and includes your best plays from multiple angles. Coaches and brands search Hudl first.' });
+  if (ig < 5000 || tiktok < 5000) steps.push({ priority: 'high', icon: '📱', title: 'Grow Your Social Media', text: `Your combined following of ${(ig+tiktok+twitter).toLocaleString()} can grow significantly. Post weekly training content, game highlights, and personal brand content on Instagram and TikTok. Consistency beats viral moments.` });
+  if (camps < 2) steps.push({ priority: 'medium', icon: '🏕️', title: 'Attend Elite Camps', text: 'Elite prospect camps give you direct exposure to college coaches and brand scouts. See the recommended camps below — filtered to your state and class year.' });
+  if (offers < 2) steps.push({ priority: 'medium', icon: '📬', title: 'Generate College Offers', text: 'Send your Hudl reel directly to college coaches via email. Attend college camp days hosted by programs you\'re targeting. Offers validate your on-field value to NIL sponsors.' });
+  steps.push({ priority: 'info', icon: '💼', title: 'Understand Your State\'s NIL Rules', text: `As a ${state} athlete you operate under ${state === 'GA' ? 'GHSA' : state === 'FL' ? 'FHSAA' : state === 'TX' ? 'UIL' : 'CIF'} rules. Review the rules on NIL Central before signing anything.`, link: 'nil-central.html', linkText: 'View Rules →' });
+  steps.push({ priority: 'info', icon: '🤝', title: 'Build Your Personal Brand Story', text: 'Brands don\'t just want athletes — they want stories. Define what makes you unique beyond football: your community, your journey, your values. Athletes with a clear brand attract better deals.' });
+  if (gpa < 3) steps.push({ priority: 'medium', icon: '📚', title: 'Protect Your Academic Standing', text: 'Your GPA affects eligibility, which directly affects your NIL value. Brands won\'t invest in an athlete who may lose eligibility. Work with your school\'s academic support resources.' });
+
+  // ---- RECOMMENDED CAMPS ----
+  let recCamps = [];
+  if (typeof CAMPS_DATA !== 'undefined') {
+    const now = new Date(); now.setHours(0,0,0,0);
+    recCamps = CAMPS_DATA.filter(c => {
+      if (!c.dates) return false;
+      const clean = c.dates.split('–')[0].split('—')[0].split('-')[0].trim();
+      const d = new Date(clean); if (isNaN(d) || d < now) return false;
+      // Prefer same state or tier 1-2
+      return c.state === (state === 'GA' ? 'Georgia' : state === 'FL' ? 'Florida' : state === 'TX' ? 'Texas' : 'California') || c.tier <= 2;
+    }).sort((a,b) => {
+      // Tier 1 first, then same-state, then by date
+      if (a.tier !== b.tier) return a.tier - b.tier;
+      const aState = a.state === (state === 'GA' ? 'Georgia' : state === 'FL' ? 'Florida' : state === 'TX' ? 'Texas' : 'California');
+      const bState = b.state === (state === 'GA' ? 'Georgia' : state === 'FL' ? 'Florida' : state === 'TX' ? 'Texas' : 'California');
+      if (aState !== bState) return aState ? -1 : 1;
+      return 0;
+    }).slice(0, 6);
+  }
+
+  // ---- RENDER ----
+  showResults({ name, total, tier, tierColor, summary, stars, locationScore, schoolScore, starScore, posScore, socialScore, exposureScore, steps, recCamps, pos, state, ig, tiktok, twitter, hudl });
+}
+
+function showResults(data) {
+  document.getElementById('formPanel').style.display = 'none';
+  const panel = document.getElementById('resultsPanel');
+  panel.style.display = 'block';
+
+  // Score animation
+  const arc = document.getElementById('scoreArc');
+  const numEl = document.getElementById('scoreNumber');
+  const circumference = 326.7;
+  let current = 0;
+  const target = data.total;
+  const interval = setInterval(() => {
+    current = Math.min(current + 2, target);
+    numEl.textContent = current;
+    arc.style.strokeDashoffset = circumference - (circumference * current / 100);
+    arc.style.stroke = current >= 80 ? '#FFD700' : current >= 65 ? '#e8872b' : current >= 45 ? '#4a90d9' : current >= 25 ? '#50c878' : '#888';
+    if (current >= target) clearInterval(interval);
+  }, 18);
+
+  document.getElementById('resultsName').textContent = data.name ? data.name + '\'s NIL Rating' : 'Your NIL Rating';
+  document.getElementById('resultsTier').innerHTML = `<span style="color:${data.tierColor}">${data.tier}</span>`;
+  document.getElementById('resultsSummary').textContent = data.summary;
+
+  // Factors
+  const factors = [
+    { label: 'Location & Market', score: data.locationScore, max: 20, tip: 'Based on your city\'s market size and athlete density in your state' },
+    { label: 'School Prestige', score: data.schoolScore, max: 10, tip: 'School program visibility in your market' },
+    { label: 'Recruiting Stars', score: data.starScore, max: 25, tip: 'Star ratings are the biggest driver of NIL value — get ranked' },
+    { label: 'Position Value', score: data.posScore, max: 20, tip: `${data.pos} is rated for NIL marketability based on fan interest and visibility` },
+    { label: 'Social Media', score: data.socialScore, max: 15, tip: 'Combined score across Instagram, TikTok, and Twitter/X' },
+    { label: 'Exposure & Offers', score: data.exposureScore, max: 10, tip: 'Film (Hudl), college offers, and elite camps attended' },
+  ];
+
+  const grid = document.getElementById('factorsGrid');
+  grid.innerHTML = factors.map(f => {
+    const pct = Math.round(f.score / f.max * 100);
+    const color = pct >= 80 ? '#FFD700' : pct >= 60 ? '#e8872b' : pct >= 40 ? '#4a90d9' : '#c41e3a';
+    return `
+      <div class="factor-card">
+        <div class="factor-top">
+          <span class="factor-label">${f.label}</span>
+          <span class="factor-score" style="color:${color}">${f.score}<span style="color:var(--text-muted);font-size:0.75rem"> / ${f.max}</span></span>
+        </div>
+        <div class="factor-bar-bg"><div class="factor-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="factor-tip">${f.tip}</div>
+      </div>`;
+  }).join('');
+
+  // Action steps
+  const stepsEl = document.getElementById('actionSteps');
+  stepsEl.innerHTML = data.steps.map((s, i) => `
+    <div class="action-step ${s.priority}">
+      <div class="step-num">${i+1}</div>
+      <div class="step-content">
+        <div class="step-title">${s.icon} ${s.title}</div>
+        <div class="step-text">${s.text}${s.link ? ` <a href="${s.link}" class="step-link">${s.linkText}</a>` : ''}</div>
+      </div>
+    </div>`).join('');
+
+  // Recommended camps
+  const campsEl = document.getElementById('recCampsList');
+  if (data.recCamps.length) {
+    const TC = {1:'#FFD700',2:'#c41e3a',3:'#e8872b',4:'#4a90d9',5:'#7a7a9a'};
+    campsEl.innerHTML = data.recCamps.map(c => `
+      <a href="camps.html?openCamp=${c.id}" class="rec-camp-card">
+        <div class="rec-camp-tier" style="color:${TC[c.tier]||'#7a7a9a'}">${c.tierLabel}</div>
+        <div class="rec-camp-name">${c.name}</div>
+        <div class="rec-camp-loc">${c.city}, ${c.stateAbbrev} · ${c.dates||'TBD'}</div>
+        ${c.cost ? `<div class="rec-camp-cost">${c.cost}</div>` : ''}
+      </a>`).join('');
+  } else {
+    campsEl.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:var(--space-md)">No upcoming camps found — <a href="camps.html" style="color:var(--gold)">browse all camps →</a></div>';
+  }
+
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetTool() {
+  document.getElementById('formPanel').style.display = 'block';
+  document.getElementById('resultsPanel').style.display = 'none';
+  document.getElementById('scoreArc').style.strokeDashoffset = '326.7';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+<script src="shared.js"></script>
+</body>
+</html>
