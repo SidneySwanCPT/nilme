@@ -52,24 +52,13 @@
 <!-- Hero Image Slider -->
 <section class="hero-slider">
   <div class="slider-track" id="sliderTrack">
-    <div class="slide s0"></div>
-    <div class="slide s1"></div>
-    <div class="slide s2"></div>
-    <div class="slide s3"></div>
-    <div class="slide s4"></div>
+    <div class="slide active" style="background-image:url('hero-bg.jpg')"></div>
   </div>
   <div class="slider-overlay"></div>
   <div class="hero-content">
     <div class="hero-eyebrow">Georgia Football Intelligence</div>
     <h1 class="hero-title">Camp <span>8</span></h1>
     <p class="hero-subtitle">The hub for Georgia high school football — recruiting maps, prospect camps, NIL news, and program power rankings.</p>
-  </div>
-  <div class="slider-dots" id="sliderDots">
-    <button class="dot active" onclick="goSlide(0)"></button>
-    <button class="dot" onclick="goSlide(1)"></button>
-    <button class="dot" onclick="goSlide(2)"></button>
-    <button class="dot" onclick="goSlide(3)"></button>
-    <button class="dot" onclick="goSlide(4)"></button>
   </div>
 </section>
 
@@ -186,23 +175,8 @@
 
 <script src="camps-data.js"></script>
 <script>
-// ---- SLIDER ----
-let slideIdx = 0;
-const slideEls = document.querySelectorAll('.slide');
-const dotEls   = document.querySelectorAll('.dot');
-let sliderTimer = setInterval(() => goSlide(slideIdx + 1), 5500);
-
-slideEls[0].classList.add('active');
-
-function goSlide(n) {
-  slideEls[slideIdx].classList.remove('active');
-  dotEls[slideIdx].classList.remove('active');
-  slideIdx = ((n % slideEls.length) + slideEls.length) % slideEls.length;
-  slideEls[slideIdx].classList.add('active');
-  dotEls[slideIdx].classList.add('active');
-  clearInterval(sliderTimer);
-  sliderTimer = setInterval(() => goSlide(slideIdx + 1), 5500);
-}
+// ---- SLIDER (single image — no rotation needed) ----
+document.querySelector('.slide').classList.add('active');
 
 // ---- NEWS FEEDS ----
 const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
