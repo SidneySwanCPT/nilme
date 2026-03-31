@@ -9,10 +9,10 @@
   // ---- Page map: filename → { label, parent, parentLabel } ----
   const PAGE_MAP = {
     'index.html':          { label: 'Home',                parent: null,        parentLabel: null },
-    'nil-central.html':    { label: 'NIL Central',         parent: 'nil',       parentLabel: 'NIL Central' },
+    'nil-central.html':    { label: 'NIL Central',         parent: null,        parentLabel: null },
     'nil-rating.html':     { label: 'NIL Rating Tool',     parent: 'nil',       parentLabel: 'NIL Central' },
     'nil-sponsors.html':   { label: 'Sponsor Directory',   parent: 'nil',       parentLabel: 'NIL Central' },
-    'recruits.html':       { label: 'Recruit Map',         parent: 'recruiting', parentLabel: 'Recruiting' },
+    'recruits.html':       { label: 'Top Prospects',         parent: 'recruiting', parentLabel: 'Recruiting' },
     'camps.html':          { label: 'Prospect Camps',      parent: 'recruiting', parentLabel: 'Recruiting' },
     'combine-eval.html':   { label: 'Combine Evaluator',   parent: 'recruiting', parentLabel: 'Recruiting' },
     'powerhouse.html':     { label: 'Powerhouse Central',  parent: 'recruiting', parentLabel: 'Recruiting' },
@@ -50,10 +50,7 @@
         <svg class="dd-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
       </a>
       <ul class="nav-dropdown-menu" id="menu-nil">
-        <li><a href="nil-central.html#nil-rating" data-page="nil-central.html">
-          <span class="ddm-icon">⭐</span>NIL Rating Tool
-        </a></li>
-        <li><a href="nil-central.html#nil-rules" data-page="nil-central.html">
+<li><a href="nil-central.html#nil-rules" data-page="nil-central.html">
           <span class="ddm-icon">📋</span>Rules &amp; Regulations
         </a></li>
         <li><a href="nil-central.html#nil-deals" data-page="nil-central.html">
@@ -73,7 +70,7 @@
       </a>
       <ul class="nav-dropdown-menu" id="menu-recruiting">
         <li><a href="recruits.html" data-page="recruits.html">
-          <span class="ddm-icon">🗺️</span>Recruit Map
+          <span class="ddm-icon">🗺️</span>Top Prospects
         </a></li>
         <li><a href="camps.html" data-page="camps.html">
           <span class="ddm-icon">🏕️</span>Prospect Camps
@@ -83,13 +80,6 @@
         </a></li>
         <li><a href="powerhouse.html" data-page="powerhouse.html">
           <span class="ddm-icon">🏆</span>Powerhouse Central
-        </a></li>
-        <li class="ddm-divider"></li>
-        <li><a href="commitments.html" data-page="commitments.html">
-          <span class="ddm-icon">✅</span>Commitment Tracker
-        </a></li>
-        <li><a href="transfer-portal.html" data-page="transfer-portal.html">
-          <span class="ddm-icon">🔄</span>Transfer Portal
         </a></li>
       </ul>
     </li>

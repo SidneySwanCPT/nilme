@@ -3,684 +3,456 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Camp 8 — Recruiting Central</title>
-  
-  <!-- Leaflet -->
+  <title>Camp 8 — Top Prospects</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  
-  <!-- Styles -->
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
   <style>
-    /* ---- Below-map scrollable sections ---- */
     body { overflow-y: auto; height: auto; }
-    .main-content { position: relative; height: 100vh; min-height: 600px; flex-shrink: 0; }
-    .below-map-sections { background: var(--bg-primary); }
 
-    /* Recruit Hero */
-    .recruit-hero-block { position: relative; height: 420px; overflow: hidden; }
-    .recruit-hero-img { position: absolute; inset: 0; background-size: cover; background-position: center top; }
-    .recruit-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(8,8,16,0.92) 40%, rgba(8,8,16,0.5) 100%); }
-    .recruit-hero-content { position: relative; z-index: 1; padding: var(--space-xl); height: 100%; display: flex; flex-direction: column; justify-content: center; max-width: 680px; }
-    .rh-eyebrow { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 8px; }
-    .rh-title { font-family: var(--font-display); font-size: clamp(2.5rem, 5vw, 4rem); letter-spacing: 0.04em; color: #fff; margin-bottom: 10px; }
-    .rh-title span { color: var(--gold); }
-    .rh-sub { font-size: 0.92rem; color: rgba(255,255,255,0.72); line-height: 1.6; max-width: 480px; margin-bottom: var(--space-lg); }
-    .rh-stats { display: flex; align-items: center; gap: 12px; margin-bottom: var(--space-lg); flex-wrap: wrap; }
-    .rh-stat { text-align: center; }
-    .rh-stat-num { display: block; font-family: var(--font-display); font-size: 1.8rem; color: var(--gold); line-height: 1; }
-    .rh-stat-lbl { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); }
-    .rh-stat-div { width: 1px; height: 32px; background: rgba(255,255,255,0.15); }
-    .rh-links { display: flex; gap: var(--space-sm); flex-wrap: wrap; }
-    .rh-btn { padding: 9px 20px; border-radius: 100px; font-size: 0.82rem; font-weight: 700; text-decoration: none; transition: all 0.15s ease; }
-    .rh-btn.primary { background: var(--gold); color: #0a0a12; }
-    .rh-btn.primary:hover { background: var(--gold-bright); }
-    .rh-btn:not(.primary) { border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); }
-    .rh-btn:not(.primary):hover { border-color: var(--gold); color: var(--gold); }
+    .tp-hero {
+      position: relative; height: 500px; overflow: hidden;
+      margin-top: var(--nav-height);
+    }
+    .tp-hero-img {
+      position: absolute; inset: 0;
+      background: url('powerhouse-hero.jpg') center 30% / cover no-repeat;
+    }
+    .tp-hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to right, rgba(8,8,16,0.93) 45%, rgba(8,8,16,0.4) 100%);
+    }
+    .tp-hero-content {
+      position: relative; z-index: 1; padding: var(--space-xl);
+      height: 100%; display: flex; flex-direction: column; justify-content: center; max-width: 680px;
+    }
+    .tp-eyebrow { font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; color:var(--gold); margin-bottom:8px; }
+    .tp-title { font-family:var(--font-display); font-size:clamp(2.8rem,5vw,4.5rem); letter-spacing:0.04em; color:#fff; margin-bottom:10px; line-height:0.95; }
+    .tp-title span { color:var(--gold); }
+    .tp-sub { font-size:0.92rem; color:rgba(255,255,255,0.7); line-height:1.6; max-width:440px; margin-bottom:var(--space-lg); }
+    .tp-stats { display:flex; align-items:center; gap:16px; margin-bottom:var(--space-xl); flex-wrap:wrap; }
+    .tp-stat { text-align:center; }
+    .tp-stat-num { display:block; font-family:var(--font-display); font-size:2rem; color:var(--gold); line-height:1; }
+    .tp-stat-lbl { font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.45); }
+    .tp-stat-div { width:1px; height:36px; background:rgba(255,255,255,0.12); }
+    .tp-buttons { display:flex; gap:var(--space-sm); flex-wrap:wrap; }
+    .tp-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:11px 22px; border-radius:var(--radius-md);
+      font-size:0.88rem; font-weight:700; cursor:pointer;
+      transition:all 0.15s ease; border:none; font-family:var(--font-body);
+    }
+    .tp-btn-primary { background:var(--gold); color:#0a0a12; }
+    .tp-btn-primary:hover { background:var(--gold-bright); transform:translateY(-1px); }
+    .tp-btn-outline { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.85); border:1px solid rgba(255,255,255,0.2); }
+    .tp-btn-outline:hover { border-color:var(--gold); color:var(--gold); background:var(--gold-dim); }
 
-    /* Recruit sections */
-    .recruit-section { padding: var(--space-xl) 0; border-top: 1px solid var(--border-color); }
-    .recruit-section-alt { background: var(--bg-secondary); }
-    .recruit-section-inner { max-width: 1300px; margin: 0 auto; padding: 0 var(--space-xl); }
-    .recruit-section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-lg); margin-bottom: var(--space-lg); flex-wrap: wrap; }
-    .rs-eyebrow { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 6px; }
-    .rs-title { font-family: var(--font-display); font-size: clamp(1.8rem,3vw,2.5rem); letter-spacing: 0.04em; color: var(--text-primary); margin-bottom: 6px; }
-    .rs-title span { color: var(--gold); }
-    .rs-sub { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; max-width: 400px; }
-    .rs-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .rs-select { padding: 7px 10px; font-size: 0.8rem; font-family: var(--font-body); background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-secondary); outline: none; cursor: pointer; }
-    .rs-select:focus { border-color: var(--gold); }
-    .rs-search { padding: 7px 12px; font-size: 0.8rem; font-family: var(--font-body); background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; min-width: 180px; }
-    .rs-search:focus { border-color: var(--gold); }
-    .rs-search::placeholder { color: var(--text-muted); }
-    .rs-count-badge { padding: 3px 10px; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); border-radius: 100px; white-space: nowrap; }
-    .rs-table-wrap { overflow-x: auto; }
+    /* MODAL */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; z-index:9000;
+      background:rgba(0,0,0,0.8); backdrop-filter:blur(6px);
+      align-items:center; justify-content:center; padding:var(--space-lg);
+    }
+    .modal-overlay.open { display:flex; }
+    .modal-box {
+      background:var(--bg-secondary); border:1px solid var(--border-color);
+      border-radius:var(--radius-lg); width:100%; max-width:1100px;
+      max-height:90vh; display:flex; flex-direction:column; overflow:hidden;
+      box-shadow:0 24px 80px rgba(0,0,0,0.8);
+    }
+    .modal-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:var(--space-md) var(--space-lg); border-bottom:1px solid var(--border-color);
+      flex-shrink:0; background:var(--bg-primary);
+    }
+    .modal-title { font-family:var(--font-display); font-size:1.4rem; letter-spacing:0.04em; color:var(--text-primary); }
+    .modal-title span { color:var(--gold); }
+    .modal-close {
+      width:32px; height:32px; border-radius:50%;
+      background:rgba(255,255,255,0.06); border:1px solid var(--border-color);
+      color:var(--text-secondary); display:flex; align-items:center; justify-content:center;
+      cursor:pointer; font-size:1.1rem; transition:all 0.15s; flex-shrink:0;
+    }
+    .modal-close:hover { color:var(--text-primary); background:rgba(255,255,255,0.1); }
+    .modal-body { flex:1; overflow:auto; }
 
-    @media (max-width: 768px) {
-      .recruit-hero-block { height: 320px; }
-      .recruit-section-inner { padding: 0 var(--space-md); }
-      .recruit-section { padding: var(--space-lg) 0; }
-      .recruit-section-header { flex-direction: column; }
+    /* Map modal */
+    .modal-map-wrap { display:flex; height:72vh; }
+    #modalMap { flex:1; }
+    .modal-map-sidebar {
+      width:250px; flex-shrink:0; border-left:1px solid var(--border-color);
+      overflow-y:auto; background:var(--bg-primary); padding:var(--space-md);
+    }
+
+    /* Table modals */
+    .modal-filters {
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+      padding:var(--space-md) var(--space-lg); border-bottom:1px solid var(--border-color);
+      background:var(--bg-primary); flex-shrink:0;
+    }
+    .mf-select {
+      padding:6px 10px; font-size:0.8rem; font-family:var(--font-body);
+      background:var(--bg-card); border:1px solid var(--border-color);
+      border-radius:var(--radius-sm); color:var(--text-secondary); outline:none; cursor:pointer;
+    }
+    .mf-input {
+      padding:6px 12px; font-size:0.8rem; font-family:var(--font-body);
+      background:var(--bg-card); border:1px solid var(--border-color);
+      border-radius:var(--radius-sm); color:var(--text-primary); outline:none; flex:1; min-width:160px;
+    }
+    .mf-input:focus,.mf-select:focus { border-color:var(--gold); }
+    .mf-input::placeholder { color:var(--text-muted); }
+    .mf-badge {
+      padding:3px 10px; font-size:0.7rem; font-weight:600;
+      color:var(--text-muted); background:rgba(255,255,255,0.04);
+      border:1px solid var(--border-color); border-radius:100px; white-space:nowrap;
+    }
+    .modal-table-wrap { overflow:auto; }
+    .state-pill { display:inline-block; padding:2px 8px; border-radius:100px; font-size:0.68rem; font-weight:700; }
+
+    /* Footer */
+    .site-footer { margin-top:0; }
+
+    @media(max-width:768px){
+      .tp-hero { height:420px; }
+      .tp-hero-content { padding:var(--space-lg) var(--space-md); }
+      .modal-map-wrap { flex-direction:column; height:auto; }
+      #modalMap { height:60vw; min-height:280px; }
+      .modal-map-sidebar { width:100%; border-left:none; border-top:1px solid var(--border-color); max-height:260px; }
+      .modal-box { max-height:94vh; }
     }
   </style>
-  
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
 </head>
 <body>
 
-<!-- Navigation -->
 <div id="nav-root"></div>
 <script src="nav.js"></script>
 
-<!-- Main Content -->
-<div class="main-content">
-  <!-- View Toggle -->
-  <div class="view-toggle-bar" style="position:absolute;top:0;left:0;right:0;z-index:900;height:44px;background:var(--bg-primary);border-bottom:1px solid var(--border-color);display:flex;align-items:center;padding:0 var(--space-lg);gap:var(--space-sm);">
-    <button class="view-btn active" data-view="map" onclick="recruitSwitchView('map',this)">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
-      Map View
-    </button>
-    <button class="view-btn" data-view="list" onclick="recruitSwitchView('list',this)">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
-      List View
-    </button>
-    <span style="margin-left:auto;font-size:0.72rem;color:var(--text-muted);background:rgba(255,255,255,0.04);border:1px solid var(--border-color);padding:3px 10px;border-radius:100px;" id="recruitCount"></span>
+<!-- HERO -->
+<div class="tp-hero">
+  <div class="tp-hero-img"></div>
+  <div class="tp-hero-overlay"></div>
+  <div class="tp-hero-content">
+    <div class="tp-eyebrow">GA · FL · TX · CA</div>
+    <h1 class="tp-title">Top <span>Prospects</span></h1>
+    <p class="tp-sub">Track the highest-rated high school football recruits across four states — with commitment tracker and transfer portal all in one place.</p>
+    <div class="tp-stats">
+      <div class="tp-stat"><span class="tp-stat-num" id="tpTotalR">200+</span><span class="tp-stat-lbl">Recruits</span></div>
+      <div class="tp-stat-div"></div>
+      <div class="tp-stat"><span class="tp-stat-num" id="tpTotalC">35+</span><span class="tp-stat-lbl">Commitments</span></div>
+      <div class="tp-stat-div"></div>
+      <div class="tp-stat"><span class="tp-stat-num" id="tpTotalT">16</span><span class="tp-stat-lbl">In Portal</span></div>
+      <div class="tp-stat-div"></div>
+      <div class="tp-stat"><span class="tp-stat-num">4</span><span class="tp-stat-lbl">States</span></div>
+    </div>
+    <div class="tp-buttons">
+      <button class="tp-btn tp-btn-primary" onclick="openModal('mapModal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+        Recruit Map
+      </button>
+      <button class="tp-btn tp-btn-outline" onclick="openModal('ctModal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Commitment Tracker
+      </button>
+      <button class="tp-btn tp-btn-outline" onclick="openModal('tpModal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+        Transfer Portal
+      </button>
+    </div>
   </div>
+</div>
 
-  <!-- Map View -->
-  <div id="recruitMapView" style="position:absolute;top:44px;left:0;right:0;bottom:0;">
-    <div class="map-container">
-      <div id="map"></div>
-    
-    <!-- Sidebar with filters -->
-    <div class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <h2>Recruiting Central</h2>
-        <p>Georgia's highest-rated prospects</p>
-      </div>
-      <div class="sidebar-body">
-        <!-- Filter: State -->
-        <div class="filter-group">
-          <span class="filter-label">State</span>
-          <div class="filter-buttons" id="filter-state">
-            <button class="filter-btn active" data-value="all">All</button>
-            <button class="filter-btn" data-value="GA">GA</button>
-            <button class="filter-btn" data-value="FL">FL</button>
-            <button class="filter-btn" data-value="TX">TX</button>
-            <button class="filter-btn" data-value="CA">CA</button>
+<!-- MODAL: Recruit Map -->
+<div class="modal-overlay" id="mapModal" onclick="if(event.target===this)closeModal('mapModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Recruit <span>Map</span></div>
+      <button class="modal-close" onclick="closeModal('mapModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-map-wrap">
+        <div id="modalMap"></div>
+        <div class="modal-map-sidebar">
+          <div class="filter-group">
+            <span class="filter-label">State</span>
+            <div class="filter-buttons" id="filter-state">
+              <button class="filter-btn active" data-value="all">All</button>
+              <button class="filter-btn" data-value="GA">GA</button>
+              <button class="filter-btn" data-value="FL">FL</button>
+              <button class="filter-btn" data-value="TX">TX</button>
+              <button class="filter-btn" data-value="CA">CA</button>
+            </div>
           </div>
-        </div>
-
-        <!-- Filter: Class Year -->
-        <div class="filter-group">
-          <span class="filter-label">Class Year</span>
-          <div class="filter-buttons" id="filter-year">
-            <button class="filter-btn active" data-value="all">All</button>
-            <button class="filter-btn" data-value="2026">2026</button>
-            <button class="filter-btn" data-value="2027">2027</button>
-            <button class="filter-btn" data-value="2028">2028</button>
+          <div class="filter-group">
+            <span class="filter-label">Class Year</span>
+            <div class="filter-buttons" id="filter-year">
+              <button class="filter-btn active" data-value="all">All</button>
+              <button class="filter-btn" data-value="2026">2026</button>
+              <button class="filter-btn" data-value="2027">2027</button>
+              <button class="filter-btn" data-value="2028">2028</button>
+            </div>
           </div>
-        </div>
-        
-        <!-- Filter: Stars -->
-        <div class="filter-group">
-          <span class="filter-label">Star Rating</span>
-          <div class="filter-buttons" id="filter-stars">
-            <button class="filter-btn active" data-value="all">All</button>
-            <button class="filter-btn" data-value="5" style="color:#FFD700">5★</button>
-            <button class="filter-btn" data-value="4" style="color:#c41e3a">4★</button>
-            <button class="filter-btn" data-value="3" style="color:#4a90d9">3★</button>
+          <div class="filter-group">
+            <span class="filter-label">Stars</span>
+            <div class="filter-buttons" id="filter-stars">
+              <button class="filter-btn active" data-value="all">All</button>
+              <button class="filter-btn" data-value="5" style="color:#FFD700">5★</button>
+              <button class="filter-btn" data-value="4" style="color:#c41e3a">4★</button>
+              <button class="filter-btn" data-value="3" style="color:#4a90d9">3★</button>
+            </div>
           </div>
-        </div>
-        
-        <!-- Filter: Position -->
-        <div class="filter-group">
-          <span class="filter-label">Position</span>
-          <div class="filter-buttons" id="filter-pos">
-            <button class="filter-btn active" data-value="all">All</button>
-            <button class="filter-btn" data-value="QB">QB</button>
-            <button class="filter-btn" data-value="RB">RB</button>
-            <button class="filter-btn" data-value="WR">WR</button>
-            <button class="filter-btn" data-value="TE">TE</button>
-            <button class="filter-btn" data-value="OT,IOL">OL</button>
-            <button class="filter-btn" data-value="DL">DL</button>
-            <button class="filter-btn" data-value="EDGE">EDGE</button>
-            <button class="filter-btn" data-value="LB">LB</button>
-            <button class="filter-btn" data-value="CB">CB</button>
-            <button class="filter-btn" data-value="S">S</button>
-            <button class="filter-btn" data-value="ATH">ATH</button>
+          <div class="filter-group">
+            <span class="filter-label">Position</span>
+            <div class="filter-buttons" id="filter-pos">
+              <button class="filter-btn active" data-value="all">All</button>
+              <button class="filter-btn" data-value="QB">QB</button>
+              <button class="filter-btn" data-value="RB">RB</button>
+              <button class="filter-btn" data-value="WR">WR</button>
+              <button class="filter-btn" data-value="TE">TE</button>
+              <button class="filter-btn" data-value="OT,IOL">OL</button>
+              <button class="filter-btn" data-value="DL">DL</button>
+              <button class="filter-btn" data-value="EDGE">EDGE</button>
+              <button class="filter-btn" data-value="LB">LB</button>
+              <button class="filter-btn" data-value="CB">CB</button>
+              <button class="filter-btn" data-value="S">S</button>
+              <button class="filter-btn" data-value="ATH">ATH</button>
+            </div>
           </div>
-        </div>
-        
-        <!-- Stats Panel -->
-        <div class="stat-group" style="margin-top:var(--space-md);">
-          <div class="stat-group-title">Stats</div>
-          <div class="stat-row">
-            <span class="stat-label">Showing</span>
-            <span class="stat-value" id="showing-count">—</span>
+          <div class="stat-group" style="margin-top:var(--space-md)">
+            <div class="stat-group-title">Showing</div>
+            <div class="stat-row"><span class="stat-label">Total</span><span class="stat-value" id="showing-count">—</span></div>
+            <div class="stat-row"><span class="stat-label" style="color:#FFD700">5★</span><span class="stat-value" id="count-5star">—</span></div>
+            <div class="stat-row"><span class="stat-label" style="color:#c41e3a">4★</span><span class="stat-value" id="count-4star">—</span></div>
+            <div class="stat-row"><span class="stat-label" style="color:#4a90d9">3★</span><span class="stat-value" id="count-3star">—</span></div>
           </div>
-          <div class="stat-row">
-            <span class="stat-label"><span class="stat-dot" style="background:#FFD700"></span> 5-Star</span>
-            <span class="stat-value" id="count-5star">—</span>
+          <div id="pos-breakdown" style="margin-top:var(--space-sm)"></div>
+          <div class="legend" style="position:static;width:auto;max-height:none;padding:0;background:none;border:none;box-shadow:none;margin-top:var(--space-md)">
+            <h4>Stars</h4>
+            <div class="legend-item"><span class="legend-circle" style="width:14px;height:14px;background:rgba(255,215,0,0.6)"></span>5-Star</div>
+            <div class="legend-item"><span class="legend-circle" style="width:11px;height:11px;background:rgba(196,30,58,0.6)"></span>4-Star</div>
+            <div class="legend-item"><span class="legend-circle" style="width:9px;height:9px;background:rgba(74,144,217,0.6)"></span>3-Star</div>
           </div>
-          <div class="stat-row">
-            <span class="stat-label"><span class="stat-dot" style="background:#c41e3a"></span> 4-Star</span>
-            <span class="stat-value" id="count-4star">—</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label"><span class="stat-dot" style="background:#4a90d9"></span> 3-Star</span>
-            <span class="stat-value" id="count-3star">—</span>
-          </div>
-        </div>
-        
-        <div class="stat-group">
-          <div class="stat-group-title">By Position</div>
-          <div id="pos-breakdown"></div>
-        </div>
-
-        <!-- Coming Soon -->
-        <div class="stat-group" style="margin-top:var(--space-md); padding: 12px; background:rgba(212,168,67,0.06); border-radius:var(--radius-sm); border:1px solid rgba(212,168,67,0.15);">
-          <div style="font-size:0.78rem; color:var(--gold); font-weight:600; margin-bottom:4px;">Classes 2029–2032</div>
-          <div style="font-size:0.75rem; color:var(--text-muted);">Rankings for these younger classes are not yet available. Check back as evaluations begin.</div>
         </div>
       </div>
     </div>
-    
-    <!-- Legend -->
-    <div class="legend">
-      <h4>Star Rating</h4>
-      <div class="legend-item">
-        <span class="legend-circle" style="width:14px;height:14px;background:rgba(255,215,0,0.6);"></span>
-        5-Star
-      </div>
-      <div class="legend-item">
-        <span class="legend-circle" style="width:11px;height:11px;background:rgba(196,30,58,0.6);"></span>
-        4-Star
-      </div>
-      <div class="legend-item">
-        <span class="legend-circle" style="width:9px;height:9px;background:rgba(74,144,217,0.6);"></span>
-        3-Star
-      </div>
-    </div>
   </div>
-    </div><!-- end map-container -->
-  </div><!-- end recruitMapView -->
+</div>
 
-  <!-- List View -->
-  <div id="recruitListView" style="display:none;position:absolute;top:44px;left:0;right:0;bottom:0;background:var(--bg-primary);overflow:hidden;flex-direction:column;">
-    <div style="padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--border-color);display:flex;gap:var(--space-sm);flex-wrap:wrap;align-items:center;background:var(--bg-secondary);">
-      <select class="camp-state-select" id="rlStateFilter" onchange="renderRecruitList()" style="width:auto;min-width:130px;">
+<!-- MODAL: Commitment Tracker -->
+<div class="modal-overlay" id="ctModal" onclick="if(event.target===this)closeModal('ctModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Commitment <span>Tracker</span></div>
+      <button class="modal-close" onclick="closeModal('ctModal')">✕</button>
+    </div>
+    <div class="modal-filters">
+      <select class="mf-select" id="ctState" onchange="renderCT()">
         <option value="all">All States</option>
         <option value="GA">Georgia</option>
         <option value="FL">Florida</option>
         <option value="TX">Texas</option>
         <option value="CA">California</option>
       </select>
-      <select class="camp-state-select" id="rlYearFilter" onchange="renderRecruitList()" style="width:auto;min-width:130px;">
+      <select class="mf-select" id="ctYear" onchange="renderCT()">
         <option value="all">All Classes</option>
-        <option value="2026">Class of 2026</option>
-        <option value="2027">Class of 2027</option>
-        <option value="2028">Class of 2028</option>
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+        <option value="2028">2028</option>
       </select>
-      <select class="camp-state-select" id="rlStarsFilter" onchange="renderRecruitList()" style="width:auto;min-width:130px;">
-        <option value="all">All Stars</option>
-        <option value="5">5-Star</option>
-        <option value="4">4-Star</option>
-        <option value="3">3-Star</option>
+      <select class="mf-select" id="ctStatus" onchange="renderCT()">
+        <option value="all">All Statuses</option>
+        <option value="Committed">Committed</option>
+        <option value="Signed">Signed</option>
+        <option value="Decommitted">Decommitted</option>
       </select>
-      <select class="camp-state-select" id="rlPosFilter" onchange="renderRecruitList()" style="width:auto;min-width:130px;">
-        <option value="all">All Positions</option>
-        <option value="QB">QB</option><option value="RB">RB</option><option value="WR">WR</option>
-        <option value="TE">TE</option><option value="OT">OT</option><option value="IOL">IOL</option>
-        <option value="DL">DL</option><option value="EDGE">EDGE</option><option value="LB">LB</option>
-        <option value="CB">CB</option><option value="S">S</option><option value="ATH">ATH</option>
-      </select>
-      <input type="text" class="camp-search-input" id="rlSearch" placeholder="Search athlete or school…" oninput="renderRecruitList()" style="min-width:180px;flex:1;">
+      <input class="mf-input" id="ctSearch" placeholder="Search athlete, school, or college…" oninput="renderCT()">
+      <span class="mf-badge" id="ctCount">— commits</span>
     </div>
-    <div style="flex:1;overflow-y:auto;">
-      <table class="data-table" id="recruitListTable">
-        <thead>
-          <tr>
-            <th onclick="sortRecruitList('name')">Athlete</th>
-            <th onclick="sortRecruitList('pos')">Pos</th>
-            <th onclick="sortRecruitList('stars')">Stars</th>
-            <th onclick="sortRecruitList('school')">School</th>
-            <th onclick="sortRecruitList('city')">City</th>
-            <th onclick="sortRecruitList('state')">State</th>
-            <th onclick="sortRecruitList('classYear')">Class</th>
-            <th>Links</th>
-          </tr>
-        </thead>
-        <tbody id="recruitListBody"></tbody>
+    <div class="modal-body modal-table-wrap">
+      <table class="data-table">
+        <thead><tr>
+          <th onclick="sortCT('athlete')">Athlete</th>
+          <th onclick="sortCT('pos')">Pos</th>
+          <th onclick="sortCT('stars')">Stars</th>
+          <th onclick="sortCT('school')">HS</th>
+          <th onclick="sortCT('state')">State</th>
+          <th onclick="sortCT('classYear')">Class</th>
+          <th onclick="sortCT('committedTo')">Committed To</th>
+          <th onclick="sortCT('conference')">Conf</th>
+          <th onclick="sortCT('status')">Status</th>
+        </tr></thead>
+        <tbody id="ctBody"></tbody>
       </table>
     </div>
   </div>
 </div>
 
-<script>
-// ---- Recruit List View ----
-var rlSort = { field:'stars', asc:false };
-
-function recruitSwitchView(view, btn) {
-  document.querySelectorAll('.view-btn').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  var mapV  = document.getElementById('recruitMapView');
-  var listV = document.getElementById('recruitListView');
-  if (view === 'map') {
-    mapV.style.display  = '';
-    listV.style.display = 'none';
-  } else {
-    mapV.style.display  = 'none';
-    listV.style.display = 'flex';
-    renderRecruitList();
-  }
-}
-
-function renderRecruitList() {
-  if (typeof RECRUITS === 'undefined') return;
-  var state  = document.getElementById('rlStateFilter').value;
-  var year   = document.getElementById('rlYearFilter').value;
-  var stars  = document.getElementById('rlStarsFilter').value;
-  var pos    = document.getElementById('rlPosFilter').value;
-  var q      = (document.getElementById('rlSearch').value || '').toLowerCase();
-
-  var data = RECRUITS.filter(function(r) {
-    if (state !== 'all' && r.state !== state) return false;
-    if (year  !== 'all' && String(r.classYear) !== year) return false;
-    if (stars !== 'all' && String(r.stars) !== stars) return false;
-    if (pos   !== 'all' && r.pos !== pos) return false;
-    if (q && ![r.name,r.school,r.city,r.pos].join(' ').toLowerCase().includes(q)) return false;
-    return true;
-  });
-
-  data.sort(function(a,b) {
-    var av = a[rlSort.field], bv = b[rlSort.field];
-    if (typeof av === 'string') return rlSort.asc ? av.localeCompare(bv) : bv.localeCompare(av);
-    return rlSort.asc ? av - bv : bv - av;
-  });
-
-  var countEl = document.getElementById('recruitCount');
-  if (countEl) countEl.textContent = data.length + ' recruits';
-
-  var STAR_COLORS = { 5:'#FFD700', 4:'#c41e3a', 3:'#4a90d9' };
-  var STATE_COLORS = { GA:'#4caf50', FL:'#2196f3', TX:'#f44336', CA:'#ff9800' };
-
-  var tbody = document.getElementById('recruitListBody');
-  tbody.innerHTML = '';
-  data.forEach(function(r) {
-    var sc = STAR_COLORS[r.stars] || '#888';
-    var stc = STATE_COLORS[r.state] || '#888';
-    var links = '';
-    if (r.links247) links += '<a href="' + r.links247 + '" target="_blank" rel="noopener" class="profile-link">247</a> ';
-    if (r.linksOn3) links += '<a href="' + r.linksOn3  + '" target="_blank" rel="noopener" class="profile-link">On3</a> ';
-    if (r.linksHudl) links += '<a href="' + r.linksHudl + '" target="_blank" rel="noopener" class="profile-link">Hudl</a>';
-    var tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td style="font-weight:700;color:var(--text-primary)">' + esc(r.name) + '</td>' +
-      '<td>' + esc(r.pos) + '</td>' +
-      '<td style="color:' + sc + ';letter-spacing:-1px">' + '★'.repeat(r.stars) + '</td>' +
-      '<td>' + esc(r.school) + '</td>' +
-      '<td>' + esc(r.city) + '</td>' +
-      '<td><span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:0.68rem;font-weight:700;background:' + stc + '22;color:' + stc + '">' + esc(r.state) + '</span></td>' +
-      '<td>' + r.classYear + '</td>' +
-      '<td>' + (links || '—') + '</td>';
-    tbody.appendChild(tr);
-  });
-}
-
-window.sortRecruitList = function(field) {
-  if (rlSort.field === field) rlSort.asc = !rlSort.asc;
-  else { rlSort.field = field; rlSort.asc = true; }
-  renderRecruitList();
-};
-
-function esc(s) { var d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
-
-// Update count badge when map renders too
-document.addEventListener('DOMContentLoaded', function() {
-  var countEl = document.getElementById('recruitCount');
-  if (countEl && typeof RECRUITS !== 'undefined') {
-    countEl.textContent = RECRUITS.length + ' recruits';
-  }
-});
-</script>
-
-<script src="shared.js"></script>
-<script src="recruits-data.js"></script>
-<script src="recruits-map.js"></script>
-<script data-pplx-inline-edit>
-(function(){
-  if(window===window.top)return;
-  function inlineAll(orig,clone){
-    if(orig.nodeType!==1)return;
-    try{
-      var cs=getComputedStyle(orig);
-      var t='';
-      for(var i=0;i<cs.length;i++){t+=cs[i]+':'+cs.getPropertyValue(cs[i])+';';}
-      clone.style.cssText=t;
-    }catch(e){}
-    var oc=orig.children,cc=clone.children;
-    for(var j=0;j<oc.length&&j<cc.length;j++){inlineAll(oc[j],cc[j]);}
-  }
-  function stripExternal(clone){
-    var imgs=clone.querySelectorAll('img');
-    for(var i=0;i<imgs.length;i++){
-      var s=imgs[i].getAttribute('src');
-      if(s&&!s.startsWith('data:'))imgs[i].removeAttribute('src');
-    }
-    var all=clone.querySelectorAll('*');
-    for(var i=0;i<all.length;i++){
-      var st=all[i].style.cssText;
-      if(st&&st.indexOf('url(')>=0){
-        all[i].style.cssText=st.replace(/url\(["']?(?!data:)[^)"']*["']?\)/gi,'none');
-      }
-    }
-  }
-  window.addEventListener('message',function(e){
-    if(!e.data||e.data.type!=='INLINE_EDIT_CAPTURE_REQUEST')return;
-    var scrollX=window.scrollX||window.pageXOffset||0;
-    var scrollY=window.scrollY||window.pageYOffset||0;
-    var w=window.innerWidth,h=window.innerHeight;
-    try{
-      var clone=document.documentElement.cloneNode(true);
-      var rm=clone.querySelectorAll('script,link[rel="stylesheet"],style');
-      for(var i=0;i<rm.length;i++){rm[i].remove();}
-      inlineAll(document.documentElement,clone);
-      stripExternal(clone);
-      var html=new XMLSerializer().serializeToString(clone);
-      var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
-        +'<foreignObject width="100%" height="100%">'
-        +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px;overflow:hidden">'
-        +'<div style="transform:translate(-'+scrollX+'px,-'+scrollY+'px);transform-origin:top left">'
-        +html+'</div></div></foreignObject></svg>';
-      var svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
-      var img=new Image();
-      img.onload=function(){
-        var c=document.createElement('canvas');c.width=w;c.height=h;
-        c.getContext('2d').drawImage(img,0,0);
-        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:c.toDataURL('image/png'),scrollX:scrollX,scrollY:scrollY},'*');
-      };
-      img.onerror=function(){
-        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
-      };
-      img.src=svgUrl;
-    }catch(err){
-      window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
-    }
-  });
-})();
-</script>
-
-<!-- ============================================
-     BELOW-MAP SECTIONS (scroll down from map)
-     ============================================ -->
-<div class="below-map-sections" id="belowMapSections">
-
-  <!-- Recruiting Hero -->
-  <div class="recruit-hero-block">
-    <div class="recruit-hero-img" style="background-image:url('powerhouse-hero.jpg')">
-      <div class="recruit-hero-overlay"></div>
-      <div class="recruit-hero-content">
-        <div class="rh-eyebrow">Recruiting Intelligence</div>
-        <h1 class="rh-title">Recruit <span>Map</span></h1>
-        <p class="rh-sub">Track the top high school football prospects across Georgia, Florida, Texas &amp; California — with commitment tracker and transfer portal all in one place.</p>
-        <div class="rh-stats">
-          <div class="rh-stat"><span class="rh-stat-num" id="rhTotalRecruits">200+</span><span class="rh-stat-lbl">Recruits</span></div>
-          <div class="rh-stat-div"></div>
-          <div class="rh-stat"><span class="rh-stat-num" id="rhCommitments">35+</span><span class="rh-stat-lbl">Commitments</span></div>
-          <div class="rh-stat-div"></div>
-          <div class="rh-stat"><span class="rh-stat-num" id="rhTransfers">--</span><span class="rh-stat-lbl">In Portal</span></div>
-          <div class="rh-stat-div"></div>
-          <div class="rh-stat"><span class="rh-stat-num">4</span><span class="rh-stat-lbl">States</span></div>
-        </div>
-        <div class="rh-links">
-          <a href="#recruit-commitments" class="rh-btn primary" onclick="smoothScroll('#recruit-commitments')">Commitment Tracker ↓</a>
-          <a href="#recruit-transfers" class="rh-btn" onclick="smoothScroll('#recruit-transfers')">Transfer Portal ↓</a>
-        </div>
-      </div>
+<!-- MODAL: Transfer Portal -->
+<div class="modal-overlay" id="tpModal" onclick="if(event.target===this)closeModal('tpModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Transfer <span>Portal</span></div>
+      <button class="modal-close" onclick="closeModal('tpModal')">✕</button>
+    </div>
+    <div class="modal-filters">
+      <select class="mf-select" id="tpState" onchange="renderTP()">
+        <option value="all">All States</option>
+        <option value="GA">Georgia</option>
+        <option value="FL">Florida</option>
+        <option value="TX">Texas</option>
+        <option value="CA">California</option>
+      </select>
+      <select class="mf-select" id="tpStatus" onchange="renderTP()">
+        <option value="all">All Statuses</option>
+        <option value="In Portal">In Portal</option>
+        <option value="Committed">Committed</option>
+        <option value="Enrolled">Enrolled</option>
+      </select>
+      <input class="mf-input" id="tpSearch" placeholder="Search athlete or school…" oninput="renderTP()">
+      <span class="mf-badge" id="tpCount">— transfers</span>
+    </div>
+    <div class="modal-body modal-table-wrap">
+      <table class="data-table">
+        <thead><tr>
+          <th onclick="sortTP('athlete')">Athlete</th>
+          <th onclick="sortTP('pos')">Pos</th>
+          <th onclick="sortTP('stars')">Stars</th>
+          <th onclick="sortTP('fromSchool')">From</th>
+          <th onclick="sortTP('fromState')">State</th>
+          <th onclick="sortTP('toSchool')">To</th>
+          <th onclick="sortTP('status')">Status</th>
+          <th onclick="sortTP('eligibility')">Eligibility</th>
+        </tr></thead>
+        <tbody id="tpBody"></tbody>
+      </table>
     </div>
   </div>
+</div>
 
-  <!-- Commitment Tracker Section -->
-  <div class="recruit-section" id="recruit-commitments">
-    <div class="recruit-section-inner">
-      <div class="recruit-section-header">
-        <div>
-          <div class="rs-eyebrow">Class of 2026 &amp; Beyond</div>
-          <h2 class="rs-title">Commitment <span>Tracker</span></h2>
-          <p class="rs-sub">Verbal commitments and signed letters of intent from top prospects across GA, FL, TX &amp; CA.</p>
-        </div>
-        <div class="rs-filters">
-          <select class="rs-select" id="ctStateFilter" onchange="renderCommitmentsTable()">
-            <option value="all">All States</option>
-            <option value="GA">Georgia</option>
-            <option value="FL">Florida</option>
-            <option value="TX">Texas</option>
-            <option value="CA">California</option>
-          </select>
-          <select class="rs-select" id="ctYearFilter" onchange="renderCommitmentsTable()">
-            <option value="all">All Classes</option>
-            <option value="2026">2026</option>
-            <option value="2027">2027</option>
-            <option value="2028">2028</option>
-          </select>
-          <select class="rs-select" id="ctStatusFilter" onchange="renderCommitmentsTable()">
-            <option value="all">All Statuses</option>
-            <option value="Committed">Committed</option>
-            <option value="Signed">Signed</option>
-            <option value="Decommitted">Decommitted</option>
-          </select>
-          <input type="text" class="rs-search" id="ctSearch" placeholder="Search athlete or school…" oninput="renderCommitmentsTable()">
-          <span class="rs-count-badge" id="ctCount"></span>
-        </div>
-      </div>
-      <div class="rs-table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th onclick="sortCT('athlete')">Athlete</th>
-              <th onclick="sortCT('pos')">Pos</th>
-              <th onclick="sortCT('stars')">Stars</th>
-              <th onclick="sortCT('school')">HS</th>
-              <th onclick="sortCT('state')">State</th>
-              <th onclick="sortCT('classYear')">Class</th>
-              <th onclick="sortCT('committedTo')">Committed To</th>
-              <th onclick="sortCT('conference')">Conf</th>
-              <th onclick="sortCT('status')">Status</th>
-            </tr>
-          </thead>
-          <tbody id="ctTableBody"></tbody>
-        </table>
-      </div>
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a href="index.html" class="footer-brand">Camp <span>8</span></a>
+    <div class="footer-links">
+      <a href="nil-central.html">NIL Central</a>
+      <a href="camps.html">Prospect Camps</a>
+      <a href="powerhouse.html">Powerhouse Central</a>
+      <a href="combine-eval.html">Combine Evaluator</a>
     </div>
+    <a href="https://www.instagram.com/n.i.l.me" target="_blank" rel="noopener" class="ig-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+      @n.i.l.me
+    </a>
   </div>
-
-  <!-- Transfer Portal Section -->
-  <div class="recruit-section recruit-section-alt" id="recruit-transfers">
-    <div class="recruit-section-inner">
-      <div class="recruit-section-header">
-        <div>
-          <div class="rs-eyebrow">High School Football</div>
-          <h2 class="rs-title">Transfer <span>Portal</span></h2>
-          <p class="rs-sub">High school athletes on the move — tracking transfers across the country.</p>
-        </div>
-        <div class="rs-filters">
-          <select class="rs-select" id="tpStateFilter" onchange="renderTransfersTable()">
-            <option value="all">All States</option>
-            <option value="GA">Georgia</option>
-            <option value="FL">Florida</option>
-            <option value="TX">Texas</option>
-            <option value="CA">California</option>
-          </select>
-          <select class="rs-select" id="tpStatusFilter" onchange="renderTransfersTable()">
-            <option value="all">All Statuses</option>
-            <option value="In Portal">In Portal</option>
-            <option value="Committed">Committed</option>
-            <option value="Enrolled">Enrolled</option>
-          </select>
-          <input type="text" class="rs-search" id="tpSearch" placeholder="Search athlete or school…" oninput="renderTransfersTable()">
-          <span class="rs-count-badge" id="tpCount"></span>
-        </div>
-      </div>
-      <div class="rs-table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th onclick="sortTP('athlete')">Athlete</th>
-              <th onclick="sortTP('pos')">Pos</th>
-              <th onclick="sortTP('stars')">Stars</th>
-              <th onclick="sortTP('fromSchool')">From</th>
-              <th onclick="sortTP('fromState')">State</th>
-              <th onclick="sortTP('toSchool')">To</th>
-              <th onclick="sortTP('status')">Status</th>
-              <th onclick="sortTP('eligibility')">Eligibility</th>
-            </tr>
-          </thead>
-          <tbody id="tpTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-</div><!-- end below-map-sections -->
+</footer>
 
 <script src="shared.js"></script>
 <script src="recruits-data.js"></script>
 <script src="commitments-data.js"></script>
 <script src="transfer-data.js"></script>
+<script src="recruits-map.js"></script>
 <script>
-// ============================================
-// BELOW-MAP SECTIONS LOGIC
-// ============================================
-var _ctSort = { field:'stars', asc:false };
-var _tpSort = { field:'status', asc:true };
+var mapInitialized = false;
 
-const SC = {GA:'#4caf50',FL:'#2196f3',TX:'#f44336',CA:'#ff9800'};
-const STAR_C = {5:'#FFD700',4:'#c41e3a',3:'#4a90d9'};
-const STATUS_C = {
-  'Committed':'#50c878', 'Signed':'#FFD700', 'Decommitted':'#c41e3a', 'Enrolled':'#4a90d9',
-  'In Portal':'#e8872b', 'Withdrawn':'#888'
-};
-
-function esc2(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
-
-// -- Commitments --
-function renderCommitmentsTable() {
-  if (typeof COMMITMENTS === 'undefined') return;
-  var state  = document.getElementById('ctStateFilter').value;
-  var year   = document.getElementById('ctYearFilter').value;
-  var status = document.getElementById('ctStatusFilter').value;
-  var q      = (document.getElementById('ctSearch').value||'').toLowerCase();
-  var data = COMMITMENTS.filter(function(r){
-    if (state !== 'all' && r.state !== state) return false;
-    if (year  !== 'all' && String(r.classYear) !== year) return false;
-    if (status !== 'all' && r.status !== status) return false;
-    if (q && ![r.athlete,r.school,r.committedTo,r.pos].join(' ').toLowerCase().includes(q)) return false;
-    return true;
-  });
-  data.sort(function(a,b){
-    var av=a[_ctSort.field]||'', bv=b[_ctSort.field]||'';
-    return typeof av==='string' ? (_ctSort.asc?av.localeCompare(bv):bv.localeCompare(av)) : (_ctSort.asc?av-bv:bv-av);
-  });
-  document.getElementById('ctCount').textContent = data.length + ' commitments';
-  var tbody = document.getElementById('ctTableBody');
-  tbody.innerHTML = '';
-  data.forEach(function(r){
-    var sc = SC[r.state]||'#888';
-    var stc = STAR_C[r.stars]||'#888';
-    var statc = STATUS_C[r.status]||'#888';
-    var tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td style="font-weight:700;color:var(--text-primary)">'+esc2(r.athlete)+'</td>'+
-      '<td>'+esc2(r.pos)+'</td>'+
-      '<td style="color:'+stc+';letter-spacing:-1px">'+'★'.repeat(r.stars||0)+'</td>'+
-      '<td>'+esc2(r.school)+'</td>'+
-      '<td><span style="padding:2px 8px;border-radius:100px;font-size:0.68rem;font-weight:700;background:'+sc+'22;color:'+sc+'">'+esc2(r.state)+'</span></td>'+
-      '<td>'+esc2(r.classYear)+'</td>'+
-      '<td style="font-weight:600;color:var(--text-primary)">'+esc2(r.committedTo)+'</td>'+
-      '<td style="color:var(--text-muted);font-size:0.78rem">'+esc2(r.conference||'')+'</td>'+
-      '<td><span style="padding:2px 8px;border-radius:100px;font-size:0.68rem;font-weight:700;background:'+statc+'22;color:'+statc+'">'+esc2(r.status)+'</span></td>';
-    tbody.appendChild(tr);
-  });
-}
-
-window.sortCT = function(f){ if(_ctSort.field===f)_ctSort.asc=!_ctSort.asc; else{_ctSort.field=f;_ctSort.asc=true;} renderCommitmentsTable(); };
-
-// -- Transfers --
-function renderTransfersTable() {
-  if (typeof TRANSFERS === 'undefined') return;
-  var state  = document.getElementById('tpStateFilter').value;
-  var status = document.getElementById('tpStatusFilter').value;
-  var q      = (document.getElementById('tpSearch').value||'').toLowerCase();
-  var data = TRANSFERS.filter(function(r){
-    if (state !== 'all' && r.fromState !== state) return false;
-    if (status !== 'all' && r.status !== status) return false;
-    if (q && ![r.athlete,r.fromSchool,r.toSchool,r.pos].join(' ').toLowerCase().includes(q)) return false;
-    return true;
-  });
-  data.sort(function(a,b){
-    var av=a[_tpSort.field]||'', bv=b[_tpSort.field]||'';
-    return typeof av==='string' ? (_tpSort.asc?av.localeCompare(bv):bv.localeCompare(av)) : (_tpSort.asc?av-bv:bv-av);
-  });
-  document.getElementById('tpCount').textContent = data.length + ' transfers';
-  var tbody = document.getElementById('tpTableBody');
-  tbody.innerHTML = '';
-  data.forEach(function(r){
-    var sc = SC[r.fromState]||'#888';
-    var stc = STAR_C[r.stars]||'#888';
-    var statc = STATUS_C[r.status]||'#888';
-    var tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td style="font-weight:700;color:var(--text-primary)">'+esc2(r.athlete)+'</td>'+
-      '<td>'+esc2(r.pos)+'</td>'+
-      '<td style="color:'+stc+';letter-spacing:-1px">'+'★'.repeat(r.stars||0)+'</td>'+
-      '<td>'+esc2(r.fromSchool)+'</td>'+
-      '<td><span style="padding:2px 8px;border-radius:100px;font-size:0.68rem;font-weight:700;background:'+sc+'22;color:'+sc+'">'+esc2(r.fromState)+'</span></td>'+
-      '<td style="color:var(--text-primary)">'+esc2(r.toSchool||'Undecided')+'</td>'+
-      '<td><span style="padding:2px 8px;border-radius:100px;font-size:0.68rem;font-weight:700;background:'+statc+'22;color:'+statc+'">'+esc2(r.status)+'</span></td>'+
-      '<td style="color:var(--text-muted);font-size:0.78rem">'+esc2(r.eligibility||'')+'</td>';
-    tbody.appendChild(tr);
-  });
-}
-
-window.sortTP = function(f){ if(_tpSort.field===f)_tpSort.asc=!_tpSort.asc; else{_tpSort.field=f;_tpSort.asc=true;} renderTransfersTable(); };
-
-// -- Stats in hero --
-function updateRecruitHeroStats() {
-  if (typeof RECRUITS !== 'undefined') document.getElementById('rhTotalRecruits').textContent = RECRUITS.length + '+';
-  if (typeof COMMITMENTS !== 'undefined') document.getElementById('rhCommitments').textContent = COMMITMENTS.length + '+';
-  if (typeof TRANSFERS !== 'undefined') {
-    var inPortal = TRANSFERS.filter(function(t){ return t.status === 'In Portal'; }).length;
-    document.getElementById('rhTransfers').textContent = inPortal;
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (id === 'mapModal' && !mapInitialized) {
+    mapInitialized = true;
+    setTimeout(function() {
+      if (typeof initRecruitMap === 'function') initRecruitMap();
+      else if (typeof map !== 'undefined') map.invalidateSize();
+    }, 150);
   }
+  if (id === 'ctModal') renderCT();
+  if (id === 'tpModal') renderTP();
 }
 
-function smoothScroll(selector) {
-  var el = document.querySelector(selector);
-  if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
 }
 
-// Show below-map sections toggle button
-document.addEventListener('DOMContentLoaded', function(){
-  renderCommitmentsTable();
-  renderTransfersTable();
-  updateRecruitHeroStats();
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(function(m) {
+      m.classList.remove('open');
+    });
+    document.body.style.overflow = '';
+  }
+});
 
-  // Add scroll toggle button to the map view toggle bar
-  var toggleBar = document.querySelector('.view-toggle-bar');
-  if (toggleBar) {
-    var btn = document.createElement('button');
-    btn.className = 'view-btn';
-    btn.style.marginLeft = '8px';
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg> Tracker &amp; Portal';
-    btn.onclick = function(){
-      var sections = document.getElementById('belowMapSections');
-      sections.scrollIntoView({ behavior:'smooth', block:'start' });
-    };
-    toggleBar.appendChild(btn);
+// ---- Shared utils ----
+var SC={GA:'#4caf50',FL:'#2196f3',TX:'#f44336',CA:'#ff9800'};
+var STAR_C={5:'#FFD700',4:'#c41e3a',3:'#4a90d9'};
+var STAT_C={'Committed':'#50c878','Signed':'#FFD700','Decommitted':'#c41e3a','Enrolled':'#4a90d9','In Portal':'#e8872b','Withdrawn':'#888'};
+function esc(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+
+// ---- Commitment Tracker ----
+var _ctSort={f:'stars',asc:false};
+function renderCT(){
+  if(typeof COMMITMENTS==='undefined') return;
+  var state=document.getElementById('ctState').value;
+  var year=document.getElementById('ctYear').value;
+  var status=document.getElementById('ctStatus').value;
+  var q=(document.getElementById('ctSearch').value||'').toLowerCase();
+  var data=COMMITMENTS.filter(function(r){
+    if(state!=='all'&&r.state!==state) return false;
+    if(year!=='all'&&String(r.classYear)!==year) return false;
+    if(status!=='all'&&r.status!==status) return false;
+    if(q&&![r.athlete,r.school,r.committedTo,r.pos].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  data.sort(function(a,b){var av=a[_ctSort.f]||'',bv=b[_ctSort.f]||'';return typeof av==='string'?(_ctSort.asc?av.localeCompare(bv):bv.localeCompare(av)):(_ctSort.asc?av-bv:bv-av);});
+  document.getElementById('ctCount').textContent=data.length+' commits';
+  var tb=document.getElementById('ctBody');
+  tb.innerHTML='';
+  data.forEach(function(r){
+    var sc=SC[r.state]||'#888',stc=STAR_C[r.stars]||'#888',satc=STAT_C[r.status]||'#888';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="font-weight:700;color:var(--text-primary)">'+esc(r.athlete)+'</td><td>'+esc(r.pos)+'</td><td style="color:'+stc+';letter-spacing:-1px">'+'★'.repeat(r.stars||0)+'</td><td>'+esc(r.school)+'</td><td><span class="state-pill" style="background:'+sc+'22;color:'+sc+'">'+esc(r.state)+'</span></td><td>'+esc(r.classYear)+'</td><td style="font-weight:600">'+esc(r.committedTo)+'</td><td style="color:var(--text-muted);font-size:0.78rem">'+esc(r.conference||'')+'</td><td><span class="state-pill" style="background:'+satc+'22;color:'+satc+'">'+esc(r.status)+'</span></td>';
+    tb.appendChild(tr);
+  });
+}
+window.sortCT=function(f){if(_ctSort.f===f)_ctSort.asc=!_ctSort.asc;else{_ctSort.f=f;_ctSort.asc=true;}renderCT();};
+
+// ---- Transfer Portal ----
+var _tpSort={f:'status',asc:true};
+function renderTP(){
+  if(typeof TRANSFERS==='undefined') return;
+  var state=document.getElementById('tpState').value;
+  var status=document.getElementById('tpStatus').value;
+  var q=(document.getElementById('tpSearch').value||'').toLowerCase();
+  var data=TRANSFERS.filter(function(r){
+    if(state!=='all'&&r.fromState!==state) return false;
+    if(status!=='all'&&r.status!==status) return false;
+    if(q&&![r.athlete,r.fromSchool,r.toSchool,r.pos].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  data.sort(function(a,b){var av=a[_tpSort.f]||'',bv=b[_tpSort.f]||'';return typeof av==='string'?(_tpSort.asc?av.localeCompare(bv):bv.localeCompare(av)):(_tpSort.asc?av-bv:bv-av);});
+  document.getElementById('tpCount').textContent=data.length+' transfers';
+  var tb=document.getElementById('tpBody');
+  tb.innerHTML='';
+  data.forEach(function(r){
+    var sc=SC[r.fromState]||'#888',stc=STAR_C[r.stars]||'#888',satc=STAT_C[r.status]||'#888';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="font-weight:700;color:var(--text-primary)">'+esc(r.athlete)+'</td><td>'+esc(r.pos)+'</td><td style="color:'+stc+';letter-spacing:-1px">'+'★'.repeat(r.stars||0)+'</td><td>'+esc(r.fromSchool)+'</td><td><span class="state-pill" style="background:'+sc+'22;color:'+sc+'">'+esc(r.fromState)+'</span></td><td style="color:var(--text-primary)">'+esc(r.toSchool||'Undecided')+'</td><td><span class="state-pill" style="background:'+satc+'22;color:'+satc+'">'+esc(r.status)+'</span></td><td style="color:var(--text-muted);font-size:0.78rem">'+esc(r.eligibility||'')+'</td>';
+    tb.appendChild(tr);
+  });
+}
+window.sortTP=function(f){if(_tpSort.f===f)_tpSort.asc=!_tpSort.asc;else{_tpSort.f=f;_tpSort.asc=true;}renderTP();};
+
+// ---- Hero stats ----
+document.addEventListener('DOMContentLoaded',function(){
+  if(typeof RECRUITS!=='undefined') document.getElementById('tpTotalR').textContent=RECRUITS.length+'+';
+  if(typeof COMMITMENTS!=='undefined') document.getElementById('tpTotalC').textContent=COMMITMENTS.length+'+';
+  if(typeof TRANSFERS!=='undefined'){
+    var n=TRANSFERS.filter(function(t){return t.status==='In Portal';}).length;
+    document.getElementById('tpTotalT').textContent=n;
   }
 });
 </script>
