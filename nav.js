@@ -89,11 +89,7 @@
 
   <!-- External buttons -->
   <div class="nav-external">
-    <a href="chat.html" class="ext-btn nav-ai-btn" title="AI Assistant">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      AI Chat
-    </a>
-    <a href="https://www.hudl.com" target="_blank" rel="noopener" class="ext-btn">Hudl</a>
+<a href="https://www.hudl.com" target="_blank" rel="noopener" class="ext-btn">Hudl</a>
     <a href="https://www.maxpreps.com" target="_blank" rel="noopener" class="ext-btn">MaxPreps</a>
     <a href="https://247sports.com" target="_blank" rel="noopener" class="ext-btn">247Sports</a>
     <a href="https://www.on3.com" target="_blank" rel="noopener" class="ext-btn">On3</a>

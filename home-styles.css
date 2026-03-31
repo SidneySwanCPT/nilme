@@ -1145,3 +1145,188 @@ body.home-page { overflow-y: auto; height: auto; }
 @media (max-width: 480px) {
   .plain-camps-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================================
+   CAMP 8 AI SECTION
+   ============================================ */
+.camp8ai-section {
+  padding: var(--space-xl) var(--space-xl);
+  background: linear-gradient(135deg, rgba(212,168,67,0.06) 0%, rgba(212,168,67,0.02) 50%, rgba(8,8,16,0) 100%);
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle grid texture */
+.camp8ai-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(212,168,67,0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+.camp8ai-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: var(--space-xl);
+  align-items: start;
+  position: relative;
+  z-index: 1;
+}
+
+.camp8ai-left { display: flex; flex-direction: column; gap: var(--space-md); }
+
+.camp8ai-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  opacity: 0.7;
+}
+
+/* The main Camp 8 AI button */
+.camp8ai-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, #d4a843 0%, #f0c855 100%);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: #0a0a12;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 24px rgba(212,168,67,0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.camp8ai-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.camp8ai-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(212,168,67,0.45);
+}
+
+.camp8ai-btn-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.camp8ai-btn-text { flex: 1; }
+
+.camp8ai-btn-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: #0a0a12;
+}
+
+.camp8ai-btn-sub {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0,0,0,0.6);
+  margin-top: 3px;
+}
+
+.camp8ai-btn-arrow {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: rgba(0,0,0,0.4);
+  transition: transform 0.15s;
+}
+.camp8ai-btn:hover .camp8ai-btn-arrow { transform: translateX(4px); }
+
+.camp8ai-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Capabilities grid */
+.camp8ai-right { display: flex; flex-direction: column; gap: var(--space-md); }
+
+.camp8ai-caps-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.camp8ai-caps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.camp8ai-cap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.15s ease;
+}
+
+.camp8ai-cap:hover {
+  border-color: var(--gold);
+  background: var(--gold-dim);
+  transform: translateY(-2px);
+}
+
+.cap-icon { font-size: 1.2rem; }
+
+.cap-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.cap-desc {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.camp8ai-cap:hover .cap-title { color: var(--gold); }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .camp8ai-inner { grid-template-columns: 1fr; }
+  .camp8ai-left { max-width: 480px; }
+  .camp8ai-caps { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .camp8ai-section { padding: var(--space-lg) var(--space-md); }
+  .camp8ai-caps { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 420px) {
+  .camp8ai-caps { grid-template-columns: 1fr; }
+}
