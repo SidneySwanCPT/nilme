@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Commitment Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="tracker-styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+</head>
+<body class="tracker-page">
+
+<nav class="nav">
+  <a href="index.html" class="nav-brand">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 2C10 2 4 8 4 16s6 14 12 14c2 0 4-2 4-4v-1c0-1-.5-2-1-2.5-.5-.5-1-1.5-1-2.5 0-2 1.5-3.5 3.5-3.5H25c3.3 0 6-2.7 6-6C31 7.5 24.5 2 16 2z" fill="#d4a843" opacity="0.15"/>
+      <ellipse cx="16" cy="16" rx="10" ry="7" stroke="#d4a843" stroke-width="2" fill="none"/>
+      <path d="M16 9v14M10 12.5c2-1.5 4-2 6-2s4 .5 6 2" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M10 19.5c2 1.5 4 2 6 2s4-.5 6-2" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    </svg>
+    <span class="nav-brand-text">Camp <span>8</span></span>
+  </a>
+  <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle menu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <ul class="nav-links">
+    <li><a href="nil-central.html">NIL Central</a></li>
+    <li><a href="camps.html">Prospect Camps</a></li>
+    <li><a href="recruits.html">Recruiting Central</a></li>
+    <li><a href="commitments.html" class="active">Commitments</a></li>
+    <li><a href="transfer-portal.html">Transfer Portal</a></li>
+    <li><a href="powerhouse.html">Powerhouse Central</a></li>
+  </ul>
+</nav>
+
+<!-- Header -->
+<div class="tracker-header">
+  <div class="tracker-header-inner">
+    <div>
+      <div class="tracker-eyebrow">Recruiting Central</div>
+      <h1 class="tracker-title">Commitment <span>Tracker</span></h1>
+      <p class="tracker-subtitle">Verbal commitments and signed letters of intent from top prospects in Georgia, Florida, Texas &amp; California.</p>
+    </div>
+    <div class="tracker-header-links">
+      <a href="recruits.html" class="tracker-link-btn">Recruits Map →</a>
+      <a href="transfer-portal.html" class="tracker-link-btn">Transfer Portal →</a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="tracker-filters">
+    <div class="filter-row">
+      <div class="filter-pill-group" id="stateFilter">
+        <button class="filter-pill active" data-val="all" onclick="setFilter('state','all',this)">All States</button>
+        <button class="filter-pill" data-val="GA" onclick="setFilter('state','GA',this)">Georgia</button>
+        <button class="filter-pill" data-val="FL" onclick="setFilter('state','FL',this)">Florida</button>
+        <button class="filter-pill" data-val="TX" onclick="setFilter('state','TX',this)">Texas</button>
+        <button class="filter-pill" data-val="CA" onclick="setFilter('state','CA',this)">California</button>
+      </div>
+      <div class="filter-pill-group" id="yearFilter">
+        <button class="filter-pill active" data-val="all" onclick="setFilter('year','all',this)">All Classes</button>
+        <button class="filter-pill" data-val="2026" onclick="setFilter('year','2026',this)">2026</button>
+        <button class="filter-pill" data-val="2027" onclick="setFilter('year','2027',this)">2027</button>
+        <button class="filter-pill" data-val="2028" onclick="setFilter('year','2028',this)">2028</button>
+      </div>
+      <div class="filter-pill-group" id="statusFilter">
+        <button class="filter-pill active" data-val="all" onclick="setFilter('status','all',this)">All Status</button>
+        <button class="filter-pill" data-val="Signed" onclick="setFilter('status','Signed',this)">Signed</button>
+        <button class="filter-pill" data-val="Committed" onclick="setFilter('status','Committed',this)">Committed</button>
+        <button class="filter-pill" data-val="Decommitted" onclick="setFilter('status','Decommitted',this)">Decommitted</button>
+      </div>
+      <input type="text" class="tracker-search" id="commitSearch" placeholder="Search athlete, school, college…" oninput="renderCommitments()">
+    </div>
+  </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="tracker-stats-bar" id="statsBar"></div>
+
+<!-- Content -->
+<div class="tracker-content">
+
+  <!-- Recent Commitments Feed (left) -->
+  <div class="commit-feed" id="commitFeed"></div>
+
+  <!-- Right: Top Schools Committed To -->
+  <div class="tracker-sidebar">
+    <div class="tracker-widget">
+      <div class="tracker-widget-title">Top Schools Receiving Commits</div>
+      <div id="topSchoolsList"></div>
+    </div>
+    <div class="tracker-widget">
+      <div class="tracker-widget-title">By Conference</div>
+      <div id="conferenceList"></div>
+    </div>
+    <div class="tracker-widget">
+      <div class="tracker-widget-title">Live News Feed</div>
+      <div class="commit-news" id="commitNews">
+        <div class="news-skeleton"></div>
+        <div class="news-skeleton"></div>
+        <div class="news-skeleton"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a href="index.html" class="footer-brand">Camp <span>8</span></a>
+    <div class="footer-links">
+      <a href="nil-central.html">NIL Central</a>
+      <a href="camps.html">Prospect Camps</a>
+      <a href="recruits.html">Recruiting Central</a>
+      <a href="powerhouse.html">Powerhouse Central</a>
+    </div>
+    <a href="https://www.instagram.com/n.i.l.me" target="_blank" rel="noopener" class="ig-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+      @n.i.l.me
+    </a>
+  </div>
+</footer>
+
+<script src="commitments-data.js"></script>
+<script>
+const CONF_COLORS = {
+  'SEC':'#c41e3a','Big Ten':'#4a90d9','ACC':'#e8872b','Big 12':'#7b2d8b',
+  'Pac-12':'#0052a5','Independent':'#50c878','American':'#FFD700','Other':'#7a7a9a'
+};
+const STATE_COLORS = {GA:'#4caf50',FL:'#2196f3',TX:'#f44336',CA:'#ff9800'};
+const STATUS_COLORS = {Signed:'#50c878',Committed:'#FFD700',Decommitted:'#c41e3a',Enrolled:'#4a90d9'};
+
+let filters = { state:'all', year:'all', status:'all' };
+let sortField = 'date', sortAsc = false;
+
+function setFilter(key, val, btn) {
+  filters[key] = val;
+  const grp = btn.closest('.filter-pill-group');
+  grp.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCommitments();
+}
+
+function getFiltered() {
+  const q = (document.getElementById('commitSearch')?.value || '').toLowerCase();
+  return COMMITMENTS.filter(c => {
+    if (filters.state !== 'all' && c.state !== filters.state) return false;
+    if (filters.year !== 'all' && String(c.classYear) !== filters.year) return false;
+    if (filters.status !== 'all' && c.status !== filters.status) return false;
+    if (q && ![c.athlete,c.school,c.city,c.committedTo,c.pos].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderCommitments() {
+  const data = getFiltered();
+  data.sort((a,b) => {
+    const av = a[sortField]||'', bv = b[sortField]||'';
+    return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
+  // Stats bar
+  const signed = data.filter(c=>c.status==='Signed').length;
+  const committed = data.filter(c=>c.status==='Committed').length;
+  const decommitted = data.filter(c=>c.status==='Decommitted').length;
+  const stars5 = data.filter(c=>c.stars===5).length;
+  document.getElementById('statsBar').innerHTML = `
+    <div class="tracker-stat"><span class="ts-num">${data.length}</span><span class="ts-label">Total</span></div>
+    <div class="tracker-stat"><span class="ts-num" style="color:#50c878">${signed}</span><span class="ts-label">Signed</span></div>
+    <div class="tracker-stat"><span class="ts-num" style="color:#FFD700">${committed}</span><span class="ts-label">Committed</span></div>
+    <div class="tracker-stat"><span class="ts-num" style="color:#c41e3a">${decommitted}</span><span class="ts-label">Decommitted</span></div>
+    <div class="tracker-stat"><span class="ts-num" style="color:#FFD700">${stars5}</span><span class="ts-label">5-Stars</span></div>
+  `;
+
+  // Feed
+  const feed = document.getElementById('commitFeed');
+  feed.innerHTML = '';
+  if (!data.length) {
+    feed.innerHTML = '<div class="tracker-empty">No commitments match your filters.</div>';
+    return;
+  }
+  data.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'commit-card';
+    const sc = STATUS_COLORS[c.status]||'#888';
+    const cc = CONF_COLORS[c.conference]||'#7a7a9a';
+    const stateC = STATE_COLORS[c.state]||'#888';
+    card.innerHTML = `
+      <div class="commit-card-top">
+        <div class="commit-name">${esc(c.athlete)}</div>
+        <span class="commit-status-badge" style="background:${sc}22;color:${sc}">${esc(c.status)}</span>
+      </div>
+      <div class="commit-meta">
+        <span style="color:${stateC}">${esc(c.state)}</span> &middot;
+        ${starStr(c.stars)} &middot; ${esc(c.pos)} &middot; Class of ${c.classYear}
+      </div>
+      <div class="commit-school-row">
+        <span class="commit-from">${esc(c.school)}, ${esc(c.city)}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        <span class="commit-to" style="color:${cc}">${esc(c.committedTo)}</span>
+        <span class="commit-conf" style="color:${cc}">(${esc(c.conference||'')})</span>
+      </div>
+      <div class="commit-date">
+        ${fmtDate(c.date)} &middot;
+        <a href="${esc(c.sourceUrl)}" target="_blank" rel="noopener" class="profile-link">${esc(c.source)}</a>
+      </div>
+    `;
+    feed.appendChild(card);
+  });
+
+  // Top schools
+  const schoolCounts = {};
+  const schoolConf = {};
+  COMMITMENTS.forEach(c => {
+    schoolCounts[c.committedTo] = (schoolCounts[c.committedTo]||0)+1;
+    schoolConf[c.committedTo] = c.conference;
+  });
+  const sorted = Object.entries(schoolCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  document.getElementById('topSchoolsList').innerHTML = sorted.map(([s,c])=>{
+    const cc = CONF_COLORS[schoolConf[s]]||'#7a7a9a';
+    return `<div class="stat-row"><span class="stat-label" style="color:${cc}">${esc(s)}</span><span class="stat-value">${c}</span></div>`;
+  }).join('');
+
+  // By conference
+  const confCounts = {};
+  COMMITMENTS.forEach(c => { confCounts[c.conference]=(confCounts[c.conference]||0)+1; });
+  const confSorted = Object.entries(confCounts).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('conferenceList').innerHTML = confSorted.map(([conf,ct])=>{
+    const cc = CONF_COLORS[conf]||'#7a7a9a';
+    return `<div class="stat-row"><span class="stat-label"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${cc};margin-right:6px"></span>${esc(conf)}</span><span class="stat-value">${ct}</span></div>`;
+  }).join('');
+}
+
+async function loadCommitNews() {
+  const url = 'https://news.google.com/rss/search?q=high+school+football+commitment+2026+2027+SEC+recruit&hl=en-US&gl=US&ceid=US:en';
+  const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+  try {
+    const res = await fetch(RSS2JSON + encodeURIComponent(url) + '&count=5');
+    const data = await res.json();
+    const items = data.items || [];
+    const el = document.getElementById('commitNews');
+    if (!items.length) { el.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:0.8rem">No news available</div>'; return; }
+    el.innerHTML = items.slice(0,5).map(it=>`
+      <a href="${esc(it.link)}" target="_blank" rel="noopener" class="commit-news-item">
+        <div class="cni-source">${esc(it.author||xDomain(it.link))}</div>
+        <div class="cni-title">${esc(strip(it.title||''))}</div>
+      </a>`).join('');
+  } catch(e) {
+    document.getElementById('commitNews').innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:0.8rem">Feed unavailable</div>';
+  }
+}
+
+function fmtDate(s){try{return new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return s||'';}}
+function starStr(n){return'<span style="color:#FFD700;letter-spacing:-1px">'+'★'.repeat(n)+'</span>'+'<span style="color:var(--text-muted);letter-spacing:-1px">'+'☆'.repeat(5-n)+'</span>';}
+function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+function strip(h){const d=document.createElement('div');d.innerHTML=h;return d.textContent||'';}
+function xDomain(u){try{return new URL(u).hostname.replace('www.','');}catch{return '';}}
+
+document.addEventListener('DOMContentLoaded',()=>{ renderCommitments(); loadCommitNews(); });
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

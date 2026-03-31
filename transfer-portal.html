@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Transfer Portal</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="tracker-styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+</head>
+<body class="tracker-page">
+
+<nav class="nav">
+  <a href="index.html" class="nav-brand">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 2C10 2 4 8 4 16s6 14 12 14c2 0 4-2 4-4v-1c0-1-.5-2-1-2.5-.5-.5-1-1.5-1-2.5 0-2 1.5-3.5 3.5-3.5H25c3.3 0 6-2.7 6-6C31 7.5 24.5 2 16 2z" fill="#d4a843" opacity="0.15"/>
+      <ellipse cx="16" cy="16" rx="10" ry="7" stroke="#d4a843" stroke-width="2" fill="none"/>
+      <path d="M16 9v14M10 12.5c2-1.5 4-2 6-2s4 .5 6 2" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M10 19.5c2 1.5 4 2 6 2s4-.5 6-2" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    </svg>
+    <span class="nav-brand-text">Camp <span>8</span></span>
+  </a>
+  <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle menu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <ul class="nav-links">
+    <li><a href="nil-central.html">NIL Central</a></li>
+    <li><a href="camps.html">Prospect Camps</a></li>
+    <li><a href="recruits.html">Recruiting Central</a></li>
+    <li><a href="commitments.html">Commitments</a></li>
+    <li><a href="transfer-portal.html" class="active">Transfer Portal</a></li>
+    <li><a href="powerhouse.html">Powerhouse Central</a></li>
+  </ul>
+</nav>
+
+<!-- Header -->
+<div class="tracker-header">
+  <div class="tracker-header-inner">
+    <div>
+      <div class="tracker-eyebrow">Football · National</div>
+      <h1 class="tracker-title">Transfer <span>Portal</span></h1>
+      <p class="tracker-subtitle">High school football athletes who have entered the transfer portal or switched schools. Updated manually — add transfers via the data file.</p>
+    </div>
+    <div class="tracker-header-links">
+      <a href="commitments.html" class="tracker-link-btn">Commitment Tracker →</a>
+      <a href="recruits.html" class="tracker-link-btn">Recruits Map →</a>
+    </div>
+  </div>
+
+  <div class="tracker-filters">
+    <div class="filter-row">
+      <div class="filter-pill-group" id="fromStateFilter">
+        <button class="filter-pill active" data-val="all" onclick="setFilter('fromState','all',this)">All States</button>
+        <button class="filter-pill" data-val="GA" onclick="setFilter('fromState','GA',this)">GA</button>
+        <button class="filter-pill" data-val="FL" onclick="setFilter('fromState','FL',this)">FL</button>
+        <button class="filter-pill" data-val="TX" onclick="setFilter('fromState','TX',this)">TX</button>
+        <button class="filter-pill" data-val="CA" onclick="setFilter('fromState','CA',this)">CA</button>
+        <button class="filter-pill" data-val="other" onclick="setFilter('fromState','other',this)">Other</button>
+      </div>
+      <div class="filter-pill-group" id="tStatusFilter">
+        <button class="filter-pill active" data-val="all" onclick="setFilter('tstatus','all',this)">All Status</button>
+        <button class="filter-pill" data-val="In Portal" onclick="setFilter('tstatus','In Portal',this)">In Portal</button>
+        <button class="filter-pill" data-val="Committed" onclick="setFilter('tstatus','Committed',this)">Committed</button>
+        <button class="filter-pill" data-val="Enrolled" onclick="setFilter('tstatus','Enrolled',this)">Enrolled</button>
+        <button class="filter-pill" data-val="Withdrawn" onclick="setFilter('tstatus','Withdrawn',this)">Withdrawn</button>
+      </div>
+      <input type="text" class="tracker-search" id="transferSearch" placeholder="Search athlete, school, city…" oninput="renderTransfers()">
+    </div>
+  </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="tracker-stats-bar" id="tStatsBar"></div>
+
+<!-- Content -->
+<div class="tracker-content">
+  <div class="commit-feed" id="transferFeed"></div>
+  <div class="tracker-sidebar">
+    <div class="tracker-widget">
+      <div class="tracker-widget-title">By Status</div>
+      <div id="statusBreakdown"></div>
+    </div>
+    <div class="tracker-widget">
+      <div class="tracker-widget-title">Top Destination Schools</div>
+      <div id="destSchools"></div>
+    </div>
+    <div class="tracker-widget">
+      <div class="tracker-widget-title">Eligibility Breakdown</div>
+      <div id="eligBreakdown"></div>
+    </div>
+    <div class="tracker-widget">
+      <div class="tracker-widget-title">Transfer News</div>
+      <div class="commit-news" id="transferNews">
+        <div class="news-skeleton"></div>
+        <div class="news-skeleton"></div>
+        <div class="news-skeleton"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a href="index.html" class="footer-brand">Camp <span>8</span></a>
+    <div class="footer-links">
+      <a href="nil-central.html">NIL Central</a>
+      <a href="camps.html">Prospect Camps</a>
+      <a href="recruits.html">Recruiting Central</a>
+      <a href="powerhouse.html">Powerhouse Central</a>
+    </div>
+    <a href="https://www.instagram.com/n.i.l.me" target="_blank" rel="noopener" class="ig-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+      @n.i.l.me
+    </a>
+  </div>
+</footer>
+
+<script src="transfer-data.js"></script>
+<script>
+const STAT_COLORS={GA:'#4caf50',FL:'#2196f3',TX:'#f44336',CA:'#ff9800'};
+const TSTAT_COLORS={'In Portal':'#FFD700','Committed':'#4a90d9','Enrolled':'#50c878','Withdrawn':'#c41e3a','Pending':'#888'};
+const ELIG_COLORS={'Immediate':'#50c878','Sit Year':'#c41e3a','Pending':'#FFD700'};
+
+let tFilters={fromState:'all',tstatus:'all'};
+
+function setFilter(key,val,btn){
+  tFilters[key]=val;
+  btn.closest('.filter-pill-group').querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTransfers();
+}
+
+function getFiltered(){
+  const q=(document.getElementById('transferSearch')?.value||'').toLowerCase();
+  const KEY4=['GA','FL','TX','CA'];
+  return TRANSFERS.filter(t=>{
+    if(tFilters.fromState!=='all'){
+      if(tFilters.fromState==='other'&&KEY4.includes(t.fromState)) return false;
+      if(tFilters.fromState!=='other'&&t.fromState!==tFilters.fromState) return false;
+    }
+    if(tFilters.tstatus!=='all'&&t.status!==tFilters.tstatus) return false;
+    if(q&&![t.athlete,t.fromSchool,t.toSchool,t.fromCity,t.toCity,t.fromState,t.toState,t.pos].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderTransfers(){
+  const data=getFiltered();
+  data.sort((a,b)=>b.date.localeCompare(a.date));
+
+  const inPortal=data.filter(t=>t.status==='In Portal').length;
+  const committed=data.filter(t=>t.status==='Committed').length;
+  const enrolled=data.filter(t=>t.status==='Enrolled').length;
+  document.getElementById('tStatsBar').innerHTML=`
+    <div class="tracker-stat"><span class="ts-num">${data.length}</span><span class="ts-label">Total</span></div>
+    <div class="tracker-stat"><span class="ts-num" style="color:#FFD700">${inPortal}</span><span class="ts-label">In Portal</span></div>
+    <div class="tracker-stat"><span class="ts-num" style="color:#4a90d9">${committed}</span><span class="ts-label">Committed</span></div>
+    <div class="tracker-stat"><span class="ts-num" style="color:#50c878">${enrolled}</span><span class="ts-label">Enrolled</span></div>
+  `;
+
+  const feed=document.getElementById('transferFeed');
+  feed.innerHTML='';
+  if(!data.length){feed.innerHTML='<div class="tracker-empty">No transfers match your filters.</div>';return;}
+  data.forEach(t=>{
+    const sc=TSTAT_COLORS[t.status]||'#888';
+    const ec=ELIG_COLORS[t.eligibility]||'#888';
+    const fromC=STAT_COLORS[t.fromState]||'#aaa';
+    const toC=STAT_COLORS[t.toState]||'#aaa';
+    const card=document.createElement('div');
+    card.className='commit-card';
+    card.innerHTML=`
+      <div class="commit-card-top">
+        <div class="commit-name">${esc(t.athlete)}</div>
+        <span class="commit-status-badge" style="background:${sc}22;color:${sc}">${esc(t.status)}</span>
+      </div>
+      <div class="commit-meta">${starStr(t.stars)} · ${esc(t.pos)} · Class of ${t.classYear}</div>
+      <div class="transfer-schools">
+        <div class="transfer-school from">
+          <div class="ts-label-sm">From</div>
+          <div class="ts-name">${esc(t.fromSchool)}</div>
+          <div class="ts-loc" style="color:${fromC}">${esc(t.fromCity)}, ${esc(t.fromState)}</div>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        <div class="transfer-school to">
+          <div class="ts-label-sm">To</div>
+          <div class="ts-name">${t.toSchool?esc(t.toSchool):'<span style="color:var(--text-muted)">Evaluating</span>'}</div>
+          ${t.toCity?`<div class="ts-loc" style="color:${toC}">${esc(t.toCity)}, ${esc(t.toState)}</div>`:''}
+        </div>
+      </div>
+      <div class="transfer-footer">
+        <span class="elig-badge" style="background:${ec}22;color:${ec}">${esc(t.eligibility)}</span>
+        ${t.reason&&t.reason!=='Undisclosed'?`<span class="transfer-reason">${esc(t.reason)}</span>`:''}
+      </div>
+      <div class="commit-date">${fmtDate(t.date)} · <a href="${esc(t.sourceUrl)}" target="_blank" rel="noopener" class="profile-link">${esc(t.source)}</a></div>
+    `;
+    feed.appendChild(card);
+  });
+
+  // Status breakdown
+  const sCounts={};TRANSFERS.forEach(t=>{sCounts[t.status]=(sCounts[t.status]||0)+1;});
+  document.getElementById('statusBreakdown').innerHTML=Object.entries(sCounts).sort((a,b)=>b[1]-a[1]).map(([s,c])=>`<div class="stat-row"><span class="stat-label" style="color:${TSTAT_COLORS[s]||'#888'}">${esc(s)}</span><span class="stat-value">${c}</span></div>`).join('');
+
+  // Destination schools
+  const dCounts={};TRANSFERS.filter(t=>t.toSchool).forEach(t=>{dCounts[t.toSchool]=(dCounts[t.toSchool]||0)+1;});
+  document.getElementById('destSchools').innerHTML=Object.entries(dCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([s,c])=>`<div class="stat-row"><span class="stat-label">${esc(s)}</span><span class="stat-value">${c}</span></div>`).join('');
+
+  // Eligibility
+  const eCounts={};TRANSFERS.forEach(t=>{eCounts[t.eligibility]=(eCounts[t.eligibility]||0)+1;});
+  document.getElementById('eligBreakdown').innerHTML=Object.entries(eCounts).sort((a,b)=>b[1]-a[1]).map(([e,c])=>`<div class="stat-row"><span class="stat-label" style="color:${ELIG_COLORS[e]||'#888'}">${esc(e)}</span><span class="stat-value">${c}</span></div>`).join('');
+}
+
+async function loadTransferNews(){
+  const RSS2JSON='https://api.rss2json.com/v1/api.json?rss_url=';
+  const url='https://news.google.com/rss/search?q=high+school+football+transfer+portal+2026&hl=en-US&gl=US&ceid=US:en';
+  try{
+    const res=await fetch(RSS2JSON+encodeURIComponent(url)+'&count=5');
+    const data=await res.json();
+    const items=data.items||[];
+    const el=document.getElementById('transferNews');
+    if(!items.length){el.innerHTML='<div style="padding:12px;color:var(--text-muted);font-size:0.8rem">No news available</div>';return;}
+    el.innerHTML=items.slice(0,5).map(it=>`<a href="${esc(it.link)}" target="_blank" rel="noopener" class="commit-news-item"><div class="cni-source">${esc(it.author||xDomain(it.link))}</div><div class="cni-title">${esc(strip(it.title||''))}</div></a>`).join('');
+  }catch(e){document.getElementById('transferNews').innerHTML='<div style="padding:12px;color:var(--text-muted);font-size:0.8rem">Feed unavailable</div>';}
+}
+
+function fmtDate(s){try{return new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return s||'';}}
+function starStr(n){return'<span style="color:#FFD700;letter-spacing:-1px">'+'★'.repeat(n)+'</span>'+'<span style="color:var(--text-muted);letter-spacing:-1px">'+'☆'.repeat(5-n)+'</span>';}
+function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+function strip(h){const d=document.createElement('div');d.innerHTML=h;return d.textContent||'';}
+function xDomain(u){try{return new URL(u).hostname.replace('www.','');}catch{return'';}}
+
+document.addEventListener('DOMContentLoaded',()=>{renderTransfers();loadTransferNews();});
+</script>
+<script src="shared.js"></script>
+</body>
+</html>
