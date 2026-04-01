@@ -450,8 +450,16 @@ function showError(el, msg) {
   el.style.display = 'block';
 }
 
-// ---- If already logged in, redirect home ----
+// ---- Handle URL params ----
 document.addEventListener('DOMContentLoaded', async function() {
+  // Auto-switch to signup tab if ?tab=signup
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('tab') === 'signup') {
+    const signupTab = document.querySelector('.login-tab:nth-child(2)');
+    if (signupTab) setTab('signup', signupTab);
+  }
+
+  // If already logged in, redirect home
   const user = await getCurrentUser();
   if (user) window.location.href = 'index.html';
 });

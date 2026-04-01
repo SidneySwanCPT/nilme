@@ -11,6 +11,16 @@
 </head>
 <body class="home-page">
 
+<!-- Login redirect overlay -->
+<div id="loginRedirectOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(8,8,16,0.97);align-items:center;justify-content:center;flex-direction:column;gap:var(--space-lg)">
+  <div style="font-family:var(--font-display);font-size:2.5rem;color:var(--gold);letter-spacing:0.04em">Camp 8</div>
+  <div style="font-size:0.9rem;color:var(--text-secondary)">Taking you to sign in…</div>
+  <div style="width:40px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden">
+    <div style="height:100%;background:var(--gold);border-radius:2px;animation:loadBar 0.8s ease forwards"></div>
+  </div>
+  <style>@keyframes loadBar{from{width:0}to{width:100%}}</style>
+</div>
+
 <!-- Navigation -->
 <div id="nav-root"></div>
 <script src="nav.js"></script>
@@ -66,14 +76,17 @@
   <div class="ffb-inner">
     <div class="ffb-label">🔓 Free with a Camp 8 account:</div>
     <div class="ffb-items">
-      <span class="ffb-item">⭐ NIL Rating AI</span>
-      <span class="ffb-item">⚡ Combine Evaluator</span>
-      <span class="ffb-item">📊 Athlete Dashboard</span>
-      <span class="ffb-item">🏈 AI Mentor Chat</span>
-      <span class="ffb-item">📅 Camp Planner</span>
-      <span class="ffb-item">✉️ Coach Email Writer</span>
+      <a href="nil-rating.html" class="ffb-item-btn">⭐ NIL Rating AI</a>
+      <a href="combine-eval.html" class="ffb-item-btn">⚡ Combine Evaluator</a>
+      <a href="dashboard.html" class="ffb-item-btn">📊 Athlete Dashboard</a>
+      <a href="chat.html" class="ffb-item-btn">🏈 AI Mentor Chat</a>
+      <a href="dashboard.html" class="ffb-item-btn">📅 Camp Planner</a>
+      <a href="chat.html?topic=email" class="ffb-item-btn">✉️ Coach Email Writer</a>
     </div>
-    <a href="login.html" class="ffb-cta">Create Free Account →</a>
+    <div class="ffb-auth-btns">
+      <a href="login.html?tab=signup" class="ffb-cta">Create Free Account</a>
+      <a href="login.html" class="ffb-signin">Sign In</a>
+    </div>
   </div>
 </div>
 
@@ -123,6 +136,41 @@
   </a>
 </div>
 
+<!-- Logged-in user profile bar -->
+<div class="user-profile-bar" id="userProfileBar" style="display:none">
+  <div class="upb-inner">
+    <div class="upb-avatar" id="upbAvatar">?</div>
+    <div class="upb-info">
+      <div class="upb-name" id="upbName">Athlete</div>
+      <div class="upb-details" id="upbDetails"></div>
+    </div>
+    <div class="upb-scores">
+      <div class="upb-score-card" id="upbNilCard">
+        <div class="upb-score-num" id="upbNilScore">—</div>
+        <div class="upb-score-lbl">NIL Score</div>
+      </div>
+      <div class="upb-score-card" id="upbCombineCard">
+        <div class="upb-score-num" id="upbCombineGrade">—</div>
+        <div class="upb-score-lbl">Combine Grade</div>
+      </div>
+      <div class="upb-score-card">
+        <div class="upb-score-num" id="upbCamps">0</div>
+        <div class="upb-score-lbl">Starred Camps</div>
+      </div>
+      <div class="upb-score-card">
+        <div class="upb-score-num" id="upbOffers">0</div>
+        <div class="upb-score-lbl">Offers</div>
+      </div>
+    </div>
+    <div class="upb-actions">
+      <a href="dashboard.html" class="upb-btn primary">My Dashboard</a>
+      <a href="nil-rating.html" class="upb-btn">NIL Eval</a>
+      <a href="combine-eval.html" class="upb-btn">Combine Eval</a>
+      <button onclick="doHomeSignOut()" class="upb-signout">Sign Out</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============================================
      EVALUATION TOOLS — See Where You Rank
      ============================================ -->
@@ -130,13 +178,18 @@
   <div class="eval-eyebrow">Athlete Evaluation Tools</div>
   <h2 class="eval-headline">See Where You <span>Rank</span></h2>
   <p class="eval-sub">Two free tools built to show you exactly where you stand — and what to do next.</p>
-  <div class="eval-login-prompt">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    These tools require a free account.
-    <a href="login.html" class="eval-login-cta">Sign Up Free →</a>
+  <div class="eval-signup-banner">
+    <div class="esb-text">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      These tools require a free Camp 8 account
+    </div>
+    <div class="esb-btns">
+      <a href="login.html?tab=signup" class="esb-btn primary">Create Free Account</a>
+      <a href="login.html" class="esb-btn outline">Sign In</a>
+    </div>
   </div>
   <div class="eval-cards">
-    <a href="login.html" class="eval-card nil-card">
+    <a href="login.html" class="eval-card nil-card" onclick="smoothLoginRedirect(event,'login.html?from=nil-rating')">
       <div class="eval-card-icon">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       </div>
@@ -158,7 +211,7 @@
       </div>
     </a>
 
-    <a href="login.html" class="eval-card combine-card">
+    <a href="login.html" class="eval-card combine-card" onclick="smoothLoginRedirect(event,'login.html?from=combine-eval')">
       <div class="eval-card-icon">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       </div>
@@ -185,19 +238,29 @@
      TOP 5 FEATURED CAMPS
      ============================================ -->
 <section class="featured-camps-section">
+  <!-- Big Schedule CTA above camps -->
+  <div class="camp-schedule-cta">
+    <div class="csc-inner">
+      <div class="csc-icon">📅</div>
+      <div class="csc-text">
+        <h3 class="csc-title">Sign In to Plan Your Camp Schedule</h3>
+        <p class="csc-sub">Star camps, build your personal calendar, track what you've attended, and get reminders — all in your free athlete dashboard.</p>
+      </div>
+      <div class="csc-btns">
+        <a href="login.html?tab=signup" class="csc-btn primary">Create Free Account</a>
+        <a href="login.html" class="csc-btn outline">Sign In</a>
+        <a href="camps.html" class="csc-btn ghost">Browse All 755 Camps</a>
+      </div>
+    </div>
+  </div>
+
   <div class="featured-camps-header">
     <div>
       <div class="section-eyebrow">Editor's Picks</div>
       <h2 class="section-title-lg">Top <span>8</span> Elite Camps</h2>
       <p class="section-subtitle">The highest-tier prospect camps — handpicked from Georgia and the Southeast.</p>
     </div>
-    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
-      <a href="camps.html" class="section-link-btn">View All 755 Camps →</a>
-      <a href="login.html" class="section-plan-btn">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Sign in to plan your camp schedule →
-      </a>
-    </div>
+    <a href="camps.html" class="section-link-btn">View All 755 Camps →</a>
   </div>
   <div class="featured-camps-grid" id="featuredCampsGrid">
     <!-- Populated by JS -->
@@ -637,7 +700,122 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCampsWidget();
   renderFeaturedCamps();
   renderCampsTeaser();
+  checkHomeAuth();
 });
+
+// ============================================
+// HOME PAGE AUTH CHECK — show profile bar if logged in
+// ============================================
+function smoothLoginRedirect(e, url) {
+  e.preventDefault();
+  const overlay = document.getElementById('loginRedirectOverlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    // Re-trigger animation
+    overlay.querySelector('div[style*="animation"]').style.animation = 'none';
+    setTimeout(() => {
+      overlay.querySelector('div[style*="animation"]').style.animation = '';
+      setTimeout(() => window.location.href = url, 900);
+    }, 10);
+  } else {
+    window.location.href = url;
+  }
+}
+
+async function checkHomeAuth() {
+  if (typeof window.supabase === 'undefined') return;
+
+  const sb = window.supabase.createClient(
+    'https://afikpptrkkfpoatadhyg.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmaWtwcHRya2tmcG9hdGFkaHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDM4MjIsImV4cCI6MjA5MDU3OTgyMn0.fSpFH4kP_iyDAptTlTIQLL5tjhzjFe6PWFDMdWV55uI'
+  );
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  const user = session.user;
+  const bar = document.getElementById('userProfileBar');
+  if (bar) bar.style.display = '';
+
+  // Update nav login btn to dashboard
+  const navBtn = document.getElementById('navLoginBtn');
+  if (navBtn) {
+    navBtn.textContent = '📊 My Dashboard';
+    navBtn.href = 'dashboard.html';
+  }
+
+  // Hide signup prompts since they're logged in
+  document.querySelectorAll('.eval-signup-banner, .camp-schedule-cta, .ffb-auth-btns').forEach(el => {
+    el.style.display = 'none';
+  });
+
+  // Update eval card links to actual tools
+  document.querySelectorAll('.eval-card.nil-card').forEach(a => a.href = 'nil-rating.html');
+  document.querySelectorAll('.eval-card.combine-card').forEach(a => a.href = 'combine-eval.html');
+
+  // Update feature bar buttons (already correct hrefs)
+
+  // Load athlete profile
+  try {
+    const { data: profile } = await sb.from('athletes').select('*').eq('user_id', user.id).single();
+
+    if (profile) {
+      const name = profile.name || user.email.split('@')[0];
+      document.getElementById('upbAvatar').textContent = name.charAt(0).toUpperCase();
+      document.getElementById('upbName').textContent = name;
+      const parts = [];
+      if (profile.position) parts.push(profile.position);
+      if (profile.school) parts.push(profile.school);
+      if (profile.state) parts.push(profile.state);
+      if (profile.graduation_year) parts.push("Class of '" + String(profile.graduation_year).slice(-2));
+      document.getElementById('upbDetails').textContent = parts.join(' · ') || user.email;
+    } else {
+      document.getElementById('upbName').textContent = user.email.split('@')[0];
+      document.getElementById('upbDetails').textContent = user.email;
+    }
+
+    // Load latest combine score
+    const { data: combine } = await sb.from('athlete_combine_scores')
+      .select('overall_grade').eq('athlete_id', profile?.id).order('created_at', { ascending: false }).limit(1);
+    if (combine?.[0]) {
+      const g = combine[0].overall_grade;
+      const el = document.getElementById('upbCombineGrade');
+      el.textContent = g;
+      el.style.color = g.startsWith('A') ? '#FFD700' : g.startsWith('B') ? '#50c878' : '#e8872b';
+    }
+
+    // Load latest NIL score
+    const { data: nil } = await sb.from('athlete_nil_scores')
+      .select('score, grade').eq('athlete_id', profile?.id).order('created_at', { ascending: false }).limit(1);
+    if (nil?.[0]) {
+      document.getElementById('upbNilScore').textContent = nil[0].score;
+    }
+
+    // Load starred camps count
+    const { count: campsCount } = await sb.from('athlete_starred_camps')
+      .select('*', { count: 'exact', head: true }).eq('athlete_id', profile?.id);
+    document.getElementById('upbCamps').textContent = campsCount || 0;
+
+    // Load offers count
+    const { count: offersCount } = await sb.from('athlete_offers')
+      .select('*', { count: 'exact', head: true }).eq('athlete_id', profile?.id);
+    document.getElementById('upbOffers').textContent = offersCount || 0;
+
+  } catch(e) {
+    document.getElementById('upbName').textContent = user.email.split('@')[0];
+    document.getElementById('upbDetails').textContent = user.email;
+  }
+}
+
+async function doHomeSignOut() {
+  if (typeof window.supabase === 'undefined') return;
+  const sb = window.supabase.createClient(
+    'https://afikpptrkkfpoatadhyg.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmaWtwcHRya2tmcG9hdGFkaHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDM4MjIsImV4cCI6MjA5MDU3OTgyMn0.fSpFH4kP_iyDAptTlTIQLL5tjhzjFe6PWFDMdWV55uI'
+  );
+  await sb.auth.signOut();
+  window.location.reload();
+}
 </script>
 <script src="shared.js"></script>
 </body>

@@ -1721,3 +1721,285 @@ body.home-page { overflow-y: auto; height: auto; }
   .free-features-bar { padding: 10px var(--space-md); }
   .camps-teaser-right { grid-template-columns: 1fr; }
 }
+
+/* ============================================
+   FREE FEATURES BAR — clickable buttons
+   ============================================ */
+.ffb-item-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.ffb-item-btn:hover { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
+
+.ffb-auth-btns {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.ffb-signin {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.ffb-signin:hover { color: var(--text-primary); border-color: var(--border-hover); }
+
+/* ============================================
+   EVAL SIGNUP BANNER (big, centered)
+   ============================================ */
+.eval-signup-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin: var(--space-lg) auto var(--space-md);
+  padding: var(--space-md) var(--space-xl);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  max-width: 700px;
+  flex-wrap: wrap;
+}
+
+.esb-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.esb-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.esb-btn {
+  padding: 9px 22px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.esb-btn.primary { background: var(--gold); color: #0a0a12; }
+.esb-btn.primary:hover { background: var(--gold-bright); }
+.esb-btn.outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); }
+.esb-btn.outline:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ============================================
+   CAMP SCHEDULE BIG CTA
+   ============================================ */
+.camp-schedule-cta {
+  background: linear-gradient(135deg, rgba(212,168,67,0.1) 0%, rgba(212,168,67,0.03) 100%);
+  border-bottom: 1px solid rgba(212,168,67,0.2);
+  padding: var(--space-xl);
+}
+
+.csc-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+.csc-icon { font-size: 2.5rem; flex-shrink: 0; }
+
+.csc-text { flex: 1; min-width: 250px; }
+
+.csc-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.csc-sub {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 480px;
+}
+
+.csc-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.csc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 24px;
+  border-radius: 100px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.csc-btn.primary { background: var(--gold); color: #0a0a12; }
+.csc-btn.primary:hover { background: var(--gold-bright); transform: translateY(-1px); }
+.csc-btn.outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); }
+.csc-btn.outline:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+.csc-btn.ghost { background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.8rem; font-weight: 600; padding: 8px 20px; }
+.csc-btn.ghost:hover { color: var(--text-secondary); }
+
+/* Featured camps grid — 4 columns x 2 rows */
+.featured-camps-grid {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+/* ============================================
+   USER PROFILE BAR (logged-in state)
+   ============================================ */
+.user-profile-bar {
+  background: linear-gradient(135deg, rgba(212,168,67,0.1) 0%, rgba(212,168,67,0.04) 100%);
+  border-bottom: 2px solid rgba(212,168,67,0.25);
+  padding: var(--space-md) var(--space-xl);
+}
+
+.upb-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.upb-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #0a0a12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  border: 2px solid rgba(212,168,67,0.4);
+}
+
+.upb-info { min-width: 140px; }
+.upb-name { font-size: 1rem; font-weight: 800; color: var(--text-primary); line-height: 1.2; }
+.upb-details { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+.upb-scores {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.upb-score-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.upb-score-num {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.upb-score-lbl {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.upb-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.upb-btn {
+  padding: 7px 16px;
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.15s;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  background: transparent;
+}
+.upb-btn:hover { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
+.upb-btn.primary { background: var(--gold); color: #0a0a12; border-color: var(--gold); }
+.upb-btn.primary:hover { background: var(--gold-bright); }
+
+.upb-signout {
+  padding: 7px 14px;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(196,30,58,0.3);
+  color: #c41e3a;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.15s;
+}
+.upb-signout:hover { background: rgba(196,30,58,0.1); }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .featured-camps-grid { grid-template-columns: repeat(4, 1fr) !important; }
+  .csc-inner { gap: var(--space-lg); }
+}
+
+@media (max-width: 768px) {
+  .featured-camps-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .upb-inner { gap: var(--space-md); }
+  .upb-scores { display: none; }
+  .upb-actions { margin-left: 0; }
+  .csc-inner { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
+  .csc-btns { flex-direction: row; flex-wrap: wrap; }
+  .eval-signup-banner { flex-direction: column; text-align: center; }
+  .ffb-auth-btns { margin-left: 0; }
+}
+
+@media (max-width: 480px) {
+  .featured-camps-grid { grid-template-columns: 1fr 1fr !important; }
+}
