@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Sign In</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-primary);
+      padding: var(--space-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(212,168,67,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(212,168,67,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .login-wrap {
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Brand */
+    .login-brand {
+      text-align: center;
+      margin-bottom: var(--space-xl);
+    }
+
+    .login-brand-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      background: var(--gold-dim);
+      border: 2px solid rgba(212,168,67,0.3);
+      border-radius: 16px;
+      margin-bottom: var(--space-md);
+    }
+
+    .login-brand-name {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .login-brand-name span { color: var(--gold); }
+
+    .login-brand-tagline {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Card */
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    /* Tabs */
+    .login-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .login-tab {
+      flex: 1;
+      padding: 14px;
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.15s;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      font-family: var(--font-body);
+    }
+
+    .login-tab.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+      background: rgba(212,168,67,0.03);
+    }
+
+    /* Form body */
+    .login-body { padding: var(--space-xl); }
+
+    .login-form-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .login-form-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: var(--space-lg);
+      line-height: 1.5;
+    }
+
+    .login-field { margin-bottom: var(--space-md); }
+
+    .login-label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 0.88rem;
+      font-family: var(--font-body);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .login-input:focus { border-color: var(--gold); }
+    .login-input::placeholder { color: var(--text-muted); }
+
+    .login-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--gold);
+      color: #0a0a12;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.92rem;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: var(--space-sm);
+    }
+    .login-btn:hover { background: var(--gold-bright); transform: translateY(-1px); }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .login-error {
+      margin-top: var(--space-md);
+      padding: 10px 14px;
+      background: rgba(196,30,58,0.1);
+      border: 1px solid rgba(196,30,58,0.25);
+      border-radius: var(--radius-sm);
+      color: #e05068;
+      font-size: 0.8rem;
+      text-align: center;
+      display: none;
+    }
+
+    .login-success {
+      margin-top: var(--space-md);
+      padding: 10px 14px;
+      background: rgba(80,200,120,0.1);
+      border: 1px solid rgba(80,200,120,0.25);
+      border-radius: var(--radius-sm);
+      color: #50c878;
+      font-size: 0.8rem;
+      text-align: center;
+      display: none;
+    }
+
+    /* Feature list */
+    .login-features {
+      margin-top: var(--space-lg);
+      padding-top: var(--space-lg);
+      border-top: 1px solid var(--border-color);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .login-feature {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .lf-icon { font-size: 0.9rem; flex-shrink: 0; }
+
+    /* Footer note */
+    .login-footer {
+      text-align: center;
+      margin-top: var(--space-lg);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .login-footer a { color: var(--gold); text-decoration: none; }
+
+    /* App badge */
+    .login-app-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: var(--space-lg);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-wrap">
+
+  <!-- Brand -->
+  <div class="login-brand">
+    <div class="login-brand-logo">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+        <ellipse cx="16" cy="16" rx="10" ry="7" stroke="#d4a843" stroke-width="2" fill="none"/>
+        <path d="M16 9v14M10 12.5c2-1.5 4-2 6-2s4 .5 6 2" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M10 19.5c2 1.5 4 2 6 2s4-.5 6-2" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="login-brand-name">Camp <span>8</span></div>
+    <div class="login-brand-tagline">Georgia's #1 High School Football Intelligence Platform</div>
+  </div>
+
+  <!-- Card -->
+  <div class="login-card">
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="setTab('signin', this)">Sign In</button>
+      <button class="login-tab" onclick="setTab('signup', this)">Create Account</button>
+    </div>
+
+    <!-- Sign In -->
+    <div class="login-body" id="signinBody">
+      <div class="login-form-title">Welcome back</div>
+      <div class="login-form-sub">Sign in to access your dashboard, AI tools, and recruiting resources.</div>
+
+      <div class="login-field">
+        <label class="login-label">Email Address</label>
+        <input type="email" class="login-input" id="si_email" placeholder="your@email.com" autocomplete="email">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Password</label>
+        <input type="password" class="login-input" id="si_pass" placeholder="Your password" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter') doSignIn()">
+      </div>
+      <button class="login-btn" id="siBtn" onclick="doSignIn()">Sign In</button>
+      <div class="login-error" id="siError"></div>
+
+      <div class="login-features">
+        <div class="login-feature"><span class="lf-icon">🗺️</span>Recruit Map</div>
+        <div class="login-feature"><span class="lf-icon">⭐</span>NIL Rating AI</div>
+        <div class="login-feature"><span class="lf-icon">⚡</span>Combine Evaluator</div>
+        <div class="login-feature"><span class="lf-icon">🏕️</span>755 Camps</div>
+        <div class="login-feature"><span class="lf-icon">📊</span>Athlete Dashboard</div>
+        <div class="login-feature"><span class="lf-icon">🏈</span>AI Mentor Chat</div>
+      </div>
+    </div>
+
+    <!-- Sign Up -->
+    <div class="login-body" id="signupBody" style="display:none">
+      <div class="login-form-title">Create your free account</div>
+      <div class="login-form-sub">Free to join. Track your progress, use AI tools, and manage your recruiting journey.</div>
+
+      <div class="login-field">
+        <label class="login-label">Email Address</label>
+        <input type="email" class="login-input" id="su_email" placeholder="your@email.com" autocomplete="email">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Password</label>
+        <input type="password" class="login-input" id="su_pass" placeholder="Min 8 characters" autocomplete="new-password">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Confirm Password</label>
+        <input type="password" class="login-input" id="su_pass2" placeholder="Repeat password"
+          onkeydown="if(event.key==='Enter') doSignUp()">
+      </div>
+      <button class="login-btn" id="suBtn" onclick="doSignUp()">Create Free Account</button>
+      <div class="login-error" id="suError"></div>
+      <div class="login-success" id="suSuccess"></div>
+    </div>
+  </div>
+
+  <div class="login-footer">
+    By signing in you agree to Camp 8's terms of use.<br>
+    Your data is private and never shared.
+  </div>
+
+  <div class="login-app-badge">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+    App coming soon — iOS &amp; Android
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script>
+// ---- Tab switching ----
+function setTab(tab, btn) {
+  document.querySelectorAll('.login-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('signinBody').style.display = tab === 'signin' ? '' : 'none';
+  document.getElementById('signupBody').style.display = tab === 'signup' ? '' : 'none';
+}
+
+// ---- Sign In ----
+async function doSignIn() {
+  const email = document.getElementById('si_email').value.trim();
+  const pass  = document.getElementById('si_pass').value;
+  const errEl = document.getElementById('siError');
+  const btn   = document.getElementById('siBtn');
+  errEl.style.display = 'none';
+
+  if (!email || !pass) { showError(errEl, 'Please enter your email and password.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  const { data, error } = await signIn(email, pass);
+
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+    showError(errEl, error.message === 'Invalid login credentials'
+      ? 'Incorrect email or password. Try again.'
+      : error.message);
+    return;
+  }
+
+  // Redirect to where they came from, or home
+  const redirect = sessionStorage.getItem('camp8_redirect') || 'index.html';
+  sessionStorage.removeItem('camp8_redirect');
+  window.location.href = redirect;
+}
+
+// ---- Sign Up ----
+async function doSignUp() {
+  const email = document.getElementById('su_email').value.trim();
+  const pass  = document.getElementById('su_pass').value;
+  const pass2 = document.getElementById('su_pass2').value;
+  const errEl = document.getElementById('suError');
+  const sucEl = document.getElementById('suSuccess');
+  const btn   = document.getElementById('suBtn');
+
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!email || !pass) { showError(errEl, 'Please fill in all fields.'); return; }
+  if (pass.length < 8)  { showError(errEl, 'Password must be at least 8 characters.'); return; }
+  if (pass !== pass2)   { showError(errEl, 'Passwords do not match.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Creating account…';
+
+  const { data, error } = await signUp(email, pass);
+
+  btn.disabled = false;
+  btn.textContent = 'Create Free Account';
+
+  if (error) { showError(errEl, error.message); return; }
+
+  sucEl.textContent = '✓ Account created! Check your email to confirm, then sign in.';
+  sucEl.style.display = 'block';
+}
+
+function showError(el, msg) {
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ---- If already logged in, redirect home ----
+document.addEventListener('DOMContentLoaded', async function() {
+  const user = await getCurrentUser();
+  if (user) window.location.href = 'index.html';
+});
+</script>
+</body>
+</html>

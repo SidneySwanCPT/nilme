@@ -54,29 +54,13 @@
     }
     @media(max-width:480px){.how-steps{grid-template-columns:1fr;}}
   </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth-guard.js"></script>
 </head>
 <body>
 
-<nav class="nav">
-  <a href="index.html" class="nav-brand">
-    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M16 2C10 2 4 8 4 16s6 14 12 14c2 0 4-2 4-4v-1c0-1-.5-2-1-2.5-.5-.5-1-1.5-1-2.5 0-2 1.5-3.5 3.5-3.5H25c3.3 0 6-2.7 6-6C31 7.5 24.5 2 16 2z" fill="#d4a843" opacity="0.15"/>
-      <ellipse cx="16" cy="16" rx="10" ry="7" stroke="#d4a843" stroke-width="2" fill="none"/>
-      <path d="M16 9v14M10 12.5c2-1.5 4-2 6-2s4 .5 6 2" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-      <path d="M10 19.5c2 1.5 4 2 6 2s4-.5 6-2" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-    </svg>
-    <span class="nav-brand-text">Camp <span>8</span></span>
-  </a>
-  <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle menu">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-  </button>
-  <ul class="nav-links">
-    <li><a href="nil-central.html">NIL Central</a></li>
-    <li><a href="camps.html">Prospect Camps</a></li>
-    <li><a href="recruits.html">Recruiting Central</a></li>
-    <li><a href="powerhouse.html">Powerhouse Central</a></li>
-  </ul>
-</nav>
+<div id="nav-root"></div>
+<script src="nav.js"></script>
 
 <div class="hub-header">
   <div class="hub-eyebrow">Free Tools for High School Athletes</div>
