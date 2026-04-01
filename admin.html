@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Admin</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { overflow-y: auto; height: auto; background: var(--bg-primary); }
+
+    /* ---- Login Screen ---- */
+    .admin-login {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+    }
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      width: 100%;
+      max-width: 400px;
+    }
+    .login-title { font-family: var(--font-display); font-size: 2rem; color: var(--gold); margin-bottom: 4px; }
+    .login-sub { font-size: 0.82rem; color: var(--text-muted); margin-bottom: var(--space-xl); }
+    .login-input {
+      width: 100%; padding: 11px 14px; margin-bottom: var(--space-md);
+      font-size: 0.88rem; font-family: var(--font-body);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm); color: var(--text-primary); outline: none;
+    }
+    .login-input:focus { border-color: var(--gold); }
+    .login-btn {
+      width: 100%; padding: 12px; background: var(--gold); color: #0a0a12;
+      border: none; border-radius: var(--radius-sm); font-size: 0.9rem;
+      font-weight: 800; cursor: pointer; font-family: var(--font-body);
+      transition: background 0.15s;
+    }
+    .login-btn:hover { background: var(--gold-bright); }
+    .login-error { color: #e05068; font-size: 0.8rem; margin-top: var(--space-sm); text-align: center; }
+
+    /* ---- Admin App ---- */
+    .admin-app { display: none; min-height: 100vh; }
+
+    .admin-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,8,16,0.97); border-bottom: 1px solid var(--border-color);
+      padding: 0 var(--space-xl);
+      display: flex; align-items: center; gap: var(--space-lg);
+      height: 56px;
+    }
+    .admin-brand { font-family: var(--font-display); font-size: 1.3rem; color: var(--gold); }
+    .admin-badge {
+      padding: 3px 10px; background: rgba(196,30,58,0.15); border: 1px solid rgba(196,30,58,0.3);
+      border-radius: 100px; font-size: 0.68rem; font-weight: 800; color: #c41e3a;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .admin-signout {
+      margin-left: auto; padding: 6px 14px; font-size: 0.78rem; font-weight: 600;
+      border: 1px solid var(--border-color); border-radius: 100px; color: var(--text-muted);
+      background: transparent; cursor: pointer; font-family: var(--font-body); transition: all 0.15s;
+    }
+    .admin-signout:hover { color: #c41e3a; border-color: #c41e3a; }
+
+    .admin-body { display: flex; min-height: calc(100vh - 56px); }
+
+    /* Sidebar */
+    .admin-sidebar {
+      width: 220px; flex-shrink: 0;
+      border-right: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      padding: var(--space-lg) var(--space-md);
+    }
+    .sidebar-section-label {
+      font-size: 0.62rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: var(--space-sm);
+      padding: 0 4px;
+    }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px; margin-bottom: 2px;
+      border-radius: var(--radius-sm); font-size: 0.84rem; font-weight: 500;
+      color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+    .sidebar-link:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+    .sidebar-link.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+    .sidebar-badge {
+      margin-left: auto; padding: 1px 7px; border-radius: 100px;
+      font-size: 0.62rem; font-weight: 800;
+      background: rgba(196,30,58,0.15); color: #c41e3a;
+    }
+
+    /* Main content */
+    .admin-main { flex: 1; padding: var(--space-xl); overflow-y: auto; }
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-lg); flex-wrap: wrap; gap: var(--space-md);
+    }
+    .section-title { font-family: var(--font-display); font-size: 1.6rem; color: var(--text-primary); }
+    .section-title span { color: var(--gold); }
+
+    .add-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; background: var(--gold); color: #0a0a12;
+      border: none; border-radius: var(--radius-sm); font-size: 0.82rem;
+      font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: all 0.15s;
+    }
+    .add-btn:hover { background: var(--gold-bright); }
+
+    /* Pending queue */
+    .pending-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-md);
+      border-left: 4px solid var(--gold);
+    }
+    .pending-card.nil { border-left-color: #50c878; }
+    .pending-type { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+    .pending-type.commitment { color: var(--gold); }
+    .pending-type.nil_deal { color: #50c878; }
+    .pending-headline { font-size: 0.82rem; color: var(--text-muted); margin-bottom: var(--space-md); line-height: 1.4; }
+    .pending-data { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; margin-bottom: var(--space-md); }
+    .pending-field { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 7px 10px; }
+    .pf-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+    .pf-value { font-size: 0.82rem; color: var(--text-primary); font-weight: 600; margin-top: 2px; }
+    .pending-confidence { font-size: 0.72rem; color: var(--text-muted); margin-bottom: var(--space-md); }
+    .pending-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; }
+    .btn-approve { padding: 7px 16px; background: rgba(80,200,120,0.15); border: 1px solid #50c878; border-radius: 100px; color: #50c878; font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
+    .btn-approve:hover { background: rgba(80,200,120,0.25); }
+    .btn-reject { padding: 7px 16px; background: rgba(196,30,58,0.1); border: 1px solid rgba(196,30,58,0.3); border-radius: 100px; color: #c41e3a; font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
+    .btn-reject:hover { background: rgba(196,30,58,0.2); }
+    .btn-source { padding: 7px 14px; background: transparent; border: 1px solid var(--border-color); border-radius: 100px; color: var(--text-muted); font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); text-decoration: none; }
+
+    /* Form modal */
+    .form-modal { display: none; position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; padding: var(--space-lg); }
+    .form-modal.open { display: flex; }
+    .form-box { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg); width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
+    .form-box-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: var(--bg-secondary); z-index: 1; }
+    .form-box-title { font-family: var(--font-display); font-size: 1.3rem; color: var(--text-primary); }
+    .form-close { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; }
+    .form-body { padding: var(--space-lg); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+    .form-input, .form-select {
+      padding: 9px 12px; font-size: 0.85rem; font-family: var(--font-body);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm); color: var(--text-primary); outline: none;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--gold); }
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-full { grid-column: 1/-1; }
+    .form-submit { width: 100%; padding: 11px; background: var(--gold); color: #0a0a12; border: none; border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 800; cursor: pointer; font-family: var(--font-body); margin-top: var(--space-md); transition: background 0.15s; }
+    .form-submit:hover { background: var(--gold-bright); }
+
+    .empty-state { padding: var(--space-xl); text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+    .loading-state { padding: var(--space-xl); text-align: center; color: var(--text-muted); }
+
+    @media(max-width:768px){
+      .admin-sidebar { display: none; }
+      .admin-main { padding: var(--space-md); }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div class="admin-login" id="adminLogin">
+  <div class="login-card">
+    <div class="login-title">Camp 8</div>
+    <div class="login-sub">Admin Panel — authorized personnel only</div>
+    <input type="email" class="login-input" id="loginEmail" placeholder="Email address">
+    <input type="password" class="login-input" id="loginPass" placeholder="Password">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ===== ADMIN APP ===== -->
+<div class="admin-app" id="adminApp">
+  <div class="admin-header">
+    <div class="admin-brand">Camp 8</div>
+    <div class="admin-badge">Admin</div>
+    <span style="font-size:0.78rem;color:var(--text-muted)" id="adminUserEmail"></span>
+    <button class="admin-signout" onclick="doSignOut()">Sign Out</button>
+  </div>
+
+  <div class="admin-body">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+      <div class="sidebar-section-label" style="margin-top:var(--space-sm)">Review Queue</div>
+      <div class="sidebar-link active" onclick="showSection('pending',this)">
+        ⚡ Pending News
+        <span class="sidebar-badge" id="pendingBadge">0</span>
+      </div>
+
+      <div class="sidebar-section-label" style="margin-top:var(--space-lg)">Manage Data</div>
+      <div class="sidebar-link" onclick="showSection('commitments',this)">✅ Commitments</div>
+      <div class="sidebar-link" onclick="showSection('nildeals',this)">💰 NIL Deals</div>
+      <div class="sidebar-link" onclick="showSection('camps',this)">🏕️ Camps</div>
+
+      <div class="sidebar-section-label" style="margin-top:var(--space-lg)">Info</div>
+      <div class="sidebar-link" onclick="showSection('instructions',this)">📋 Instructions</div>
+    </div>
+
+    <!-- Main -->
+    <div class="admin-main">
+
+      <!-- Pending News -->
+      <div class="admin-section active" id="section-pending">
+        <div class="section-header">
+          <div class="section-title">Pending <span>Review</span></div>
+          <button class="add-btn" onclick="refreshPending()">↺ Refresh</button>
+        </div>
+        <div id="pendingList"><div class="loading-state">Loading…</div></div>
+      </div>
+
+      <!-- Commitments -->
+      <div class="admin-section" id="section-commitments">
+        <div class="section-header">
+          <div class="section-title">Commitment <span>Tracker</span></div>
+          <button class="add-btn" onclick="openForm('commitment')">+ Add Commitment</button>
+        </div>
+        <div id="commitmentsList"><div class="loading-state">Loading…</div></div>
+      </div>
+
+      <!-- NIL Deals -->
+      <div class="admin-section" id="section-nildeals">
+        <div class="section-header">
+          <div class="section-title">NIL <span>Deals</span></div>
+          <button class="add-btn" onclick="openForm('nildeal')">+ Add Deal</button>
+        </div>
+        <div id="nildealsList"><div class="loading-state">Loading…</div></div>
+      </div>
+
+      <!-- Camps -->
+      <div class="admin-section" id="section-camps">
+        <div class="section-header">
+          <div class="section-title">Camps <span>Database</span></div>
+          <button class="add-btn" onclick="openForm('camp')">+ Add Camp</button>
+        </div>
+        <div id="campsList"><div class="loading-state">Loading…</div></div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="admin-section" id="section-instructions">
+        <h2 class="section-title" style="margin-bottom:var(--space-lg)">Admin <span>Instructions</span></h2>
+        <div style="display:flex;flex-direction:column;gap:var(--space-md);max-width:700px">
+          <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--space-lg)">
+            <h3 style="font-size:0.9rem;font-weight:700;color:var(--gold);margin-bottom:var(--space-sm)">⚡ Pending News Queue</h3>
+            <p style="font-size:0.82rem;color:var(--text-secondary);line-height:1.6">The news scanner runs daily at 8am and automatically extracts commitments and NIL deals from news headlines. Each item appears here for you to review. Click Approve to add it to the live site, or Reject to discard it. Always verify with the source link before approving.</p>
+          </div>
+          <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--space-lg)">
+            <h3 style="font-size:0.9rem;font-weight:700;color:var(--gold);margin-bottom:var(--space-sm)">➕ Adding Manually</h3>
+            <p style="font-size:0.82rem;color:var(--text-secondary);line-height:1.6">Use the "+ Add" buttons to manually enter a commitment, NIL deal, or camp. The system automatically checks for duplicates based on athlete name and school before saving. If a duplicate is detected you'll be warned and can choose to override.</p>
+          </div>
+          <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--space-lg)">
+            <h3 style="font-size:0.9rem;font-weight:700;color:var(--gold);margin-bottom:var(--space-sm)">🔑 Adding a Service Key</h3>
+            <p style="font-size:0.82rem;color:var(--text-secondary);line-height:1.6">The news scanner requires a Supabase SERVICE ROLE key (not the anon key) to write to the database. Add it in Netlify as <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px">SUPABASE_SERVICE_KEY</code>. Get it from Supabase → Project Settings → API → service_role key.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Form Modal -->
+<div class="form-modal" id="formModal" onclick="if(event.target===this)closeForm()">
+  <div class="form-box">
+    <div class="form-box-header">
+      <div class="form-box-title" id="formTitle">Add Entry</div>
+      <button class="form-close" onclick="closeForm()">✕</button>
+    </div>
+    <div class="form-body" id="formBody"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script>
+// ============================================
+// ADMIN PANEL LOGIC
+// ============================================
+const ADMIN_EMAILS = ['your-email@example.com']; // Replace with your actual email
+
+let sb = null;
+let currentUser = null;
+let athleteId = null;
+
+// ---- Auth ----
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+
+  if (!email || !pass) { errEl.textContent = 'Please enter email and password.'; return; }
+
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+  if (error) { errEl.textContent = error.message; return; }
+
+  currentUser = data.user;
+  document.getElementById('adminLogin').style.display = 'none';
+  document.getElementById('adminApp').style.display = 'block';
+  document.getElementById('adminUserEmail').textContent = currentUser.email;
+
+  loadSection('pending');
+}
+
+async function doSignOut() {
+  await sb.auth.signOut();
+  window.location.reload();
+}
+
+// ---- Navigation ----
+function showSection(name, btn) {
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  btn.classList.add('active');
+  loadSection(name);
+}
+
+function loadSection(name) {
+  if (name === 'pending') refreshPending();
+  if (name === 'commitments') loadCommitments();
+  if (name === 'nildeals') loadNilDeals();
+  if (name === 'camps') loadCamps();
+}
+
+function esc(s) { const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+
+// ---- Pending News ----
+async function refreshPending() {
+  const el = document.getElementById('pendingList');
+  el.innerHTML = '<div class="loading-state">Loading pending items…</div>';
+
+  const { data, error } = await sb.from('pending_news')
+    .select('*').eq('status','pending').order('created_at', { ascending: false });
+
+  document.getElementById('pendingBadge').textContent = data?.length || 0;
+
+  if (!data || !data.length) {
+    el.innerHTML = '<div class="empty-state">No pending items — check back after the next scan (8am daily).</div>';
+    return;
+  }
+
+  el.innerHTML = data.map(item => {
+    const d = item.extracted_data || {};
+    const fields = Object.entries(d)
+      .filter(([k,v]) => k !== 'confidence' && v)
+      .map(([k,v]) => `<div class="pending-field"><div class="pf-label">${esc(k)}</div><div class="pf-value">${esc(v)}</div></div>`)
+      .join('');
+
+    return `<div class="pending-card ${item.type === 'nil_deal' ? 'nil' : ''}">
+      <div class="pending-type ${item.type}">${item.type === 'commitment' ? '✅ COMMITMENT' : '💰 NIL DEAL'}</div>
+      <div class="pending-headline">${esc(item.headline)}</div>
+      <div class="pending-data">${fields}</div>
+      <div class="pending-confidence">AI Confidence: ${Math.round((item.confidence||0)*100)}% · Source: ${esc(item.source_name||'unknown')}</div>
+      <div class="pending-actions">
+        <button class="btn-approve" onclick="approvePending('${item.id}','${item.type}')">✓ Approve</button>
+        <button class="btn-reject" onclick="rejectPending('${item.id}')">✗ Reject</button>
+        ${item.source_url ? `<a href="${esc(item.source_url)}" target="_blank" rel="noopener" class="btn-source">View Source →</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function approvePending(id, type) {
+  const { data: item } = await sb.from('pending_news').select('*').eq('id', id).single();
+  if (!item) return;
+  const d = item.extracted_data || {};
+
+  let insertError = null;
+
+  if (type === 'commitment') {
+    const { error } = await sb.from('commitments_admin').insert({
+      athlete: d.athlete, pos: d.pos, stars: d.stars || 0,
+      school: d.school, city: d.city, state: d.state,
+      class_year: d.class_year, committed_to: d.committed_to,
+      conference: d.conference, status: 'Committed',
+      announcement_date: new Date().toISOString().split('T')[0],
+      source_url: item.source_url, source_name: item.source_name,
+    });
+    insertError = error;
+  } else {
+    const { error } = await sb.from('nil_deals_admin').insert({
+      athlete: d.athlete, pos: d.pos, stars: d.stars || 0,
+      school: d.school, state: d.state,
+      deal: d.deal, brand: d.brand, value: d.value || 'Undisclosed',
+      deal_date: new Date().toISOString().split('T')[0],
+      source_url: item.source_url, source_name: item.source_name,
+    });
+    insertError = error;
+  }
+
+  if (insertError) { alert('Error saving: ' + insertError.message); return; }
+
+  await sb.from('pending_news').update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', id);
+  refreshPending();
+}
+
+async function rejectPending(id) {
+  await sb.from('pending_news').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', id);
+  refreshPending();
+}
+
+// ---- Commitments ----
+async function loadCommitments() {
+  const el = document.getElementById('commitmentsList');
+  el.innerHTML = '<div class="loading-state">Loading…</div>';
+  const { data } = await sb.from('commitments_admin').select('*').order('created_at', { ascending: false }).limit(50);
+  if (!data?.length) { el.innerHTML = '<div class="empty-state">No commitments yet.</div>'; return; }
+
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Athlete</th><th>Pos</th><th>Stars</th><th>School</th><th>State</th><th>Class</th><th>Committed To</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${data.map(r => `<tr>
+      <td style="font-weight:700">${esc(r.athlete)}</td>
+      <td>${esc(r.pos||'')}</td>
+      <td style="color:#FFD700">${'★'.repeat(r.stars||0)}</td>
+      <td>${esc(r.school||'')}</td>
+      <td>${esc(r.state||'')}</td>
+      <td>${esc(r.class_year||'')}</td>
+      <td style="font-weight:600;color:var(--gold)">${esc(r.committed_to||'')}</td>
+      <td><span style="padding:2px 8px;border-radius:100px;font-size:0.68rem;font-weight:700;background:rgba(80,200,120,0.15);color:#50c878">${esc(r.status||'')}</span></td>
+      <td><button onclick="deleteEntry('commitments_admin','${r.id}','commitments')" style="padding:3px 10px;background:rgba(196,30,58,0.1);border:1px solid rgba(196,30,58,0.3);border-radius:100px;color:#c41e3a;font-size:0.72rem;cursor:pointer">Delete</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ---- NIL Deals ----
+async function loadNilDeals() {
+  const el = document.getElementById('nildealsList');
+  el.innerHTML = '<div class="loading-state">Loading…</div>';
+  const { data } = await sb.from('nil_deals_admin').select('*').order('created_at', { ascending: false }).limit(50);
+  if (!data?.length) { el.innerHTML = '<div class="empty-state">No NIL deals yet.</div>'; return; }
+
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Athlete</th><th>Pos</th><th>School</th><th>State</th><th>Brand</th><th>Deal</th><th>Value</th><th>Actions</th></tr></thead>
+    <tbody>${data.map(r => `<tr>
+      <td style="font-weight:700">${esc(r.athlete)}</td>
+      <td>${esc(r.pos||'')}</td>
+      <td>${esc(r.school||'')}</td>
+      <td>${esc(r.state||'')}</td>
+      <td style="font-weight:600">${esc(r.brand||'')}</td>
+      <td>${esc(r.deal||'')}</td>
+      <td style="color:var(--gold)">${esc(r.value||'')}</td>
+      <td><button onclick="deleteEntry('nil_deals_admin','${r.id}','nildeals')" style="padding:3px 10px;background:rgba(196,30,58,0.1);border:1px solid rgba(196,30,58,0.3);border-radius:100px;color:#c41e3a;font-size:0.72rem;cursor:pointer">Delete</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ---- Camps ----
+async function loadCamps() {
+  const el = document.getElementById('campsList');
+  el.innerHTML = '<div class="loading-state">Loading…</div>';
+  const { data } = await sb.from('camps_admin').select('*').order('created_at', { ascending: false }).limit(50);
+  if (!data?.length) { el.innerHTML = '<div class="empty-state">No camps added yet. Add camps using the button above.</div>'; return; }
+
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Camp</th><th>City</th><th>State</th><th>Dates</th><th>Tier</th><th>Actions</th></tr></thead>
+    <tbody>${data.map(r => `<tr>
+      <td style="font-weight:700">${esc(r.name)}</td>
+      <td>${esc(r.city||'')}</td>
+      <td>${esc(r.state||'')}</td>
+      <td>${esc(r.dates||'TBD')}</td>
+      <td style="color:var(--gold)">${esc(r.tier_label||'')}</td>
+      <td><button onclick="deleteEntry('camps_admin','${r.id}','camps')" style="padding:3px 10px;background:rgba(196,30,58,0.1);border:1px solid rgba(196,30,58,0.3);border-radius:100px;color:#c41e3a;font-size:0.72rem;cursor:pointer">Delete</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+async function deleteEntry(table, id, section) {
+  if (!confirm('Delete this entry? This cannot be undone.')) return;
+  await sb.from(table).delete().eq('id', id);
+  loadSection(section);
+}
+
+// ---- Form Modal ----
+function openForm(type) {
+  const modal = document.getElementById('formModal');
+  const title = document.getElementById('formTitle');
+  const body = document.getElementById('formBody');
+
+  if (type === 'commitment') {
+    title.textContent = 'Add Commitment';
+    body.innerHTML = `<div class="form-grid">
+      <div class="form-group form-full"><label class="form-label">Athlete Name *</label><input class="form-input" id="f_athlete" placeholder="First Last"></div>
+      <div class="form-group"><label class="form-label">Position</label><input class="form-input" id="f_pos" placeholder="QB"></div>
+      <div class="form-group"><label class="form-label">Stars</label><select class="form-select" id="f_stars"><option value="0">Unranked</option><option value="3">3★</option><option value="4">4★</option><option value="5">5★</option></select></div>
+      <div class="form-group"><label class="form-label">High School</label><input class="form-input" id="f_school" placeholder="School name"></div>
+      <div class="form-group"><label class="form-label">City</label><input class="form-input" id="f_city" placeholder="City"></div>
+      <div class="form-group"><label class="form-label">State</label><input class="form-input" id="f_state" placeholder="GA" maxlength="2"></div>
+      <div class="form-group"><label class="form-label">Class Year</label><input class="form-input" id="f_year" placeholder="2026" type="number"></div>
+      <div class="form-group"><label class="form-label">Committed To *</label><input class="form-input" id="f_college" placeholder="University name"></div>
+      <div class="form-group"><label class="form-label">Conference</label><input class="form-input" id="f_conf" placeholder="SEC"></div>
+      <div class="form-group"><label class="form-label">Source URL</label><input class="form-input" id="f_source" placeholder="https://..."></div>
+      <div class="form-group form-full"><label class="form-label">Source Name</label><input class="form-input" id="f_sourcename" placeholder="247Sports"></div>
+    </div>
+    <button class="form-submit" onclick="submitCommitment()">Save Commitment</button>`;
+  } else if (type === 'nildeal') {
+    title.textContent = 'Add NIL Deal';
+    body.innerHTML = `<div class="form-grid">
+      <div class="form-group form-full"><label class="form-label">Athlete Name *</label><input class="form-input" id="f_athlete" placeholder="First Last"></div>
+      <div class="form-group"><label class="form-label">Position</label><input class="form-input" id="f_pos" placeholder="WR"></div>
+      <div class="form-group"><label class="form-label">Stars</label><select class="form-select" id="f_stars"><option value="0">Unranked</option><option value="3">3★</option><option value="4">4★</option><option value="5">5★</option></select></div>
+      <div class="form-group"><label class="form-label">High School</label><input class="form-input" id="f_school" placeholder="School name"></div>
+      <div class="form-group"><label class="form-label">State</label><input class="form-input" id="f_state" placeholder="GA" maxlength="2"></div>
+      <div class="form-group"><label class="form-label">Brand / Company *</label><input class="form-input" id="f_brand" placeholder="Nike, local business, etc."></div>
+      <div class="form-group form-full"><label class="form-label">Deal Description *</label><input class="form-input" id="f_deal" placeholder="Social media endorsement, appearance, etc."></div>
+      <div class="form-group"><label class="form-label">Value</label><input class="form-input" id="f_value" placeholder="$500 or Undisclosed"></div>
+      <div class="form-group"><label class="form-label">Source URL</label><input class="form-input" id="f_source" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Source Name</label><input class="form-input" id="f_sourcename" placeholder="On3"></div>
+    </div>
+    <button class="form-submit" onclick="submitNilDeal()">Save NIL Deal</button>`;
+  } else if (type === 'camp') {
+    title.textContent = 'Add Camp';
+    body.innerHTML = `<div class="form-grid">
+      <div class="form-group form-full"><label class="form-label">Camp Name *</label><input class="form-input" id="f_name" placeholder="Nike Opening Regional"></div>
+      <div class="form-group"><label class="form-label">Host / University</label><input class="form-input" id="f_host" placeholder="Georgia Tech"></div>
+      <div class="form-group"><label class="form-label">City *</label><input class="form-input" id="f_city" placeholder="Atlanta"></div>
+      <div class="form-group"><label class="form-label">State *</label><input class="form-input" id="f_state" placeholder="GA" maxlength="2"></div>
+      <div class="form-group"><label class="form-label">Dates *</label><input class="form-input" id="f_dates" placeholder="June 15, 2026"></div>
+      <div class="form-group"><label class="form-label">Tier</label><select class="form-select" id="f_tier">
+        <option value="1">1 — Elite</option><option value="2" selected>2 — Showcase</option>
+        <option value="3">3 — Regional</option><option value="4">4 — Local</option>
+      </select></div>
+      <div class="form-group"><label class="form-label">Registration URL</label><input class="form-input" id="f_regurl" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Invite Only?</label><select class="form-select" id="f_invite"><option value="false">No — Open Registration</option><option value="true">Yes — Invite Only</option></select></div>
+      <div class="form-group form-full"><label class="form-label">Description</label><input class="form-input" id="f_desc" placeholder="Brief description of the camp"></div>
+    </div>
+    <button class="form-submit" onclick="submitCamp()">Save Camp</button>`;
+  }
+
+  modal.classList.add('open');
+}
+
+function closeForm() {
+  document.getElementById('formModal').classList.remove('open');
+}
+
+function v(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+async function checkDuplicate(table, field, value) {
+  if (!value) return false;
+  const { data } = await sb.from(table).select('id').ilike(field, value).limit(1);
+  return data?.length > 0;
+}
+
+async function submitCommitment() {
+  const athlete = v('f_athlete'), college = v('f_college');
+  if (!athlete || !college) { alert('Athlete name and committed college are required.'); return; }
+
+  const isDup = await checkDuplicate('commitments_admin', 'athlete', athlete);
+  if (isDup && !confirm(`A commitment for "${athlete}" may already exist. Add anyway?`)) return;
+
+  const { error } = await sb.from('commitments_admin').insert({
+    athlete, pos: v('f_pos'), stars: parseInt(v('f_stars'))||0,
+    school: v('f_school'), city: v('f_city'), state: v('f_state')?.toUpperCase(),
+    class_year: parseInt(v('f_year'))||null, committed_to: college,
+    conference: v('f_conf'), status: 'Committed',
+    announcement_date: new Date().toISOString().split('T')[0],
+    source_url: v('f_source'), source_name: v('f_sourcename'),
+  });
+  if (error) { alert('Error: ' + error.message); return; }
+  closeForm(); loadCommitments(); showSection('commitments', document.querySelector('.sidebar-link:nth-child(3)'));
+}
+
+async function submitNilDeal() {
+  const athlete = v('f_athlete'), deal = v('f_deal'), brand = v('f_brand');
+  if (!athlete || !deal) { alert('Athlete name and deal description are required.'); return; }
+
+  const isDup = await checkDuplicate('nil_deals_admin', 'athlete', athlete);
+  if (isDup && !confirm(`A NIL deal for "${athlete}" may already exist. Add anyway?`)) return;
+
+  const { error } = await sb.from('nil_deals_admin').insert({
+    athlete, pos: v('f_pos'), stars: parseInt(v('f_stars'))||0,
+    school: v('f_school'), state: v('f_state')?.toUpperCase(),
+    deal, brand, value: v('f_value')||'Undisclosed',
+    deal_date: new Date().toISOString().split('T')[0],
+    source_url: v('f_source'), source_name: v('f_sourcename'),
+  });
+  if (error) { alert('Error: ' + error.message); return; }
+  closeForm(); loadNilDeals();
+}
+
+async function submitCamp() {
+  const name = v('f_name'), city = v('f_city'), state = v('f_state');
+  if (!name || !city || !state) { alert('Name, city, and state are required.'); return; }
+
+  const tierNum = parseInt(v('f_tier'))||2;
+  const tierLabels = {1:'Elite',2:'Showcase',3:'Regional',4:'Local'};
+
+  const { error } = await sb.from('camps_admin').insert({
+    name, host: v('f_host'), city, state: state.toUpperCase(),
+    state_abbrev: state.toUpperCase(), dates: v('f_dates'),
+    tier: tierNum, tier_label: tierLabels[tierNum],
+    invite_only: v('f_invite') === 'true',
+    registration_url: v('f_regurl'), description: v('f_desc'),
+  });
+  if (error) { alert('Error: ' + error.message); return; }
+  closeForm(); loadCamps();
+}
+
+// Close on escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeForm(); });
+
+// Check if already logged in
+document.addEventListener('DOMContentLoaded', async function() {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data: { user } } = await sb.auth.getUser();
+  if (user) {
+    currentUser = user;
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    document.getElementById('adminUserEmail').textContent = user.email;
+    loadSection('pending');
+  }
+});
+</script>
+</body>
+</html>

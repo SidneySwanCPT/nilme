@@ -1,0 +1,16 @@
+# ============================================
+# Camp 8 — Netlify Configuration
+# ============================================
+
+[build]
+  functions = "netlify/functions"
+
+# ---- Scheduled Functions ----
+[functions."news-scanner"]
+  schedule = "0 8 * * *"
+
+# ---- Redirects ----
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

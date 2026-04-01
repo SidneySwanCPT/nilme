@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Athlete Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body { overflow-y: auto; height: auto; }
+
+    /* ---- Auth Gate ---- */
+    .auth-gate {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+      margin-top: var(--nav-height);
+    }
+
+    .auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .auth-eyebrow { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 6px; }
+    .auth-title { font-family: var(--font-display); font-size: 2rem; color: var(--text-primary); margin-bottom: 4px; }
+    .auth-title span { color: var(--gold); }
+    .auth-sub { font-size: 0.82rem; color: var(--text-muted); margin-bottom: var(--space-xl); line-height: 1.5; }
+
+    .auth-tabs { display: flex; gap: 0; margin-bottom: var(--space-lg); border-bottom: 1px solid var(--border-color); }
+    .auth-tab { flex: 1; padding: 10px; text-align: center; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+    .auth-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .auth-input {
+      width: 100%; padding: 11px 14px; margin-bottom: var(--space-md);
+      font-size: 0.88rem; font-family: var(--font-body);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm); color: var(--text-primary); outline: none; box-sizing: border-box;
+    }
+    .auth-input:focus { border-color: var(--gold); }
+    .auth-input::placeholder { color: var(--text-muted); }
+
+    .auth-btn {
+      width: 100%; padding: 12px; background: var(--gold); color: #0a0a12;
+      border: none; border-radius: var(--radius-md); font-size: 0.9rem;
+      font-weight: 800; cursor: pointer; font-family: var(--font-body); transition: background 0.15s;
+    }
+    .auth-btn:hover { background: var(--gold-bright); }
+    .auth-error { color: #e05068; font-size: 0.8rem; margin-top: var(--space-sm); text-align: center; }
+    .auth-note { font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: var(--space-md); line-height: 1.5; }
+
+    /* ---- Dashboard ---- */
+    .dashboard-wrap { display: none; margin-top: var(--nav-height); }
+
+    .dash-header {
+      background: linear-gradient(135deg, rgba(212,168,67,0.08) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--space-xl);
+    }
+
+    .dash-header-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; gap: var(--space-xl); flex-wrap: wrap;
+    }
+
+    .dash-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--gold-dim); border: 3px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 2rem; color: var(--gold);
+      flex-shrink: 0;
+    }
+
+    .dash-name { font-family: var(--font-display); font-size: 2rem; color: var(--text-primary); line-height: 1; margin-bottom: 4px; }
+    .dash-details { font-size: 0.85rem; color: var(--text-secondary); }
+    .dash-details span { color: var(--gold); font-weight: 700; }
+
+    .dash-header-actions { margin-left: auto; display: flex; gap: var(--space-sm); flex-wrap: wrap; }
+    .dash-action-btn {
+      padding: 8px 18px; font-size: 0.8rem; font-weight: 700; font-family: var(--font-body);
+      border-radius: 100px; cursor: pointer; transition: all 0.15s;
+    }
+    .dash-action-btn.primary { background: var(--gold); color: #0a0a12; border: none; }
+    .dash-action-btn.primary:hover { background: var(--gold-bright); }
+    .dash-action-btn.outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); }
+    .dash-action-btn.outline:hover { color: var(--text-primary); border-color: var(--border-hover); }
+    .dash-action-btn.danger { background: transparent; border: 1px solid rgba(196,30,58,0.3); color: #c41e3a; }
+
+    /* Stat cards row */
+    .dash-stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--space-sm);
+      max-width: 1200px;
+      margin: var(--space-lg) auto;
+      padding: 0 var(--space-xl);
+    }
+
+    .dash-stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dash-stat-card:hover { border-color: var(--gold); background: var(--gold-dim); }
+    .dsc-num { font-family: var(--font-display); font-size: 2.2rem; color: var(--gold); line-height: 1; }
+    .dsc-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-top: 3px; }
+    .dsc-sub { font-size: 0.72rem; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Tabs */
+    .dash-tabs {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 var(--space-xl);
+      display: flex; gap: 4px; border-bottom: 1px solid var(--border-color);
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .dash-tabs::-webkit-scrollbar { display: none; }
+    .dash-tab {
+      padding: 10px 18px; font-size: 0.85rem; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; white-space: nowrap;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: all 0.15s;
+    }
+    .dash-tab:hover { color: var(--text-secondary); }
+    .dash-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* Tab content */
+    .dash-content { max-width: 1200px; margin: 0 auto; padding: var(--space-xl); }
+    .dash-panel { display: none; }
+    .dash-panel.active { display: block; }
+
+    /* Section headers */
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-lg); flex-wrap: wrap; gap: var(--space-sm); }
+    .panel-title { font-family: var(--font-display); font-size: 1.5rem; color: var(--text-primary); }
+    .panel-title span { color: var(--gold); }
+    .panel-add-btn { padding: 7px 16px; background: var(--gold-dim); border: 1px solid var(--gold); border-radius: 100px; color: var(--gold); font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
+    .panel-add-btn:hover { background: rgba(212,168,67,0.2); }
+
+    /* Score history chart */
+    .score-history { display: flex; flex-direction: column; gap: var(--space-md); }
+    .score-entry {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg);
+      display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap;
+    }
+    .se-grade { font-family: var(--font-display); font-size: 2rem; min-width: 48px; text-align: center; }
+    .se-details { flex: 1; min-width: 200px; }
+    .se-title { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); }
+    .se-date { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .se-bar-row { display: flex; gap: var(--space-sm); margin-top: var(--space-sm); flex-wrap: wrap; }
+    .se-stat { font-size: 0.75rem; color: var(--text-secondary); background: rgba(255,255,255,0.04); padding: 3px 8px; border-radius: 100px; }
+
+    /* Camps grid */
+    .camps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md); }
+    .camp-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: var(--space-md);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .cc-tier { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+    .cc-name { font-size: 0.92rem; font-weight: 700; color: var(--text-primary); }
+    .cc-loc { font-size: 0.78rem; color: var(--text-secondary); }
+    .cc-date { font-size: 0.75rem; color: var(--text-muted); }
+    .cc-status select { padding: 5px 10px; font-size: 0.75rem; font-family: var(--font-body); background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-secondary); outline: none; width: 100%; }
+    .cc-remove { padding: 5px 12px; background: rgba(196,30,58,0.08); border: 1px solid rgba(196,30,58,0.2); border-radius: 100px; color: #c41e3a; font-size: 0.72rem; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; align-self: flex-start; }
+
+    /* Map */
+    #dashMap { height: 360px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: var(--space-lg); }
+
+    /* Calendar */
+    .cal-ticker { background: rgba(212,168,67,0.06); border: 1px solid rgba(212,168,67,0.15); border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); margin-bottom: var(--space-lg); overflow: hidden; }
+    .cal-ticker-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 8px; }
+    .cal-ticker-items { display: flex; gap: var(--space-xl); overflow-x: auto; scrollbar-width: none; }
+    .cal-ticker-items::-webkit-scrollbar { display: none; }
+    .cti { flex-shrink: 0; text-align: center; }
+    .cti-date { font-family: var(--font-display); font-size: 1.4rem; color: var(--gold); line-height: 1; }
+    .cti-name { font-size: 0.72rem; color: var(--text-primary); font-weight: 600; max-width: 120px; }
+    .cti-loc { font-size: 0.65rem; color: var(--text-muted); }
+
+    /* Offers */
+    .offers-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .offer-item {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg);
+      display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap;
+    }
+    .oi-college { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); flex: 1; }
+    .oi-div { font-size: 0.75rem; color: var(--text-muted); }
+    .oi-status { padding: 3px 10px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; }
+    .oi-remove { padding: 4px 10px; background: rgba(196,30,58,0.08); border: 1px solid rgba(196,30,58,0.2); border-radius: 100px; color: #c41e3a; font-size: 0.7rem; cursor: pointer; font-family: var(--font-body); }
+
+    /* Goals */
+    .goals-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .goal-item {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg);
+      display: flex; align-items: center; gap: var(--space-md);
+    }
+    .goal-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-color); flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .goal-check.done { background: var(--gold); border-color: var(--gold); color: #0a0a12; font-size: 0.75rem; }
+    .goal-check:hover { border-color: var(--gold); }
+    .goal-text { flex: 1; font-size: 0.88rem; }
+    .goal-text.done { text-decoration: line-through; color: var(--text-muted); }
+    .goal-cat { padding: 2px 8px; border-radius: 100px; font-size: 0.65rem; font-weight: 700; background: rgba(255,255,255,0.06); color: var(--text-muted); flex-shrink: 0; }
+    .goal-del { color: var(--text-muted); cursor: pointer; font-size: 1rem; flex-shrink: 0; transition: color 0.15s; }
+    .goal-del:hover { color: #c41e3a; }
+
+    /* AI tools row */
+    .ai-tools-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-md); margin-top: var(--space-lg); }
+    .ai-tool-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-lg); text-decoration: none; color: inherit; transition: all 0.15s; display: flex; flex-direction: column; gap: 8px; }
+    .ai-tool-card:hover { border-color: var(--gold); background: var(--gold-dim); transform: translateY(-2px); }
+    .atc-icon { font-size: 1.5rem; }
+    .atc-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+    .atc-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; }
+
+    /* Inline forms */
+    .inline-form { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-md); display: none; }
+    .inline-form.open { display: block; }
+    .inline-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-md); }
+    .if-input, .if-select {
+      padding: 8px 12px; font-size: 0.82rem; font-family: var(--font-body);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm); color: var(--text-primary); outline: none; width: 100%; box-sizing: border-box;
+    }
+    .if-input:focus, .if-select:focus { border-color: var(--gold); }
+    .if-input::placeholder { color: var(--text-muted); }
+    .if-submit { padding: 8px 20px; background: var(--gold); color: #0a0a12; border: none; border-radius: 100px; font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: var(--font-body); }
+    .if-cancel { padding: 8px 16px; background: transparent; border: 1px solid var(--border-color); border-radius: 100px; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; font-family: var(--font-body); margin-left: 6px; }
+
+    .empty-state { padding: var(--space-xl); text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+
+    /* Social post preview */
+    .social-post-preview {
+      background: linear-gradient(135deg, #0a0a12 0%, #1a1a30 100%);
+      border: 2px solid var(--gold);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      text-align: center;
+      max-width: 400px;
+      margin: var(--space-lg) auto;
+    }
+    .spp-logo { font-family: var(--font-display); font-size: 1.5rem; color: var(--gold); margin-bottom: var(--space-md); }
+    .spp-name { font-family: var(--font-display); font-size: 2.5rem; color: #fff; line-height: 1; margin-bottom: 6px; }
+    .spp-action { font-size: 1rem; color: var(--gold); font-weight: 700; margin-bottom: var(--space-sm); }
+    .spp-college { font-family: var(--font-display); font-size: 1.8rem; color: #fff; }
+    .spp-details { font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: var(--space-sm); }
+    .spp-tag { font-size: 0.72rem; color: var(--gold); margin-top: var(--space-sm); }
+
+    @media(max-width:768px){
+      .dash-stats-row { grid-template-columns: 1fr 1fr; }
+      .dash-content { padding: var(--space-md); }
+      .camps-grid { grid-template-columns: 1fr; }
+      .ai-tools-row { grid-template-columns: 1fr 1fr; }
+      .inline-form-grid { grid-template-columns: 1fr; }
+      .dash-header { padding: var(--space-md); }
+      .dash-stats-row { padding: 0 var(--space-md); }
+      .dash-tabs { padding: 0 var(--space-md); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<!-- ===== AUTH GATE ===== -->
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div class="auth-eyebrow">Your Personal Hub</div>
+    <h1 class="auth-title">Athlete <span>Dashboard</span></h1>
+    <p class="auth-sub">Track your combine scores, NIL progress, starred camps, college offers, and goals — all in one place. Free account, no credit card needed.</p>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="setAuthTab('signin',this)">Sign In</div>
+      <div class="auth-tab" onclick="setAuthTab('signup',this)">Create Account</div>
+    </div>
+
+    <div id="authSignin">
+      <input type="email" class="auth-input" id="siEmail" placeholder="Email address">
+      <input type="password" class="auth-input" id="siPass" placeholder="Password">
+      <button class="auth-btn" onclick="doSignIn()">Sign In</button>
+    </div>
+
+    <div id="authSignup" style="display:none">
+      <input type="email" class="auth-input" id="suEmail" placeholder="Email address">
+      <input type="password" class="auth-input" id="suPass" placeholder="Password (min 8 characters)">
+      <input type="password" class="auth-input" id="suPass2" placeholder="Confirm password">
+      <button class="auth-btn" onclick="doSignUp()">Create Free Account</button>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+    <p class="auth-note">Your data is private and only visible to you. We never share your information.</p>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="dashboard-wrap" id="dashWrap">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div class="dash-header-inner">
+      <div class="dash-avatar" id="dashAvatar">?</div>
+      <div>
+        <div class="dash-name" id="dashName">Athlete</div>
+        <div class="dash-details" id="dashDetails">Complete your profile to get started</div>
+      </div>
+      <div class="dash-header-actions">
+        <button class="dash-action-btn primary" onclick="showTab('overview')">Dashboard</button>
+        <button class="dash-action-btn outline" onclick="showProfileEdit()">Edit Profile</button>
+        <button class="dash-action-btn danger" onclick="doSignOut()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="dash-stats-row">
+    <div class="dash-stat-card" onclick="showTab('combine')">
+      <div class="dsc-num" id="statCombineGrade">—</div>
+      <div class="dsc-label">Combine Grade</div>
+      <div class="dsc-sub">Latest eval</div>
+    </div>
+    <div class="dash-stat-card" onclick="showTab('nil')">
+      <div class="dsc-num" id="statNilScore">—</div>
+      <div class="dsc-label">NIL Score</div>
+      <div class="dsc-sub">Out of 100</div>
+    </div>
+    <div class="dash-stat-card" onclick="showTab('camps')">
+      <div class="dsc-num" id="statCamps">0</div>
+      <div class="dsc-label">Starred Camps</div>
+      <div class="dsc-sub">On your list</div>
+    </div>
+    <div class="dash-stat-card" onclick="showTab('offers')">
+      <div class="dsc-num" id="statOffers">0</div>
+      <div class="dsc-label">Offers</div>
+      <div class="dsc-sub">College offers</div>
+    </div>
+    <div class="dash-stat-card" onclick="showTab('goals')">
+      <div class="dsc-num" id="statGoals">0</div>
+      <div class="dsc-label">Goals</div>
+      <div class="dsc-sub">Active goals</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="dash-tabs">
+    <div class="dash-tab active" onclick="showTab('overview',this)">Overview</div>
+    <div class="dash-tab" onclick="showTab('combine',this)">Combine</div>
+    <div class="dash-tab" onclick="showTab('nil',this)">NIL</div>
+    <div class="dash-tab" onclick="showTab('camps',this)">My Camps</div>
+    <div class="dash-tab" onclick="showTab('offers',this)">Offers</div>
+    <div class="dash-tab" onclick="showTab('goals',this)">Goals</div>
+    <div class="dash-tab" onclick="showTab('tools',this)">AI Tools</div>
+  </div>
+
+  <div class="dash-content">
+
+    <!-- OVERVIEW -->
+    <div class="dash-panel active" id="panel-overview">
+      <div id="calTickerWrap"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg)">
+        <div>
+          <h3 style="font-family:var(--font-display);font-size:1.2rem;color:var(--text-primary);margin-bottom:var(--space-md)">Upcoming Starred Camps</h3>
+          <div id="overviewCamps"><div class="empty-state">No camps starred yet. <a href="camps.html" style="color:var(--gold)">Browse camps →</a></div></div>
+        </div>
+        <div>
+          <h3 style="font-family:var(--font-display);font-size:1.2rem;color:var(--text-primary);margin-bottom:var(--space-md)">Active Goals</h3>
+          <div id="overviewGoals"><div class="empty-state">No goals set yet.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMBINE HISTORY -->
+    <div class="dash-panel" id="panel-combine">
+      <div class="panel-header">
+        <div class="panel-title">Combine <span>History</span></div>
+        <a href="combine-eval.html" class="panel-add-btn">+ New Evaluation</a>
+      </div>
+      <div id="combineHistoryList"><div class="empty-state">No combine evaluations yet. <a href="combine-eval.html" style="color:var(--gold)">Run your first eval →</a></div></div>
+    </div>
+
+    <!-- NIL HISTORY -->
+    <div class="dash-panel" id="panel-nil">
+      <div class="panel-header">
+        <div class="panel-title">NIL Score <span>History</span></div>
+        <a href="nil-rating.html" class="panel-add-btn">+ New Evaluation</a>
+      </div>
+      <div id="nilHistoryList"><div class="empty-state">No NIL evaluations yet. <a href="nil-rating.html" style="color:var(--gold)">Get your NIL score →</a></div></div>
+    </div>
+
+    <!-- CAMPS -->
+    <div class="dash-panel" id="panel-camps">
+      <div class="panel-header">
+        <div class="panel-title">My <span>Camps</span></div>
+        <a href="camps.html" class="panel-add-btn">Browse Camps →</a>
+      </div>
+      <div id="dashMap"></div>
+      <div class="camps-grid" id="starredCampsList">
+        <div class="empty-state" style="grid-column:1/-1">No camps starred yet. <a href="camps.html" style="color:var(--gold)">Browse 755 camps →</a></div>
+      </div>
+    </div>
+
+    <!-- OFFERS -->
+    <div class="dash-panel" id="panel-offers">
+      <div class="panel-header">
+        <div class="panel-title">College <span>Offers</span></div>
+        <button class="panel-add-btn" onclick="toggleForm('addOfferForm')">+ Add Offer</button>
+      </div>
+      <div class="inline-form" id="addOfferForm">
+        <div class="inline-form-grid">
+          <input class="if-input" id="of_college" placeholder="College name *">
+          <select class="if-select" id="of_division">
+            <option value="">Division…</option>
+            <option value="FBS">FBS (D1)</option><option value="FCS">FCS (D1-AA)</option>
+            <option value="D2">Division II</option><option value="D3">Division III</option>
+            <option value="JUCO">JUCO</option>
+          </select>
+          <input class="if-input" id="of_conference" placeholder="Conference (e.g. SEC)">
+          <select class="if-select" id="of_type">
+            <option value="Scholarship">Full Scholarship</option>
+            <option value="Partial">Partial Scholarship</option>
+            <option value="Walk-On">Walk-On</option>
+            <option value="Preferred Walk-On">Preferred Walk-On</option>
+          </select>
+        </div>
+        <button class="if-submit" onclick="saveOffer()">Save Offer</button>
+        <button class="if-cancel" onclick="toggleForm('addOfferForm')">Cancel</button>
+      </div>
+      <div class="offers-list" id="offersList"><div class="empty-state">No offers yet. Add your first offer above.</div></div>
+    </div>
+
+    <!-- GOALS -->
+    <div class="dash-panel" id="panel-goals">
+      <div class="panel-header">
+        <div class="panel-title">My <span>Goals</span></div>
+        <button class="panel-add-btn" onclick="toggleForm('addGoalForm')">+ Add Goal</button>
+      </div>
+      <div class="inline-form" id="addGoalForm">
+        <div class="inline-form-grid">
+          <input class="if-input" id="gl_title" placeholder="Goal description *" style="grid-column:1/-1">
+          <select class="if-select" id="gl_category">
+            <option value="general">General</option>
+            <option value="combine">Combine / Training</option>
+            <option value="nil">NIL</option>
+            <option value="recruiting">Recruiting</option>
+            <option value="academic">Academic</option>
+            <option value="camp">Camp</option>
+          </select>
+          <input class="if-input" id="gl_target" placeholder="Target (e.g. Run 4.45 by June)">
+        </div>
+        <button class="if-submit" onclick="saveGoal()">Save Goal</button>
+        <button class="if-cancel" onclick="toggleForm('addGoalForm')">Cancel</button>
+      </div>
+      <div class="goals-list" id="goalsList"><div class="empty-state">No goals yet. Set your first goal above.</div></div>
+    </div>
+
+    <!-- AI TOOLS -->
+    <div class="dash-panel" id="panel-tools">
+      <div class="panel-title" style="margin-bottom:var(--space-md)">AI <span style="color:var(--gold)">Tools</span></div>
+      <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:var(--space-lg)">All your Camp 8 AI tools in one place. Your scores are automatically saved to your dashboard after each evaluation.</p>
+      <div class="ai-tools-row">
+        <a href="nil-rating.html" class="ai-tool-card"><span class="atc-icon">⭐</span><div class="atc-title">NIL Rating</div><div class="atc-desc">Get your NIL market value score</div></a>
+        <a href="combine-eval.html" class="ai-tool-card"><span class="atc-icon">⚡</span><div class="atc-title">Combine Eval</div><div class="atc-desc">Grade your combine numbers</div></a>
+        <a href="chat.html?topic=email" class="ai-tool-card"><span class="atc-icon">✉️</span><div class="atc-title">Coach Email</div><div class="atc-desc">Write a standout coach email</div></a>
+        <a href="chat.html?topic=combine" class="ai-tool-card"><span class="atc-icon">🏋️</span><div class="atc-title">Training Plan</div><div class="atc-desc">Position-specific prep plan</div></a>
+        <a href="chat.html?topic=nil" class="ai-tool-card"><span class="atc-icon">💰</span><div class="atc-title">NIL Advice</div><div class="atc-desc">Navigate deals and eligibility</div></a>
+        <a href="chat.html?topic=recruiting" class="ai-tool-card"><span class="atc-icon">🎓</span><div class="atc-title">Recruiting Rules</div><div class="atc-desc">NCAA rules explained clearly</div></a>
+        <a href="chat.html" class="ai-tool-card"><span class="atc-icon">🏈</span><div class="atc-title">General Chat</div><div class="atc-desc">Ask anything about football</div></a>
+        <a href="ncaa-rules.html" class="ai-tool-card"><span class="atc-icon">📋</span><div class="atc-title">NCAA Rules Guide</div><div class="atc-desc">Full recruiting rules by division</div></a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Profile Edit Modal -->
+<div style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;padding:var(--space-lg)" id="profileModal" onclick="if(event.target===this)closeProfileEdit()">
+  <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-lg);width:100%;max-width:600px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--border-color);position:sticky;top:0;background:var(--bg-secondary)">
+      <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--text-primary)">Edit Profile</div>
+      <button onclick="closeProfileEdit()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid var(--border-color);color:var(--text-secondary);cursor:pointer;font-size:1rem">✕</button>
+    </div>
+    <div style="padding:var(--space-lg)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+        <div style="display:flex;flex-direction:column;gap:5px;grid-column:1/-1"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Full Name</label><input class="auth-input" id="pr_name" placeholder="First Last" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Position</label><input class="auth-input" id="pr_pos" placeholder="QB" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Graduation Year</label><input class="auth-input" id="pr_year" placeholder="2026" type="number" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">State</label><input class="auth-input" id="pr_state" placeholder="GA" maxlength="2" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">City</label><input class="auth-input" id="pr_city" placeholder="Atlanta" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">High School</label><input class="auth-input" id="pr_school" placeholder="School name" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Height</label><input class="auth-input" id="pr_height" placeholder="6-2" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Weight (lbs)</label><input class="auth-input" id="pr_weight" placeholder="185" type="number" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Instagram</label><input class="auth-input" id="pr_ig" placeholder="@handle" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Hudl URL</label><input class="auth-input" id="pr_hudl" placeholder="https://hudl.com/..." style="margin:0"></div>
+      </div>
+      <button onclick="saveProfile()" style="width:100%;padding:12px;background:var(--gold);color:#0a0a12;border:none;border-radius:var(--radius-md);font-size:0.9rem;font-weight:800;cursor:pointer;font-family:var(--font-body);margin-top:var(--space-lg)">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="camps-data.js"></script>
+<script>
+// ============================================
+// DASHBOARD LOGIC
+// ============================================
+let sb, currentUser, athleteProfile, athleteId;
+let dashMap = null;
+
+const TIER_COLORS = {1:'#FFD700',2:'#c41e3a',3:'#e8872b',4:'#4a90d9',5:'#7a7a9a'};
+
+function esc(s) { const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+
+// ---- Auth ----
+function setAuthTab(tab, btn) {
+  document.querySelectorAll('.auth-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('authSignin').style.display = tab === 'signin' ? '' : 'none';
+  document.getElementById('authSignup').style.display = tab === 'signup' ? '' : 'none';
+  document.getElementById('authError').textContent = '';
+}
+
+async function doSignIn() {
+  const email = document.getElementById('siEmail').value.trim();
+  const pass = document.getElementById('siPass').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Please fill in all fields.'; return; }
+  const { data, error } = await signIn(email, pass);
+  if (error) { errEl.textContent = error.message; return; }
+  currentUser = data.user;
+  await loadDashboard();
+}
+
+async function doSignUp() {
+  const email = document.getElementById('suEmail').value.trim();
+  const pass = document.getElementById('suPass').value;
+  const pass2 = document.getElementById('suPass2').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Please fill in all fields.'; return; }
+  if (pass !== pass2) { errEl.textContent = 'Passwords do not match.'; return; }
+  if (pass.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; return; }
+  const { data, error } = await signUp(email, pass);
+  if (error) { errEl.textContent = error.message; return; }
+  errEl.style.color = '#50c878';
+  errEl.textContent = 'Account created! Check your email to confirm, then sign in.';
+}
+
+async function doSignOut() {
+  await signOut();
+}
+
+// ---- Load dashboard ----
+async function loadDashboard() {
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('dashWrap').style.display = 'block';
+
+  // Load profile
+  athleteProfile = await getAthleteProfile(currentUser.id);
+  if (athleteProfile) {
+    athleteId = athleteProfile.id;
+    updateHeaderFromProfile();
+  }
+
+  // Load all data
+  await Promise.all([
+    loadCombineHistory(),
+    loadNilHistory(),
+    loadStarredCamps(),
+    loadOffers(),
+    loadGoals(),
+  ]);
+
+  updateStatCards();
+}
+
+function updateHeaderFromProfile() {
+  const p = athleteProfile;
+  if (!p) return;
+  const name = p.name || 'Athlete';
+  document.getElementById('dashName').textContent = name;
+  document.getElementById('dashAvatar').textContent = name.charAt(0).toUpperCase();
+  const parts = [];
+  if (p.pos) parts.push(p.pos);
+  if (p.school) parts.push(p.school);
+  if (p.state) parts.push(p.state);
+  if (p.graduation_year) parts.push("'" + String(p.graduation_year).slice(-2));
+  document.getElementById('dashDetails').innerHTML = parts.join(' · ');
+}
+
+// ---- Tab switching ----
+function showTab(tab, btn) {
+  document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+  else {
+    document.querySelectorAll('.dash-tab').forEach(t => {
+      if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + tab + "'")) t.classList.add('active');
+    });
+  }
+  if (tab === 'camps') initDashMap();
+}
+
+// ---- Combine history ----
+let combineHistory = [];
+async function loadCombineHistory() {
+  if (!athleteId) return;
+  combineHistory = await getCombineHistory(athleteId);
+  renderCombineHistory();
+}
+
+function renderCombineHistory() {
+  const el = document.getElementById('combineHistoryList');
+  if (!combineHistory.length) { el.innerHTML = '<div class="empty-state">No combine evaluations yet. <a href="combine-eval.html" style="color:var(--gold)">Run your first eval →</a></div>'; return; }
+  el.innerHTML = '<div class="score-history">' + combineHistory.map(s => {
+    const stats = s.score_data || {};
+    const statPills = Object.entries(stats).filter(([k]) => ['forty','vertical','broad'].includes(k))
+      .map(([k,v]) => `<span class="se-stat">${k}: ${v}</span>`).join('');
+    return `<div class="score-entry">
+      <div class="se-grade" style="color:${gradeColor(s.overall_grade)}">${esc(s.overall_grade||'?')}</div>
+      <div class="se-details">
+        <div class="se-title">${esc(s.pos||'Unknown')} · Overall: ${esc(s.overall_grade||'?')}</div>
+        <div class="se-date">${new Date(s.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+        <div class="se-bar-row">${statPills}</div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ---- NIL history ----
+let nilHistory = [];
+async function loadNilHistory() {
+  if (!athleteId) return;
+  nilHistory = await getNilHistory(athleteId);
+  renderNilHistory();
+}
+
+function renderNilHistory() {
+  const el = document.getElementById('nilHistoryList');
+  if (!nilHistory.length) { el.innerHTML = '<div class="empty-state">No NIL evaluations yet. <a href="nil-rating.html" style="color:var(--gold)">Get your NIL score →</a></div>'; return; }
+  el.innerHTML = '<div class="score-history">' + nilHistory.map(s => `
+    <div class="score-entry">
+      <div class="se-grade" style="color:${gradeColor(s.grade)}">${esc(s.grade||'?')}</div>
+      <div class="se-details">
+        <div class="se-title">NIL Score: ${esc(String(s.score||'?'))}/100</div>
+        <div class="se-date">${new Date(s.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+        ${s.notes ? `<div class="se-bar-row"><span class="se-stat">${esc(s.notes)}</span></div>` : ''}
+      </div>
+    </div>`).join('') + '</div>';
+}
+
+// ---- Starred camps ----
+let starredCamps = [];
+async function loadStarredCamps() {
+  if (!athleteId) return;
+  starredCamps = await getStarredCamps(athleteId);
+  renderStarredCamps();
+  renderCalTicker();
+  renderOverviewCamps();
+}
+
+function renderStarredCamps() {
+  const el = document.getElementById('starredCampsList');
+  if (!starredCamps.length) { el.innerHTML = '<div class="empty-state" style="grid-column:1/-1">No camps starred yet. <a href="camps.html" style="color:var(--gold)">Browse 755 camps →</a></div>'; return; }
+  const TC = TIER_COLORS;
+  el.innerHTML = starredCamps.map(c => {
+    const color = TC[c.camp_tier] || '#7a7a9a';
+    return `<div class="camp-card">
+      <div class="cc-tier" style="color:${color}">${esc(c.camp_tier === 1 ? 'Elite' : c.camp_tier === 2 ? 'Showcase' : 'Regional')}</div>
+      <div class="cc-name">${esc(c.camp_name)}</div>
+      <div class="cc-loc">${esc(c.camp_city)}, ${esc(c.camp_state)}</div>
+      <div class="cc-date">${esc(c.camp_dates || 'TBD')}</div>
+      <div class="cc-status">
+        <select onchange="updateCampStatus('${c.id}',this.value)">
+          <option value="interested" ${c.status==='interested'?'selected':''}>Interested</option>
+          <option value="planning" ${c.status==='planning'?'selected':''}>Planning to attend</option>
+          <option value="registered" ${c.status==='registered'?'selected':''}>Registered</option>
+          <option value="attended" ${c.status==='attended'?'selected':''}>Attended</option>
+        </select>
+      </div>
+      ${c.status === 'registered' ? `<button onclick="showCampPost('${c.id}')" style="padding:5px 12px;background:rgba(212,168,67,0.12);border:1px solid rgba(212,168,67,0.3);border-radius:100px;color:var(--gold);font-size:0.72rem;cursor:pointer;font-family:var(--font-body)">📱 Create Social Post</button>` : ''}
+      <button class="cc-remove" onclick="removeCamp('${c.id}')">✕ Remove</button>
+    </div>`;
+  }).join('');
+}
+
+function renderCalTicker() {
+  const upcoming = starredCamps.filter(c => {
+    if (!c.camp_dates) return false;
+    const d = new Date(c.camp_dates.split('–')[0]);
+    return !isNaN(d) && d >= new Date();
+  }).sort((a,b) => new Date(a.camp_dates) - new Date(b.camp_dates)).slice(0, 8);
+
+  const el = document.getElementById('calTickerWrap');
+  if (!upcoming.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = `<div class="cal-ticker">
+    <div class="cal-ticker-label">🗓️ Your Upcoming Camps</div>
+    <div class="cal-ticker-items">${upcoming.map(c => {
+      const d = new Date(c.camp_dates.split('–')[0]);
+      return `<div class="cti">
+        <div class="cti-date">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+        <div class="cti-name">${esc(c.camp_name)}</div>
+        <div class="cti-loc">${esc(c.camp_city)}, ${esc(c.camp_state)}</div>
+      </div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+function renderOverviewCamps() {
+  const el = document.getElementById('overviewCamps');
+  const upcoming = starredCamps.slice(0, 3);
+  if (!upcoming.length) { el.innerHTML = '<div class="empty-state">No camps starred yet. <a href="camps.html" style="color:var(--gold)">Browse camps →</a></div>'; return; }
+  el.innerHTML = upcoming.map(c => `<div style="padding:10px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-sm);margin-bottom:6px">
+    <div style="font-size:0.85rem;font-weight:700;color:var(--text-primary)">${esc(c.camp_name)}</div>
+    <div style="font-size:0.75rem;color:var(--text-muted)">${esc(c.camp_dates||'TBD')} · ${esc(c.camp_city)}, ${esc(c.camp_state)}</div>
+  </div>`).join('');
+}
+
+async function updateCampStatus(starId, status) {
+  const sb2 = getSupabase();
+  await sb2.from('athlete_starred_camps').update({ status }).eq('id', starId);
+  await loadStarredCamps();
+}
+
+async function removeCamp(starId) {
+  const sb2 = getSupabase();
+  await sb2.from('athlete_starred_camps').delete().eq('id', starId);
+  await loadStarredCamps();
+}
+
+function showCampPost(starId) {
+  const camp = starredCamps.find(c => c.id === starId);
+  if (!camp) return;
+  const name = athleteProfile?.name || 'ATHLETE NAME';
+  alert(`Social post preview:\n\n🏈 ${name}\n📍 ${camp.camp_name}\n📅 ${camp.camp_dates || 'TBD'}\n📌 ${camp.camp_city}, ${camp.camp_state}\n\n#Camp8 #Football #Recruiting\n\n(Copy this text and post to your social media!)`);
+}
+
+// ---- Map ----
+function initDashMap() {
+  if (dashMap) { dashMap.invalidateSize(); return; }
+  dashMap = L.map('dashMap', { zoomControl: true }).setView([33.7, -84.4], 5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(dashMap);
+
+  starredCamps.forEach(c => {
+    // Try to find lat/lng from camps-data
+    if (typeof CAMPS_DATA !== 'undefined') {
+      const found = CAMPS_DATA.find(cd => cd.id === c.camp_id);
+      if (found && found.lat && found.lng) {
+        const color = TIER_COLORS[c.camp_tier] || '#7a7a9a';
+        const marker = L.circleMarker([found.lat, found.lng], { radius: 8, color, fillColor: color, fillOpacity: 0.7, weight: 2 }).addTo(dashMap);
+        marker.bindPopup(`<div style="color:#fff;background:#0a0a14;padding:8px;border-radius:6px"><strong>${c.camp_name}</strong><br>${c.camp_dates || 'TBD'}</div>`);
+      }
+    }
+  });
+}
+
+// ---- Offers ----
+let offersList = [];
+async function loadOffers() {
+  if (!athleteId) return;
+  offersList = await getOffers(athleteId);
+  renderOffers();
+}
+
+function renderOffers() {
+  const el = document.getElementById('offersList');
+  if (!offersList.length) { el.innerHTML = '<div class="empty-state">No offers yet. Add your first offer above.</div>'; return; }
+  const SC = {'Active':'#50c878','Declined':'#c41e3a','Committed':'#FFD700'};
+  el.innerHTML = '<div class="offers-list">' + offersList.map(o => `
+    <div class="offer-item">
+      <div class="oi-college">${esc(o.college)}</div>
+      <div class="oi-div">${esc(o.division||'')} ${esc(o.conference ? '· ' + o.conference : '')}</div>
+      <div class="oi-div">${esc(o.offer_type||'')}</div>
+      <span class="oi-status" style="background:${SC[o.status]||'#888'}22;color:${SC[o.status]||'#888'}">${esc(o.status||'Active')}</span>
+      <button class="oi-remove" onclick="removeOffer('${o.id}')">✕</button>
+    </div>`).join('') + '</div>';
+}
+
+function toggleForm(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+async function saveOffer() {
+  const college = document.getElementById('of_college').value.trim();
+  if (!college) { alert('College name is required.'); return; }
+  await addOffer(athleteId, {
+    college,
+    division: document.getElementById('of_division').value,
+    conference: document.getElementById('of_conference').value,
+    offer_type: document.getElementById('of_type').value,
+    offer_date: new Date().toISOString().split('T')[0],
+    status: 'Active',
+  });
+  document.getElementById('of_college').value = '';
+  toggleForm('addOfferForm');
+  await loadOffers();
+  updateStatCards();
+}
+
+async function removeOffer(id) {
+  await deleteOffer(id);
+  await loadOffers();
+  updateStatCards();
+}
+
+// ---- Goals ----
+let goalsList = [];
+async function loadGoals() {
+  if (!athleteId) return;
+  goalsList = await getGoals(athleteId);
+  renderGoals();
+  renderOverviewGoals();
+}
+
+function renderGoals() {
+  const el = document.getElementById('goalsList');
+  if (!goalsList.length) { el.innerHTML = '<div class="empty-state">No goals yet. Set your first goal above.</div>'; return; }
+  el.innerHTML = '<div class="goals-list">' + goalsList.map(g => `
+    <div class="goal-item">
+      <div class="goal-check ${g.completed ? 'done' : ''}" onclick="toggleGoalDone('${g.id}',${!g.completed})">${g.completed ? '✓' : ''}</div>
+      <div class="goal-text ${g.completed ? 'done' : ''}">${esc(g.title)}${g.target_value ? ' <span style="color:var(--text-muted)">→ ' + esc(g.target_value) + '</span>' : ''}</div>
+      <span class="goal-cat">${esc(g.category||'general')}</span>
+      <span class="goal-del" onclick="removeGoal('${g.id}')">✕</span>
+    </div>`).join('') + '</div>';
+}
+
+function renderOverviewGoals() {
+  const el = document.getElementById('overviewGoals');
+  const active = goalsList.filter(g => !g.completed).slice(0, 4);
+  if (!active.length) { el.innerHTML = '<div class="empty-state">No active goals.</div>'; return; }
+  el.innerHTML = active.map(g => `<div style="padding:9px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-sm);margin-bottom:6px;font-size:0.82rem;color:var(--text-primary)">${esc(g.title)}</div>`).join('');
+}
+
+async function saveGoal() {
+  const title = document.getElementById('gl_title').value.trim();
+  if (!title) { alert('Goal description is required.'); return; }
+  await addGoal(athleteId, {
+    title,
+    category: document.getElementById('gl_category').value,
+    target_value: document.getElementById('gl_target').value,
+  });
+  document.getElementById('gl_title').value = '';
+  document.getElementById('gl_target').value = '';
+  toggleForm('addGoalForm');
+  await loadGoals();
+  updateStatCards();
+}
+
+async function toggleGoalDone(id, done) {
+  await toggleGoal(id, done);
+  await loadGoals();
+}
+
+async function removeGoal(id) {
+  await deleteGoal(id);
+  await loadGoals();
+  updateStatCards();
+}
+
+// ---- Profile ----
+function showProfileEdit() {
+  const p = athleteProfile || {};
+  document.getElementById('pr_name').value = p.name || '';
+  document.getElementById('pr_pos').value = p.position || '';
+  document.getElementById('pr_year').value = p.graduation_year || '';
+  document.getElementById('pr_state').value = p.state || '';
+  document.getElementById('pr_city').value = p.city || '';
+  document.getElementById('pr_school').value = p.school || '';
+  document.getElementById('pr_height').value = p.height || '';
+  document.getElementById('pr_weight').value = p.weight || '';
+  document.getElementById('pr_ig').value = p.instagram || '';
+  document.getElementById('pr_hudl').value = p.hudl_url || '';
+  document.getElementById('profileModal').style.display = 'flex';
+}
+
+function closeProfileEdit() {
+  document.getElementById('profileModal').style.display = 'none';
+}
+
+async function saveProfile() {
+  const data = {
+    name: document.getElementById('pr_name').value.trim(),
+    position: document.getElementById('pr_pos').value.trim(),
+    graduation_year: parseInt(document.getElementById('pr_year').value) || null,
+    state: document.getElementById('pr_state').value.trim().toUpperCase(),
+    city: document.getElementById('pr_city').value.trim(),
+    school: document.getElementById('pr_school').value.trim(),
+    height: document.getElementById('pr_height').value.trim(),
+    weight: parseInt(document.getElementById('pr_weight').value) || null,
+    instagram: document.getElementById('pr_ig').value.trim(),
+    hudl_url: document.getElementById('pr_hudl').value.trim(),
+  };
+
+  athleteProfile = await upsertAthleteProfile(currentUser.id, data);
+  if (athleteProfile) athleteId = athleteProfile.id;
+  updateHeaderFromProfile();
+  closeProfileEdit();
+}
+
+// ---- Stat cards ----
+function updateStatCards() {
+  const latestCombine = combineHistory[0];
+  const latestNil = nilHistory[0];
+  document.getElementById('statCombineGrade').textContent = latestCombine?.overall_grade || '—';
+  document.getElementById('statCombineGrade').style.color = gradeColor(latestCombine?.overall_grade);
+  document.getElementById('statNilScore').textContent = latestNil?.score ? latestNil.score : '—';
+  document.getElementById('statCamps').textContent = starredCamps.length;
+  document.getElementById('statOffers').textContent = offersList.length;
+  document.getElementById('statGoals').textContent = goalsList.filter(g => !g.completed).length;
+}
+
+function gradeColor(g) {
+  if (!g) return 'var(--text-muted)';
+  if (g.startsWith('A')) return '#FFD700';
+  if (g.startsWith('B')) return '#50c878';
+  if (g.startsWith('C')) return '#e8872b';
+  return '#c41e3a';
+}
+
+// ---- Boot ----
+document.addEventListener('DOMContentLoaded', async function() {
+  // Init Supabase
+  window._sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Check existing session
+  const user = await getCurrentUser();
+  if (user) {
+    currentUser = user;
+    athleteProfile = await getAthleteProfile(user.id);
+    if (athleteProfile) athleteId = athleteProfile.id;
+    await loadDashboard();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeProfileEdit();
+});
+</script>
+</body>
+</html>
