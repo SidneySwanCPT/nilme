@@ -815,3 +815,21 @@ body.has-breadcrumb .page-header {
   border-color: var(--gold);
   color: var(--gold);
 }
+
+/* Nav Login Button */
+.nav-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0a0a12;
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+.nav-login-btn:hover { background: var(--gold-bright); border-color: var(--gold-bright); }

@@ -91,7 +91,11 @@
 
   <!-- External buttons -->
   <div class="nav-external">
-<a href="https://www.hudl.com" target="_blank" rel="noopener" class="ext-btn">Hudl</a>
+    <a href="login.html" class="nav-login-btn" id="navLoginBtn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Athlete Login
+    </a>
+    <a href="https://www.hudl.com" target="_blank" rel="noopener" class="ext-btn">Hudl</a>
     <a href="https://www.maxpreps.com" target="_blank" rel="noopener" class="ext-btn">MaxPreps</a>
     <a href="https://247sports.com" target="_blank" rel="noopener" class="ext-btn">247Sports</a>
     <a href="https://www.on3.com" target="_blank" rel="noopener" class="ext-btn">On3</a>
@@ -158,6 +162,21 @@
       const nav = document.getElementById('camp8-nav');
       if (nav) nav.insertAdjacentHTML('afterend', bc);
       document.body.classList.add('has-breadcrumb');
+    }
+
+    // ---- Update login btn if logged in ----
+    if (typeof window.supabase !== 'undefined') {
+      window.supabase.createClient(
+        'https://afikpptrkkfpoatadhyg.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmaWtwcHRya2tmcG9hdGFkaHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDM4MjIsImV4cCI6MjA5MDU3OTgyMn0.fSpFH4kP_iyDAptTlTIQLL5tjhzjFe6PWFDMdWV55uI'
+      ).auth.getSession().then(function(r) {
+        var btn = document.getElementById('navLoginBtn');
+        if (!btn) return;
+        if (r.data && r.data.session) {
+          btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> My Dashboard';
+          btn.href = 'dashboard.html';
+        }
+      });
     }
 
     // ---- Dropdown hover with delay (fix for closing too fast) ----

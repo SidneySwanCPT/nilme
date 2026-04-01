@@ -1522,3 +1522,202 @@ body.home-page { overflow-y: auto; height: auto; }
   .hero-ai-caps { grid-template-columns: 1fr 1fr; }
   .hero-slider { height: 640px; }
 }
+
+/* ============================================
+   FREE FEATURES BAR
+   ============================================ */
+.free-features-bar {
+  background: rgba(212,168,67,0.07);
+  border-bottom: 1px solid rgba(212,168,67,0.15);
+  padding: 10px var(--space-xl);
+}
+
+.ffb-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.ffb-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gold);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ffb-items {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.ffb-item {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.ffb-cta {
+  margin-left: auto;
+  padding: 6px 16px;
+  background: var(--gold);
+  color: #0a0a12;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.ffb-cta:hover { background: var(--gold-bright); }
+
+/* ============================================
+   EVAL SECTION LOGIN PROMPT
+   ============================================ */
+.eval-login-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: var(--space-sm);
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 100px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.eval-login-cta {
+  color: var(--gold);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.eval-login-cta:hover { color: var(--gold-bright); }
+
+/* ============================================
+   FEATURED CAMPS PLAN BUTTON
+   ============================================ */
+.section-plan-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(212,168,67,0.3);
+  border-radius: 100px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.section-plan-btn:hover { background: rgba(212,168,67,0.2); }
+
+/* ============================================
+   CAMPS TEASER SECTION
+   ============================================ */
+.camps-teaser-section {
+  padding: var(--space-xl);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.camps-teaser-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+  align-items: center;
+}
+
+.camps-teaser-btns {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.camps-teaser-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.camps-teaser-btn.primary {
+  background: var(--gold);
+  color: #0a0a12;
+}
+.camps-teaser-btn.primary:hover { background: var(--gold-bright); }
+
+.camps-teaser-btn.outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+.camps-teaser-btn.outline:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+
+.camps-teaser-right {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.camps-teaser-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ctc-tier { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+.ctc-name { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+.ctc-loc { font-size: 0.74rem; color: var(--text-secondary); }
+.ctc-date { font-size: 0.7rem; color: var(--text-muted); }
+
+.ctc-more {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(212,168,67,0.25);
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.ctc-more:hover { background: rgba(212,168,67,0.2); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .camps-teaser-inner { grid-template-columns: 1fr; }
+  .ffb-inner { gap: var(--space-sm); }
+  .ffb-cta { margin-left: 0; }
+}
+
+@media (max-width: 640px) {
+  .camps-teaser-section { padding: var(--space-lg) var(--space-md); }
+  .free-features-bar { padding: 10px var(--space-md); }
+  .camps-teaser-right { grid-template-columns: 1fr; }
+}

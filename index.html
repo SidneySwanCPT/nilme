@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="home-styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="auth-guard.js"></script>
 </head>
 <body class="home-page">
 
@@ -61,6 +60,22 @@
     </div>
   </div>
 </section>
+
+<!-- Free Features Blurb -->
+<div class="free-features-bar">
+  <div class="ffb-inner">
+    <div class="ffb-label">🔓 Free with a Camp 8 account:</div>
+    <div class="ffb-items">
+      <span class="ffb-item">⭐ NIL Rating AI</span>
+      <span class="ffb-item">⚡ Combine Evaluator</span>
+      <span class="ffb-item">📊 Athlete Dashboard</span>
+      <span class="ffb-item">🏈 AI Mentor Chat</span>
+      <span class="ffb-item">📅 Camp Planner</span>
+      <span class="ffb-item">✉️ Coach Email Writer</span>
+    </div>
+    <a href="login.html" class="ffb-cta">Create Free Account →</a>
+  </div>
+</div>
 
 <!-- Countdown to Friday Night Lights -->
 <div class="countdown-bar">
@@ -115,8 +130,13 @@
   <div class="eval-eyebrow">Athlete Evaluation Tools</div>
   <h2 class="eval-headline">See Where You <span>Rank</span></h2>
   <p class="eval-sub">Two free tools built to show you exactly where you stand — and what to do next.</p>
+  <div class="eval-login-prompt">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    These tools require a free account.
+    <a href="login.html" class="eval-login-cta">Sign Up Free →</a>
+  </div>
   <div class="eval-cards">
-    <a href="nil-central.html#nil-rating" class="eval-card nil-card">
+    <a href="login.html" class="eval-card nil-card">
       <div class="eval-card-icon">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       </div>
@@ -138,7 +158,7 @@
       </div>
     </a>
 
-    <a href="combine-eval.html" class="eval-card combine-card">
+    <a href="login.html" class="eval-card combine-card">
       <div class="eval-card-icon">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       </div>
@@ -168,10 +188,16 @@
   <div class="featured-camps-header">
     <div>
       <div class="section-eyebrow">Editor's Picks</div>
-      <h2 class="section-title-lg">Top <span>5</span> Elite Camps</h2>
+      <h2 class="section-title-lg">Top <span>8</span> Elite Camps</h2>
       <p class="section-subtitle">The highest-tier prospect camps — handpicked from Georgia and the Southeast.</p>
     </div>
-    <a href="camps.html" class="section-link-btn">View All 755 Camps →</a>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+      <a href="camps.html" class="section-link-btn">View All 755 Camps →</a>
+      <a href="login.html" class="section-plan-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Sign in to plan your camp schedule →
+      </a>
+    </div>
   </div>
   <div class="featured-camps-grid" id="featuredCampsGrid">
     <!-- Populated by JS -->
@@ -180,32 +206,30 @@
     <div class="fc-skeleton"></div>
     <div class="fc-skeleton"></div>
     <div class="fc-skeleton"></div>
+    <div class="fc-skeleton"></div>
+    <div class="fc-skeleton"></div>
+    <div class="fc-skeleton"></div>
   </div>
 </section>
 
-<!-- ============================================
-     UPCOMING CAMPS PHOTO REEL
-     ============================================ -->
-<section class="camps-plain-section">
-  <div class="camps-plain-header">
-    <div>
-      <div class="section-eyebrow">What's Coming Up</div>
-      <h2 class="section-title-lg">Upcoming <span>Football Camps</span></h2>
-      <p class="section-subtitle">Upcoming elite football camps — click any to view on the map.</p>
+<!-- Camps Teaser -->
+<section class="camps-teaser-section">
+  <div class="camps-teaser-inner">
+    <div class="camps-teaser-left">
+      <div class="section-eyebrow">755 Prospect Camps</div>
+      <h2 class="section-title-lg">Plan Your <span>Camp Schedule</span></h2>
+      <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.6;margin-bottom:var(--space-lg);max-width:400px">Browse, filter, and star the camps you want to attend. Build a personalized schedule, get reminded of upcoming dates, and track which ones you've attended — all in your free athlete dashboard.</p>
+      <div class="camps-teaser-btns">
+        <a href="camps.html" class="camps-teaser-btn primary">Browse All 755 Camps</a>
+        <a href="login.html" class="camps-teaser-btn outline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Sign In to Plan Your Schedule
+        </a>
+      </div>
     </div>
-    <div class="reel-filters">
-      <button class="reel-filter active" onclick="setPlainFilter('all',this)">All</button>
-      <button class="reel-filter" onclick="setPlainFilter('Georgia',this)">GA</button>
-      <button class="reel-filter" onclick="setPlainFilter('Florida',this)">FL</button>
-      <button class="reel-filter" onclick="setPlainFilter('Texas',this)">TX</button>
-      <button class="reel-filter" onclick="setPlainFilter('California',this)">CA</button>
+    <div class="camps-teaser-right" id="campsTeaserCards">
+      <!-- 4 teaser camp cards populated by JS -->
     </div>
-  </div>
-  <div class="plain-camps-grid" id="plainCampsGrid">
-    <!-- Populated by JS -->
-  </div>
-  <div style="text-align:center;margin-top:var(--space-lg)">
-    <a href="camps.html" class="eval-hub-link">View All Camps + Map &amp; Calendar →</a>
   </div>
 </section>
 
@@ -467,7 +491,7 @@ function renderFeaturedCamps() {
     elite = elite.concat(others);
   }
 
-  elite = elite.slice(0, 5);
+  elite = elite.slice(0, 8);
   const grid = document.getElementById('featuredCampsGrid');
   grid.innerHTML = '';
 
@@ -582,13 +606,37 @@ function strip(h){const d=document.createElement('div');d.innerHTML=h;return d.t
 function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
 
 // ============================================
+// CAMPS TEASER (4 plain cards, no auth needed)
+// ============================================
+function renderCampsTeaser() {
+  if (typeof CAMPS_DATA === 'undefined') return;
+  const camps = getUpcomingFootballCamps(null).slice(0, 4);
+  const el = document.getElementById('campsTeaserCards');
+  if (!el) return;
+  if (!camps.length) { el.style.display = 'none'; return; }
+  el.innerHTML = camps.map(camp => {
+    const color = TC[camp.tier] || '#7a7a9a';
+    return `<div class="camps-teaser-card">
+      <div class="ctc-tier" style="color:${color}">${esc(camp.tierLabel)}</div>
+      <div class="ctc-name">${esc(camp.name)}</div>
+      <div class="ctc-loc">${esc(camp.city)}, ${esc(camp.stateAbbrev)}</div>
+      <div class="ctc-date">${esc(camp.dates || 'TBD')}</div>
+    </div>`;
+  }).join('') +
+  `<a href="login.html" class="ctc-more">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    Sign in to see all 755 camps + plan your schedule
+  </a>`;
+}
+
+// ============================================
 // BOOT
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
   loadNews('ga-football');
   renderCampsWidget();
   renderFeaturedCamps();
-  renderPlainCamps();
+  renderCampsTeaser();
 });
 </script>
 <script src="shared.js"></script>
