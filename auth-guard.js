@@ -43,8 +43,21 @@
         return;
       }
 
-      // Logged in — show page
-      document.documentElement.style.visibility = '';
+      // Logged in — check if onboarding is complete
+      const skipOnboarding = ['onboarding.html', 'login.html'];
+      if (!skipOnboarding.includes(currentPage)) {
+        sb.from('athletes').select('onboarding_complete').eq('user_id', session.user.id).single().then(function(res) {
+          if (!res.data || !res.data.onboarding_complete) {
+            window.location.replace('onboarding.html');
+            return;
+          }
+          document.documentElement.style.visibility = '';
+        }).catch(function() {
+          document.documentElement.style.visibility = '';
+        });
+      } else {
+        document.documentElement.style.visibility = '';
+      }
     }).catch(function () {
       // On error, redirect to login to be safe
       window.location.replace('login.html');

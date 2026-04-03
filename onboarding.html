@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Athlete Setup</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body { overflow-y:auto;height:auto;background:var(--bg-primary); }
+    .ob-wrap { min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:var(--space-xl) var(--space-md); }
+
+    /* Header */
+    .ob-brand { display:flex;align-items:center;gap:10px;margin-bottom:var(--space-xl); }
+    .ob-brand-logo { font-family:var(--font-display);font-size:1.6rem;letter-spacing:.1em;color:var(--text-primary); }
+    .ob-brand-logo span { color:var(--gold); }
+
+    /* Step tracker */
+    .ob-steps { display:flex;align-items:center;gap:0;margin-bottom:var(--space-xl);max-width:680px;width:100%; }
+    .ob-step-dot { width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;flex-shrink:0;transition:all .3s;border:2px solid var(--border-color);color:var(--text-muted);background:var(--bg-card);cursor:default;position:relative;z-index:1; }
+    .ob-step-dot.active { border-color:var(--gold);color:var(--gold);background:var(--gold-dim); }
+    .ob-step-dot.done { border-color:var(--gold);background:var(--gold);color:#0a0a12; }
+    .ob-step-line { flex:1;height:2px;background:var(--border-color);transition:background .3s; }
+    .ob-step-line.done { background:var(--gold); }
+
+    /* Card */
+    .ob-card { background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-lg);width:100%;max-width:680px;overflow:hidden; }
+    .ob-card-header { padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--border-color);background:linear-gradient(135deg,rgba(212,168,67,.07) 0%,transparent 100%); }
+    .ob-step-label { font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:var(--gold);margin-bottom:4px; }
+    .ob-step-title { font-family:var(--font-display);font-size:1.8rem;letter-spacing:.04em;color:var(--text-primary); }
+    .ob-step-desc { font-size:.84rem;color:var(--text-secondary);margin-top:4px;line-height:1.5; }
+    .ob-card-body { padding:var(--space-xl); }
+
+    /* Form grid */
+    .ob-grid { display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md); }
+    .ob-full { grid-column:1/-1; }
+    .ob-field { display:flex;flex-direction:column;gap:6px; }
+    .ob-label { font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted); }
+    .ob-label span { color:var(--gold); } /* required asterisk */
+    .ob-input,.ob-select,.ob-textarea {
+      padding:10px 14px;font-size:.88rem;font-family:var(--font-body);
+      background:rgba(255,255,255,.04);border:1px solid var(--border-color);
+      border-radius:var(--radius-sm);color:var(--text-primary);outline:none;
+      transition:border-color .15s;width:100%;box-sizing:border-box;
+    }
+    .ob-input:focus,.ob-select:focus,.ob-textarea:focus { border-color:var(--gold); }
+    .ob-input::placeholder,.ob-textarea::placeholder { color:var(--text-muted); }
+    .ob-textarea { resize:vertical;min-height:80px; }
+
+    /* MaxPreps import */
+    .ob-import-box { background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--space-lg);margin-bottom:var(--space-lg); }
+    .ob-import-title { font-size:.88rem;font-weight:700;color:var(--text-primary);margin-bottom:4px; }
+    .ob-import-desc { font-size:.78rem;color:var(--text-secondary);line-height:1.5;margin-bottom:var(--space-md); }
+    .ob-import-row { display:flex;gap:var(--space-sm); }
+    .ob-import-btn {
+      padding:10px 20px;background:var(--gold);color:#0a0a12;border:none;
+      border-radius:var(--radius-sm);font-size:.84rem;font-weight:800;
+      cursor:pointer;font-family:var(--font-body);white-space:nowrap;flex-shrink:0;
+      transition:background .15s;
+    }
+    .ob-import-btn:hover { background:var(--gold-bright); }
+    .ob-import-btn:disabled { opacity:.5;cursor:not-allowed; }
+    .ob-skip-link { font-size:.78rem;color:var(--text-muted);text-align:center;margin-top:var(--space-sm);cursor:pointer;text-decoration:underline; }
+    .ob-skip-link:hover { color:var(--text-secondary); }
+
+    /* Import progress */
+    .ob-import-progress { display:none;margin-top:var(--space-md); }
+    .ob-import-progress.visible { display:block; }
+    .ob-progress-bar { height:4px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;margin-bottom:8px; }
+    .ob-progress-fill { height:100%;background:var(--gold);border-radius:100px;transition:width .4s ease;width:0%; }
+    .ob-progress-label { font-size:.74rem;color:var(--text-muted); }
+
+    /* Import result */
+    .ob-import-result { display:none;margin-top:var(--space-md); }
+    .ob-import-result.visible { display:block; }
+    .ob-result-verified { display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(80,200,120,.1);border:1px solid rgba(80,200,120,.3);border-radius:var(--radius-sm);margin-bottom:var(--space-md); }
+    .ob-result-verified svg { color:#50c878;flex-shrink:0; }
+    .ob-result-verified-text { font-size:.82rem;color:#50c878;font-weight:700; }
+    .ob-result-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(212,168,67,.15);border:1px solid rgba(212,168,67,.3);border-radius:100px;font-size:.7rem;font-weight:700;color:var(--gold);margin-left:auto; }
+    .ob-stats-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
+    .ob-stat-pill { background:rgba(255,255,255,.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:8px 12px;text-align:center; }
+    .ob-stat-val { font-family:var(--font-display);font-size:1.2rem;color:var(--gold);line-height:1; }
+    .ob-stat-lbl { font-size:.65rem;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.05em; }
+    .ob-dispute-link { font-size:.74rem;color:var(--text-muted);text-align:right;margin-top:8px;cursor:pointer;text-decoration:underline; }
+    .ob-dispute-link:hover { color:#e8872b; }
+
+    /* Manual stats */
+    .ob-manual-notice { display:none;padding:10px 14px;background:rgba(232,135,43,.08);border:1px solid rgba(232,135,43,.2);border-radius:var(--radius-sm);font-size:.78rem;color:#e8872b;margin-bottom:var(--space-md); }
+    .ob-manual-notice.visible { display:block; }
+
+    /* Social handles */
+    .ob-social-row { display:flex;align-items:center;gap:10px; }
+    .ob-social-icon { width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.8rem;font-weight:800; }
+    .ob-social-icon.ig { background:rgba(225,48,108,.12);color:#e1306c; }
+    .ob-social-icon.tw { background:rgba(255,255,255,.06);color:var(--text-secondary); }
+    .ob-social-icon.tt { background:rgba(0,0,0,.3);color:#fff; }
+
+    /* Goals */
+    .ob-goal-card { background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:var(--space-md);margin-bottom:var(--space-sm); }
+    .ob-goal-label { font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin-bottom:6px; }
+
+    /* Footer */
+    .ob-card-footer { padding:var(--space-lg) var(--space-xl);border-top:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;gap:var(--space-md); }
+    .ob-btn-back { padding:10px 22px;background:transparent;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:.86rem;font-weight:700;color:var(--text-secondary);cursor:pointer;font-family:var(--font-body);transition:all .15s; }
+    .ob-btn-back:hover { border-color:var(--border-hover);color:var(--text-primary); }
+    .ob-btn-next { padding:10px 28px;background:var(--gold);color:#0a0a12;border:none;border-radius:var(--radius-md);font-size:.88rem;font-weight:800;cursor:pointer;font-family:var(--font-body);transition:background .15s;text-transform:uppercase;letter-spacing:.05em; }
+    .ob-btn-next:hover { background:var(--gold-bright); }
+    .ob-btn-next:disabled { opacity:.5;cursor:not-allowed; }
+    .ob-step-counter { font-size:.78rem;color:var(--text-muted); }
+
+    /* Complete screen */
+    .ob-complete { text-align:center;padding:var(--space-xl) var(--space-lg); }
+    .ob-complete-icon { font-size:3rem;margin-bottom:var(--space-md); }
+    .ob-complete-title { font-family:var(--font-display);font-size:2.5rem;color:var(--text-primary);margin-bottom:8px; }
+    .ob-complete-title span { color:var(--gold); }
+    .ob-complete-sub { font-size:.9rem;color:var(--text-secondary);line-height:1.6;max-width:400px;margin:0 auto var(--space-xl); }
+    .ob-complete-btn { display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:var(--gold);color:#0a0a12;border:none;border-radius:var(--radius-md);font-size:1rem;font-weight:800;cursor:pointer;font-family:var(--font-body);text-transform:uppercase;letter-spacing:.06em; }
+
+    @media(max-width:600px) {
+      .ob-grid { grid-template-columns:1fr; }
+      .ob-steps { gap:2px; }
+      .ob-step-dot { width:22px;height:22px;font-size:.6rem; }
+    }
+  </style>
+</head>
+<body>
+<script src="supabase-client.js"></script>
+<div class="ob-wrap">
+  <!-- Brand -->
+  <div class="ob-brand">
+    <div class="ob-brand-logo">CAMP <span>8</span></div>
+  </div>
+
+  <!-- Step tracker -->
+  <div class="ob-steps" id="obSteps"></div>
+
+  <!-- Card -->
+  <div class="ob-card" id="obCard">
+    <div class="ob-card-header">
+      <div class="ob-step-label" id="obStepLabel"></div>
+      <div class="ob-step-title" id="obStepTitle"></div>
+      <div class="ob-step-desc" id="obStepDesc"></div>
+    </div>
+    <div class="ob-card-body" id="obCardBody"></div>
+    <div class="ob-card-footer" id="obCardFooter"></div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// CAMP 8 ONBOARDING WIZARD
+// ============================================
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var currentStep = 0;
+var athleteData = {};
+var userId = null;
+var importedStats = null;
+var statsMode = 'unverified';
+
+var STEPS = [
+  { num:'01', label:'Step 1 of 8', title:'Identity',        desc:'Tell us who you are — this builds the foundation of your Camp 8 profile.' },
+  { num:'02', label:'Step 2 of 8', title:'Measurables',     desc:'Your physical profile — height, weight, and position details.' },
+  { num:'03', label:'Step 3 of 8', title:'Import Stats',    desc:'Connect your MaxPreps profile to pull your career stats automatically.' },
+  { num:'04', label:'Step 4 of 8', title:'Combine Numbers', desc:'Your athletic testing results — these feed directly into your Camp 8 rating.' },
+  { num:'05', label:'Step 5 of 8', title:'Social Presence', desc:'Your social media footprint — a key factor in your NIL market value.' },
+  { num:'06', label:'Step 6 of 8', title:'Recruiting Status',desc:'Your current recruiting picture — offers, camps, and profile links.' },
+  { num:'07', label:'Step 7 of 8', title:'Academic Standing',desc:'Your academic profile — coaches and the NCAA care about this.' },
+  { num:'08', label:'Step 8 of 8', title:'Your Goals',      desc:'What are you working toward? This powers your AI recommendations.' },
+];
+
+function ex(s){ var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML; }
+function val(id){ return (document.getElementById(id)||{}).value||''; }
+
+// ---- Step tracker ----
+function renderSteps(){
+  var el=document.getElementById('obSteps');
+  var html='';
+  STEPS.forEach(function(s,i){
+    var cls=i<currentStep?'done':i===currentStep?'active':'';
+    html+='<div class="ob-step-dot '+cls+'">'+(i<currentStep?'✓':(i+1))+'</div>';
+    if(i<STEPS.length-1) html+='<div class="ob-step-line '+(i<currentStep?'done':'')+'"></div>';
+  });
+  el.innerHTML=html;
+}
+
+// ---- Render header ----
+function renderHeader(){
+  var s=STEPS[currentStep];
+  document.getElementById('obStepLabel').textContent='Step '+s.num.replace('0','')+' of 8 — '+s.title;
+  document.getElementById('obStepTitle').textContent=s.title;
+  document.getElementById('obStepDesc').textContent=s.desc;
+}
+
+// ---- Footer ----
+function renderFooter(){
+  var f=document.getElementById('obCardFooter');
+  f.innerHTML=
+    '<button class="ob-btn-back" id="obBack" onclick="goBack()">'+(currentStep===0?'Exit':'← Back')+'</button>'+
+    '<span class="ob-step-counter">'+(currentStep+1)+' of 8</span>'+
+    '<button class="ob-btn-next" id="obNext" onclick="goNext()">'+
+      (currentStep===7?'Complete Setup ✓':'Continue →')+'</button>';
+}
+
+// ---- Step bodies ----
+function renderStep(){
+  renderSteps();
+  renderHeader();
+  renderFooter();
+  var body=document.getElementById('obCardBody');
+
+  if(currentStep===0) body.innerHTML=`
+    <div class="ob-grid">
+      <div class="ob-field ob-full"><label class="ob-label">Full Name <span>*</span></label><input class="ob-input" id="f_name" placeholder="First Last" value="${ex(athleteData.name||'')}"></div>
+      <div class="ob-field"><label class="ob-label">Position <span>*</span></label>
+        <select class="ob-select" id="f_pos">
+          ${['QB','RB','WR','TE','OL','DL','DE','LB','CB','S','K','P'].map(function(p){return '<option value="'+p+'"'+(athleteData.position===p?' selected':'')+'>'+p+'</option>';}).join('')}
+        </select>
+      </div>
+      <div class="ob-field"><label class="ob-label">Secondary Position</label><input class="ob-input" id="f_pos2" placeholder="Optional" value="${ex(athleteData.position_secondary||'')}"></div>
+      <div class="ob-field"><label class="ob-label">Graduation Year <span>*</span></label>
+        <select class="ob-select" id="f_year">
+          ${[2025,2026,2027,2028,2029].map(function(y){return '<option value="'+y+'"'+(athleteData.graduation_year==y?' selected':'')+'>'+y+'</option>';}).join('')}
+        </select>
+      </div>
+      <div class="ob-field"><label class="ob-label">High School <span>*</span></label><input class="ob-input" id="f_school" placeholder="School name" value="${ex(athleteData.school||'')}"></div>
+      <div class="ob-field"><label class="ob-label">City</label><input class="ob-input" id="f_city" placeholder="City" value="${ex(athleteData.city||'')}"></div>
+      <div class="ob-field"><label class="ob-label">State <span>*</span></label><input class="ob-input" id="f_state" placeholder="GA" maxlength="2" value="${ex(athleteData.state||'')}"></div>
+    </div>`;
+
+  else if(currentStep===1) body.innerHTML=`
+    <div class="ob-grid">
+      <div class="ob-field"><label class="ob-label">Height</label><input class="ob-input" id="f_height" placeholder="6-1" value="${ex(athleteData.height||'')}"></div>
+      <div class="ob-field"><label class="ob-label">Weight (lbs)</label><input class="ob-input" id="f_weight" placeholder="185" value="${ex(athleteData.weight||'')}"></div>
+      <div class="ob-field"><label class="ob-label">Jersey Number</label><input class="ob-input" id="f_jersey" placeholder="12" value="${ex(athleteData.jersey_number||'')}"></div>
+      <div class="ob-field"><label class="ob-label">Dominant Hand</label>
+        <select class="ob-select" id="f_hand">
+          <option value="Right" ${athleteData.dominant_hand==='Right'?'selected':''}>Right</option>
+          <option value="Left"  ${athleteData.dominant_hand==='Left'?'selected':''}>Left</option>
+          <option value="Both"  ${athleteData.dominant_hand==='Both'?'selected':''}>Both (Ambidextrous)</option>
+        </select>
+      </div>
+    </div>`;
+
+  else if(currentStep===2) body.innerHTML=`
+    <div class="ob-import-box">
+      <div class="ob-import-title">Import from MaxPreps</div>
+      <div class="ob-import-desc">Paste your MaxPreps profile URL below. We'll pull your career stats automatically and give you a <strong style="color:var(--gold)">MaxPreps Verified ✓</strong> badge on your profile.</div>
+      <div class="ob-import-row">
+        <input class="ob-input" id="f_maxpreps_url" placeholder="https://www.maxpreps.com/..." value="${ex(athleteData.maxpreps_url||'')}">
+        <button class="ob-import-btn" id="importBtn" onclick="runImport()">Import</button>
+      </div>
+      <div class="ob-import-progress" id="importProgress">
+        <div class="ob-progress-bar"><div class="ob-progress-fill" id="importBar"></div></div>
+        <div class="ob-progress-label" id="importLabel">Connecting to MaxPreps…</div>
+      </div>
+      <div class="ob-import-result" id="importResult"></div>
+      <div class="ob-skip-link" onclick="skipImport()">Skip for now — I'll enter stats manually</div>
+    </div>
+    <div class="ob-manual-notice" id="manualNotice">
+      You're in manual mode. Enter your stats below — these will be labeled "Self-reported" on your profile.
+    </div>
+    <div id="manualStatsWrap" style="display:none">
+      <div class="ob-grid">
+        <div class="ob-field"><label class="ob-label">Passing Yards</label><input class="ob-input" id="f_pass_yds" placeholder="0"></div>
+        <div class="ob-field"><label class="ob-label">Passing TDs</label><input class="ob-input" id="f_pass_td" placeholder="0"></div>
+        <div class="ob-field"><label class="ob-label">Rushing Yards</label><input class="ob-input" id="f_rush_yds" placeholder="0"></div>
+        <div class="ob-field"><label class="ob-label">Rushing TDs</label><input class="ob-input" id="f_rush_td" placeholder="0"></div>
+        <div class="ob-field"><label class="ob-label">Receiving Yards</label><input class="ob-input" id="f_rec_yds" placeholder="0"></div>
+        <div class="ob-field"><label class="ob-label">Receiving TDs</label><input class="ob-input" id="f_rec_td" placeholder="0"></div>
+        <div class="ob-field"><label class="ob-label">Tackles</label><input class="ob-input" id="f_tackles" placeholder="0"></div>
+        <div class="ob-field"><label class="ob-label">Sacks</label><input class="ob-input" id="f_sacks" placeholder="0"></div>
+      </div>
+    </div>`;
+
+  else if(currentStep===3) body.innerHTML=`
+    <div class="ob-grid">
+      <div class="ob-field"><label class="ob-label">40-Yard Dash</label><input class="ob-input" id="f_forty" placeholder="4.52" value="${ex(athleteData.forty_time||'')}"></div>
+      <div class="ob-field"><label class="ob-label">Vertical Jump (in)</label><input class="ob-input" id="f_vert" placeholder="38" value="${ex(athleteData.vertical_jump||'')}"></div>
+      <div class="ob-field"><label class="ob-label">Broad Jump (in)</label><input class="ob-input" id="f_broad" placeholder="112" value="${ex(athleteData.broad_jump||'')}"></div>
+      <div class="ob-field"><label class="ob-label">5-10-5 Shuttle</label><input class="ob-input" id="f_shuttle" placeholder="4.30" value="${ex(athleteData.shuttle_time||'')}"></div>
+      <div class="ob-field"><label class="ob-label">Bench Press Reps</label><input class="ob-input" id="f_bench" placeholder="225 lb reps" value="${ex(athleteData.bench_reps||'')}"></div>
+      <div class="ob-field"><label class="ob-label">Where tested</label><input class="ob-input" id="f_combine_loc" placeholder="Nike Camp, School, etc." value="${ex(athleteData.combine_location||'')}"></div>
+    </div>
+    <p style="font-size:.74rem;color:var(--text-muted);margin-top:var(--space-md);line-height:1.5">Leave blank if you haven't been tested yet. You can update these anytime from your dashboard.</p>`;
+
+  else if(currentStep===4) body.innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:var(--space-md)">
+      <div class="ob-social-row">
+        <div class="ob-social-icon ig">IG</div>
+        <div class="ob-field" style="flex:1"><label class="ob-label">Instagram Handle</label><input class="ob-input" id="f_ig" placeholder="@yourhandle" value="${ex(athleteData.instagram_handle||'')}"></div>
+        <div class="ob-field" style="width:120px"><label class="ob-label">Followers</label><input class="ob-input" id="f_ig_follow" placeholder="1200" value="${ex(athleteData.instagram_followers||'')}"></div>
+      </div>
+      <div class="ob-social-row">
+        <div class="ob-social-icon tw">𝕏</div>
+        <div class="ob-field" style="flex:1"><label class="ob-label">Twitter / X Handle</label><input class="ob-input" id="f_tw" placeholder="@yourhandle" value="${ex(athleteData.twitter_handle||'')}"></div>
+        <div class="ob-field" style="width:120px"><label class="ob-label">Followers</label><input class="ob-input" id="f_tw_follow" placeholder="800" value="${ex(athleteData.twitter_followers||'')}"></div>
+      </div>
+      <div class="ob-social-row">
+        <div class="ob-social-icon tt">TT</div>
+        <div class="ob-field" style="flex:1"><label class="ob-label">TikTok Handle</label><input class="ob-input" id="f_tt" placeholder="@yourhandle" value="${ex(athleteData.tiktok_handle||'')}"></div>
+        <div class="ob-field" style="width:120px"><label class="ob-label">Followers</label><input class="ob-input" id="f_tt_follow" placeholder="5000" value="${ex(athleteData.tiktok_followers||'')}"></div>
+      </div>
+    </div>
+    <p style="font-size:.74rem;color:var(--text-muted);margin-top:var(--space-md);line-height:1.5">Enter handles without the @ symbol. Follower counts are used to calculate your NIL market value.</p>`;
+
+  else if(currentStep===5) body.innerHTML=`
+    <div class="ob-grid">
+      <div class="ob-field"><label class="ob-label">Star Rating</label>
+        <select class="ob-select" id="f_stars">
+          <option value="">Not rated yet</option>
+          ${[5,4,3,2,1].map(function(s){return '<option value="'+s+'"'+(athleteData.star_rating==s?' selected':'')+'>'+s+' Star</option>';}).join('')}
+        </select>
+      </div>
+      <div class="ob-field"><label class="ob-label">Number of Offers</label><input class="ob-input" id="f_offers" placeholder="0" value="${ex(athleteData.offer_count||'')}"></div>
+      <div class="ob-field ob-full"><label class="ob-label">Schools That Have Offered</label><input class="ob-input" id="f_offers_list" placeholder="Georgia, Florida, Auburn…" value="${ex(athleteData.offers_list||'')}"></div>
+      <div class="ob-field ob-full"><label class="ob-label">Camps Attended</label><input class="ob-input" id="f_camps" placeholder="Nike Opening, Under Armour, school camps…" value="${ex(athleteData.camps_attended||'')}"></div>
+      <div class="ob-field ob-full"><label class="ob-label">Hudl Profile URL</label><input class="ob-input" id="f_hudl" placeholder="https://hudl.com/…" value="${ex(athleteData.hudl_url||'')}"></div>
+      <div class="ob-field"><label class="ob-label">247Sports URL</label><input class="ob-input" id="f_247" placeholder="https://247sports.com/…" value="${ex(athleteData.rivals_url||'')}"></div>
+      <div class="ob-field"><label class="ob-label">On3 Profile URL</label><input class="ob-input" id="f_on3" placeholder="https://on3.com/…" value="${ex(athleteData.on3_url||'')}"></div>
+    </div>`;
+
+  else if(currentStep===6) body.innerHTML=`
+    <div class="ob-grid">
+      <div class="ob-field"><label class="ob-label">GPA</label><input class="ob-input" id="f_gpa" placeholder="3.8" value="${ex(athleteData.gpa||'')}"></div>
+      <div class="ob-field"><label class="ob-label">SAT Score</label><input class="ob-input" id="f_sat" placeholder="1200" value="${ex(athleteData.sat_score||'')}"></div>
+      <div class="ob-field"><label class="ob-label">ACT Score</label><input class="ob-input" id="f_act" placeholder="26" value="${ex(athleteData.act_score||'')}"></div>
+      <div class="ob-field"><label class="ob-label">Core Courses Completed</label><input class="ob-input" id="f_cores" placeholder="8" value="${ex(athleteData.core_courses_completed||'')}"></div>
+      <div class="ob-field ob-full"><label class="ob-label">Intended Major / Field of Study</label><input class="ob-input" id="f_major" placeholder="Business, Kinesiology, Engineering…" value="${ex(athleteData.intended_major||'')}"></div>
+      <div class="ob-field ob-full"><label class="ob-label">NCAA Eligibility Status</label>
+        <select class="ob-select" id="f_ncaa">
+          <option value="unknown"   ${athleteData.ncaa_eligibility==='unknown'?'selected':''}>Not sure yet</option>
+          <option value="on_track"  ${athleteData.ncaa_eligibility==='on_track'?'selected':''}>On track</option>
+          <option value="registered"${athleteData.ncaa_eligibility==='registered'?'selected':''}>Registered with NCAA Eligibility Center</option>
+          <option value="cleared"   ${athleteData.ncaa_eligibility==='cleared'?'selected':''}>Cleared</option>
+          <option value="issue"     ${athleteData.ncaa_eligibility==='issue'?'selected':''}>Potential issue — working on it</option>
+        </select>
+      </div>
+    </div>`;
+
+  else if(currentStep===7) body.innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:var(--space-md)">
+      <div class="ob-goal-card">
+        <div class="ob-goal-label">Season Goal</div>
+        <input class="ob-input" id="f_goal_season" placeholder="e.g. 2,000 rushing yards, All-State recognition" value="${ex(athleteData.goal_season||'')}">
+      </div>
+      <div class="ob-goal-card">
+        <div class="ob-goal-label">Recruiting Goal</div>
+        <input class="ob-input" id="f_goal_recruiting" placeholder="e.g. D1 offer from SEC school by spring" value="${ex(athleteData.goal_recruiting||'')}">
+      </div>
+      <div class="ob-goal-card">
+        <div class="ob-goal-label">Target Division</div>
+        <select class="ob-select" id="f_goal_div">
+          <option value="">Select division goal</option>
+          ${['FBS (Power 4)','FBS (Group of 5)','FCS','Division II','Division III','JUCO','NAIA'].map(function(d){return '<option value="'+d+'"'+(athleteData.goal_division===d?' selected':'')+'>'+d+'</option>';}).join('')}
+        </select>
+      </div>
+      <div class="ob-goal-card">
+        <div class="ob-goal-label">NIL Goal</div>
+        <input class="ob-input" id="f_goal_nil" placeholder="e.g. Land a local brand deal by senior year" value="${ex(athleteData.goal_nil||'')}">
+      </div>
+      <div class="ob-goal-card">
+        <div class="ob-goal-label">Timeline</div>
+        <input class="ob-input" id="f_goal_timeline" placeholder="e.g. Commit by January 2026" value="${ex(athleteData.goal_timeline||'')}">
+      </div>
+    </div>`;
+}
+
+// ---- MaxPreps import ----
+async function runImport(){
+  var url = val('f_maxpreps_url').trim();
+  if(!url || !url.includes('maxpreps.com')){
+    alert('Please enter a valid MaxPreps URL');
+    return;
+  }
+  athleteData.maxpreps_url = url;
+
+  var btn = document.getElementById('importBtn');
+  var prog = document.getElementById('importProgress');
+  var bar = document.getElementById('importBar');
+  var lbl = document.getElementById('importLabel');
+  btn.disabled = true;
+  prog.classList.add('visible');
+
+  var steps = [
+    [20,'Connecting to MaxPreps…'],
+    [45,'Loading athlete profile…'],
+    [70,'Extracting career stats…'],
+    [90,'Verifying data…']
+  ];
+  var si = 0;
+  var interval = setInterval(function(){
+    if(si < steps.length){
+      bar.style.width = steps[si][0]+'%';
+      lbl.textContent = steps[si][1];
+      si++;
+    }
+  }, 800);
+
+  try {
+    var res = await fetch('/.netlify/functions/scrape', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ type:'maxpreps', url })
+    });
+    var data = await res.json();
+    clearInterval(interval);
+    bar.style.width = '100%';
+    lbl.textContent = 'Import complete!';
+
+    if(data.success && data.data){
+      importedStats = data.data;
+      statsMode = 'maxpreps_verified';
+      showImportResult(data.data);
+    } else {
+      showImportError();
+    }
+  } catch(e) {
+    clearInterval(interval);
+    showImportError();
+  }
+  btn.disabled = false;
+}
+
+function showImportResult(data){
+  var el = document.getElementById('importResult');
+  var stats = data.stats || {};
+  var keys = Object.keys(stats).slice(0,6);
+  el.innerHTML =
+    '<div class="ob-result-verified">'+
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'+
+      '<span class="ob-result-verified-text">Stats imported from MaxPreps</span>'+
+      '<span class="ob-result-badge">✓ MaxPreps Verified</span>'+
+    '</div>'+
+    (keys.length ? '<div class="ob-stats-grid">'+keys.map(function(k){return '<div class="ob-stat-pill"><div class="ob-stat-val">'+ex(stats[k])+'</div><div class="ob-stat-lbl">'+ex(k)+'</div></div>';}).join('')+'</div>' : '<p style="font-size:.78rem;color:var(--text-muted)">Profile found: '+ex(data.title||'')+'</p>')+
+    '<div class="ob-dispute-link" onclick="disputeStats()">These stats look wrong — let me fix them</div>';
+  el.classList.add('visible');
+}
+
+function showImportError(){
+  var el = document.getElementById('importResult');
+  el.innerHTML = '<div style="padding:10px 14px;background:rgba(196,30,58,.08);border:1px solid rgba(196,30,58,.2);border-radius:var(--radius-sm);font-size:.78rem;color:#c41e3a">Could not pull stats automatically. You can skip and enter them manually.</div>';
+  el.classList.add('visible');
+  skipImport();
+}
+
+function skipImport(){
+  statsMode = 'manual';
+  document.getElementById('manualNotice').classList.add('visible');
+  document.getElementById('manualStatsWrap').style.display = 'grid';
+  document.getElementById('manualStatsWrap').style.gridTemplateColumns = '1fr 1fr';
+  document.getElementById('manualStatsWrap').style.gap = 'var(--space-md)';
+}
+
+function disputeStats(){
+  if(confirm('Do you want to switch to manual entry? MaxPreps scraping will be disabled for your profile and your stats will be labeled as self-reported.')){
+    importedStats = null;
+    statsMode = 'manual';
+    document.getElementById('importResult').classList.remove('visible');
+    document.getElementById('manualNotice').classList.add('visible');
+    document.getElementById('manualStatsWrap').style.display = 'grid';
+    logDispute('maxpreps_wrong');
+  }
+}
+
+async function logDispute(type){
+  if(!userId) return;
+  await sb.from('stats_disputes').insert({
+    athlete_id: userId,
+    dispute_type: type,
+    original_data: importedStats,
+    resolution: 'manual_mode'
+  });
+  // Check if needs admin escalation (2 disputes in 30 days)
+  var thirtyDaysAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+  var { count } = await sb.from('stats_disputes')
+    .select('*', { count:'exact', head:true })
+    .eq('athlete_id', userId)
+    .gte('created_at', thirtyDaysAgo);
+  if(count >= 2){
+    await sb.from('stats_disputes')
+      .update({ needs_admin_review:true })
+      .eq('athlete_id', userId)
+      .gte('created_at', thirtyDaysAgo);
+  }
+}
+
+// ---- Collect step data ----
+function collectStep(){
+  if(currentStep===0){
+    athleteData.name = val('f_name');
+    athleteData.position = val('f_pos');
+    athleteData.position_secondary = val('f_pos2');
+    athleteData.graduation_year = val('f_year');
+    athleteData.school = val('f_school');
+    athleteData.city = val('f_city');
+    athleteData.state = val('f_state').toUpperCase();
+    if(!athleteData.name || !athleteData.position || !athleteData.school || !athleteData.state){
+      alert('Please fill in all required fields (marked with *)');
+      return false;
+    }
+  }
+  else if(currentStep===1){
+    athleteData.height = val('f_height');
+    athleteData.weight = val('f_weight');
+    athleteData.jersey_number = val('f_jersey');
+    athleteData.dominant_hand = val('f_hand');
+  }
+  else if(currentStep===2){
+    athleteData.maxpreps_url = val('f_maxpreps_url');
+    athleteData.stats_mode = statsMode;
+    athleteData.verified_badge = statsMode === 'maxpreps_verified' ? 'maxpreps' : 'unverified';
+    if(statsMode === 'manual'){
+      athleteData.manual_stats = {
+        pass_yds:val('f_pass_yds'), pass_td:val('f_pass_td'),
+        rush_yds:val('f_rush_yds'), rush_td:val('f_rush_td'),
+        rec_yds:val('f_rec_yds'), rec_td:val('f_rec_td'),
+        tackles:val('f_tackles'), sacks:val('f_sacks')
+      };
+    }
+    if(importedStats) athleteData.maxpreps_data = importedStats;
+  }
+  else if(currentStep===3){
+    athleteData.forty_time = val('f_forty');
+    athleteData.vertical_jump = val('f_vert');
+    athleteData.broad_jump = val('f_broad');
+    athleteData.shuttle_time = val('f_shuttle');
+    athleteData.bench_reps = val('f_bench');
+    athleteData.combine_location = val('f_combine_loc');
+  }
+  else if(currentStep===4){
+    athleteData.instagram_handle = val('f_ig').replace('@','');
+    athleteData.twitter_handle = val('f_tw').replace('@','');
+    athleteData.tiktok_handle = val('f_tt').replace('@','');
+    athleteData.instagram_followers = parseInt(val('f_ig_follow'))||0;
+    athleteData.twitter_followers = parseInt(val('f_tw_follow'))||0;
+    athleteData.tiktok_followers = parseInt(val('f_tt_follow'))||0;
+  }
+  else if(currentStep===5){
+    athleteData.star_rating = parseInt(val('f_stars'))||null;
+    athleteData.offer_count = parseInt(val('f_offers'))||0;
+    athleteData.offers_list = val('f_offers_list');
+    athleteData.camps_attended = val('f_camps');
+    athleteData.hudl_url = val('f_hudl');
+    athleteData.rivals_url = val('f_247');
+    athleteData.on3_url = val('f_on3');
+  }
+  else if(currentStep===6){
+    athleteData.gpa = parseFloat(val('f_gpa'))||null;
+    athleteData.sat_score = parseInt(val('f_sat'))||null;
+    athleteData.act_score = parseInt(val('f_act'))||null;
+    athleteData.core_courses_completed = parseInt(val('f_cores'))||null;
+    athleteData.intended_major = val('f_major');
+    athleteData.ncaa_eligibility = val('f_ncaa');
+  }
+  else if(currentStep===7){
+    athleteData.goal_season = val('f_goal_season');
+    athleteData.goal_recruiting = val('f_goal_recruiting');
+    athleteData.goal_division = val('f_goal_div');
+    athleteData.goal_nil = val('f_goal_nil');
+    athleteData.goal_timeline = val('f_goal_timeline');
+  }
+  return true;
+}
+
+// ---- Save to Supabase ----
+async function saveProgress(){
+  if(!userId) return;
+  var pct = Math.round(((currentStep+1)/8)*100);
+  await sb.from('athletes').upsert({
+    user_id: userId,
+    ...athleteData,
+    onboarding_step: currentStep,
+    profile_complete_pct: pct
+  }, { onConflict:'user_id' });
+}
+
+// ---- Complete onboarding ----
+async function completeOnboarding(){
+  if(!userId) return;
+  await sb.from('athletes').upsert({
+    user_id: userId,
+    ...athleteData,
+    onboarding_complete: true,
+    onboarding_step: 8,
+    profile_complete_pct: 100,
+    stats_mode: statsMode,
+    verified_badge: statsMode === 'maxpreps_verified' ? 'maxpreps' : 'unverified'
+  }, { onConflict:'user_id' });
+  showComplete();
+}
+
+function showComplete(){
+  document.getElementById('obSteps').style.display = 'none';
+  document.getElementById('obCard').innerHTML =
+    '<div class="ob-complete">'+
+      '<div class="ob-complete-icon">🏈</div>'+
+      '<div class="ob-complete-title">You\'re <span>Ready</span></div>'+
+      '<p class="ob-complete-sub">Your Camp 8 profile is set up. Head to your dashboard to see your profile, check your Camp 8 rating, and start your recruiting journey.</p>'+
+      '<button class="ob-complete-btn" onclick="window.location.href=\'dashboard.html\'">Go to My Dashboard →</button>'+
+    '</div>';
+}
+
+// ---- Navigation ----
+async function goNext(){
+  if(!collectStep()) return;
+  await saveProgress();
+  if(currentStep === 7){
+    await completeOnboarding();
+    return;
+  }
+  currentStep++;
+  renderStep();
+  window.scrollTo(0,0);
+}
+
+function goBack(){
+  if(currentStep === 0){ window.location.href = 'dashboard.html'; return; }
+  currentStep--;
+  renderStep();
+  window.scrollTo(0,0);
+}
+
+// ---- Boot ----
+document.addEventListener('DOMContentLoaded', async function(){
+  var { data:{ user } } = await sb.auth.getUser();
+  if(!user){ window.location.href = 'login.html'; return; }
+  userId = user.id;
+
+  // Load existing profile if any
+  var { data:profile } = await sb.from('athletes').select('*').eq('user_id', userId).single();
+  if(profile){
+    if(profile.onboarding_complete){ window.location.href = 'dashboard.html'; return; }
+    athleteData = profile;
+    currentStep = profile.onboarding_step || 0;
+    statsMode = profile.stats_mode || 'unverified';
+  }
+
+  renderStep();
+});
+</script>
+</body>
+</html>

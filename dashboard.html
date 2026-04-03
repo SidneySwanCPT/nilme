@@ -73,6 +73,21 @@
       display: flex; align-items: center; gap: var(--space-xl); flex-wrap: wrap;
     }
 
+    /* Verified badge */
+    .verified-badge { display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(212,168,67,.15);border:1px solid rgba(212,168,67,.3);border-radius:100px;font-size:.65rem;font-weight:800;color:var(--gold);letter-spacing:.05em;text-transform:uppercase; }
+    .verified-badge.maxpreps { background:rgba(80,200,120,.12);border-color:rgba(80,200,120,.3);color:#50c878; }
+    .verified-badge.admin { background:rgba(74,144,217,.12);border-color:rgba(74,144,217,.3);color:#4a90d9; }
+    .stats-section { background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--space-lg);margin:var(--space-md) 0; }
+    .stats-section-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md); }
+    .stats-section-title { font-size:.82rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text-secondary); }
+    .stats-update-btn { padding:5px 12px;background:transparent;border:1px solid var(--border-color);border-radius:100px;font-size:.72rem;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);transition:all .15s; }
+    .stats-update-btn:hover { border-color:var(--gold);color:var(--gold); }
+    .stats-pills { display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px; }
+    .stat-pill { background:rgba(255,255,255,.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:8px 12px;text-align:center; }
+    .stat-pill-val { font-family:var(--font-display);font-size:1.3rem;color:var(--gold);line-height:1; }
+    .stat-pill-lbl { font-size:.65rem;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.05em; }
+    .profile-complete-bar { height:4px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;margin-top:6px; }
+    .profile-complete-fill { height:100%;background:var(--gold);border-radius:100px;transition:width .5s ease; }
     .dash-avatar {
       width: 72px; height: 72px; border-radius: 50%;
       background: var(--gold-dim); border: 3px solid var(--gold);
@@ -314,8 +329,12 @@
     <div class="dash-header-inner">
       <div class="dash-avatar" id="dashAvatar">?</div>
       <div>
-        <div class="dash-name" id="dashName">Athlete</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="dash-name" id="dashName">Athlete</div>
+          <div id="verifiedBadge" style="display:none"></div>
+        </div>
         <div class="dash-details" id="dashDetails">Complete your profile to get started</div>
+        <div class="profile-complete-bar" style="width:200px;margin-top:6px"><div class="profile-complete-fill" id="profileCompleteFill" style="width:0%"></div></div>
       </div>
       <div class="dash-header-actions">
         <button class="dash-action-btn primary" onclick="showTab('overview')">Dashboard</button>
@@ -570,6 +589,48 @@ async function loadDashboard() {
   document.getElementById('authGate').style.display = 'none';
   document.getElementById('dashWrap').style.display = 'block';
 
+  // Stats update trigger
+  async function triggerStatsUpdate() {
+    const { data:{ user } } = await sb.auth.getUser();
+    if(!user) return;
+    const { data:p } = await sb.from('athletes').select('maxpreps_url,stats_mode').eq('user_id', user.id).single();
+    if(!p) return;
+    if(p.stats_mode === 'manual') {
+      alert('Your profile is in manual mode. Go to Settings to update your stats directly.');
+      return;
+    }
+    if(!p.maxpreps_url) {
+      alert('No MaxPreps URL on file. Visit Settings to add your MaxPreps profile link.');
+      return;
+    }
+    const btn = event.target;
+    btn.textContent = 'Updating…';
+    btn.disabled = true;
+    try {
+      const res = await fetch('/.netlify/functions/scrape', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ type:'maxpreps', url: p.maxpreps_url })
+      });
+      const data = await res.json();
+      if(data.success && data.data) {
+        await sb.from('athletes').update({
+          maxpreps_data: data.data,
+          stats_last_scraped: new Date().toISOString(),
+          verified_badge: 'maxpreps'
+        }).eq('user_id', user.id);
+        btn.textContent = '✓ Updated';
+        setTimeout(() => { location.reload(); }, 1000);
+      } else {
+        btn.textContent = 'Failed — try again';
+        btn.disabled = false;
+      }
+    } catch(e) {
+      btn.textContent = 'Error — try again';
+      btn.disabled = false;
+    }
+  }
+
   // Load profile
   athleteProfile = await getAthleteProfile(currentUser.id);
   if (athleteProfile) {
@@ -595,6 +656,38 @@ function updateHeaderFromProfile() {
   const name = p.name || 'Athlete';
   document.getElementById('dashName').textContent = name;
   document.getElementById('dashAvatar').textContent = name.charAt(0).toUpperCase();
+
+  // Verified badge
+  const badgeEl = document.getElementById('verifiedBadge');
+  if(p.verified_badge === 'maxpreps') {
+    badgeEl.innerHTML = '<span class="verified-badge maxpreps">✓ MaxPreps Verified</span>';
+    badgeEl.style.display = '';
+  } else if(p.verified_badge === 'admin') {
+    badgeEl.innerHTML = '<span class="verified-badge admin">✓ Camp 8 Verified</span>';
+    badgeEl.style.display = '';
+  }
+
+  // Profile completion bar
+  const pct = p.profile_complete_pct || 0;
+  const fillEl = document.getElementById('profileCompleteFill');
+  if(fillEl) fillEl.style.width = pct + '%';
+
+  // Stats display
+  if(p.maxpreps_data || p.manual_stats) {
+    const stats = p.maxpreps_data?.stats || p.manual_stats || {};
+    const keys = Object.keys(stats).slice(0, 8);
+    if(keys.length) {
+      const modeLabel = p.stats_mode === 'maxpreps_verified' ? '<span class="verified-badge maxpreps" style="font-size:.6rem">✓ MaxPreps Verified</span>' : '<span class="verified-badge" style="font-size:.6rem">Self-reported</span>';
+      const pillsHtml = keys.map(k => '<div class="stat-pill"><div class="stat-pill-val">'+esc(stats[k])+'</div><div class="stat-pill-lbl">'+esc(k)+'</div></div>').join('');
+      const statsSection = '<div class="stats-section"><div class="stats-section-header"><div class="stats-section-title">Career Stats ' + modeLabel + '</div><button class="stats-update-btn" onclick="triggerStatsUpdate()">↺ Update Stats</button></div><div class="stats-pills">' + pillsHtml + '</div></div>';
+      const overviewTab = document.getElementById('tab-overview');
+      if(overviewTab) {
+        const existing = overviewTab.querySelector('.stats-section');
+        if(existing) existing.remove();
+        overviewTab.insertAdjacentHTML('afterbegin', statsSection);
+      }
+    }
+  }
   const parts = [];
   if (p.pos) parts.push(p.pos);
   if (p.school) parts.push(p.school);
