@@ -43,6 +43,45 @@
     .nri-how-step { display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; font-size:0.78rem; color:var(--text-secondary); line-height:1.4; }
     .nri-how-num { width:20px; height:20px; border-radius:50%; background:var(--gold-dim); border:1px solid rgba(212,168,67,0.3); display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:800; color:var(--gold); flex-shrink:0; }
 
+
+    /* Progress panel */
+    .nil-progress-panel {
+      width: 240px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      overflow-y: auto;
+    }
+    .np-header {}
+    .np-title { font-size:.82rem;font-weight:800;color:var(--text-primary);margin-bottom:2px; }
+    .np-subtitle { font-size:.72rem;color:var(--text-muted); }
+    .np-bar-wrap { height:8px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden; }
+    .np-bar-fill { height:100%;background:var(--gold);border-radius:100px;transition:width .5s ease; }
+    .np-pct { font-size:.72rem;color:var(--gold);font-weight:700; }
+    .np-factors { display:flex;flex-direction:column;gap:6px; }
+    .np-factor { display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--text-secondary); }
+    .np-factor.done { color:var(--text-primary); }
+    .npf-icon { font-size:.9rem;flex-shrink:0; }
+    .np-hint { font-size:.72rem;color:var(--text-muted);line-height:1.5;padding:10px;background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-sm); }
+    .np-hint strong { color:var(--gold); }
+    @media(max-width:768px) { .nil-progress-panel { display:none; } }
+    .nri-progress-wrap { margin-bottom:var(--space-lg); }
+    .nri-progress-label { font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);margin-bottom:8px;display:flex;justify-content:space-between; }
+    .nri-progress-bar { height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:var(--space-md); }
+    .nri-progress-fill { height:100%;background:linear-gradient(90deg,#d4a843,#f0c855);border-radius:3px;transition:width 0.4s ease; }
+    .nri-factor-row { display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.78rem; }
+    .nri-factor-row:last-child { border-bottom:none; }
+    .nri-factor-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:all 0.3s; }
+    .nri-factor-dot.filled { background:var(--gold); }
+    .nri-factor-dot.empty { background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15); }
+    .nri-factor-name { flex:1;color:var(--text-secondary); }
+    .nri-factor-status { font-size:0.65rem;color:var(--text-muted); }
+    .nri-factor-status.got { color:#50c878; }
+    .nri-submit-hint { margin-top:var(--space-md);padding:10px 12px;background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.15);border-radius:var(--radius-sm);font-size:0.75rem;color:var(--text-secondary);line-height:1.5; }
     .nri-reset { margin-top:auto; padding-top:var(--space-lg); }
     .nri-reset-btn { width:100%; padding:9px; font-size:0.78rem; font-family:var(--font-body); font-weight:600; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--text-muted); cursor:pointer; transition:all 0.15s; text-transform:uppercase; letter-spacing:0.05em; }
     .nri-reset-btn:hover { color:var(--text-primary); border-color:var(--border-hover); }
@@ -64,20 +103,31 @@
 <div id="nav-root"></div>
 <script src="nav.js"></script>
 
-<div class="nil-rate-wrap">
+<div class="nil-rate-wrap" style="display:flex">
   <!-- Info panel -->
   <div class="nil-rate-info">
     <div class="nri-eyebrow">Free Athlete Tool</div>
     <div class="nri-title">NIL <span>Rating</span></div>
     <p class="nri-desc">Our AI asks you a series of questions about your profile and delivers a score out of 100 — your estimated NIL market value — with an action plan to improve it.</p>
 
-    <div class="nri-factors">
-      <div class="nri-factor"><span class="nri-factor-icon">📍</span><div class="nri-factor-text"><strong>Location</strong>Your city and market size</div></div>
-      <div class="nri-factor"><span class="nri-factor-icon">⭐</span><div class="nri-factor-text"><strong>Star Rating</strong>247/On3/Rivals ranking</div></div>
-      <div class="nri-factor"><span class="nri-factor-icon">📱</span><div class="nri-factor-text"><strong>Social Media</strong>Reach and engagement</div></div>
-      <div class="nri-factor"><span class="nri-factor-icon">🏈</span><div class="nri-factor-text"><strong>Position</strong>Marketability by position</div></div>
-      <div class="nri-factor"><span class="nri-factor-icon">🎓</span><div class="nri-factor-text"><strong>College Offers</strong>D1 interest level</div></div>
-      <div class="nri-factor"><span class="nri-factor-icon">🏆</span><div class="nri-factor-text"><strong>Achievements</strong>Awards, media coverage</div></div>
+    <!-- Progress Tracker -->
+    <div class="nri-progress-wrap">
+      <div class="nri-progress-label">
+        <span>Profile Completion</span>
+        <span id="nilProgressPct">0 / 6</span>
+      </div>
+      <div class="nri-progress-bar"><div class="nri-progress-fill" id="nilProgressFill" style="width:0%"></div></div>
+      <div id="nilFactorList">
+        <div class="nri-factor-row"><span class="nri-factor-dot empty" id="dot-location"></span><span class="nri-factor-name">Location &amp; Market</span><span class="nri-factor-status" id="st-location">Needed</span></div>
+        <div class="nri-factor-row"><span class="nri-factor-dot empty" id="dot-stars"></span><span class="nri-factor-name">Star Rating / Ranking</span><span class="nri-factor-status" id="st-stars">Needed</span></div>
+        <div class="nri-factor-row"><span class="nri-factor-dot empty" id="dot-social"></span><span class="nri-factor-name">Social Media Following</span><span class="nri-factor-status" id="st-social">Needed</span></div>
+        <div class="nri-factor-row"><span class="nri-factor-dot empty" id="dot-position"></span><span class="nri-factor-name">Position</span><span class="nri-factor-status" id="st-position">Needed</span></div>
+        <div class="nri-factor-row"><span class="nri-factor-dot empty" id="dot-offers"></span><span class="nri-factor-name">College Offers</span><span class="nri-factor-status" id="st-offers">Needed</span></div>
+        <div class="nri-factor-row"><span class="nri-factor-dot empty" id="dot-achievements"></span><span class="nri-factor-name">Achievements / Awards</span><span class="nri-factor-status" id="st-achievements">Needed</span></div>
+      </div>
+      <div class="nri-submit-hint">
+        <strong style="color:var(--gold)">You can ask for your score at any time</strong> — type "What's my NIL score?" and the AI will calculate based on what it has. The more info you share, the more accurate your rating will be.
+      </div>
     </div>
 
     <div class="nri-how">
@@ -90,6 +140,48 @@
 
     <div class="nri-reset">
       <button class="nri-reset-btn" onclick="resetNilChat()">↺ Start Over</button>
+    </div>
+  </div>
+
+  <!-- Progress Tracker -->
+  <div class="nil-progress-panel" id="nilProgress">
+    <div class="np-header">
+      <div class="np-title">Score Confidence</div>
+      <div class="np-subtitle">More answers = more accurate rating</div>
+    </div>
+    <div class="np-bar-wrap">
+      <div class="np-bar-fill" id="nilProgressBar" style="width:0%"></div>
+    </div>
+    <div class="np-pct" id="nilProgressPct">0% data collected</div>
+    <div class="np-factors" id="nilFactors">
+      <div class="np-factor" id="npf_identity">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Name / Position / Year</span>
+      </div>
+      <div class="np-factor" id="npf_location">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Location / Market</span>
+      </div>
+      <div class="np-factor" id="npf_stars">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Star Rating / Ranking</span>
+      </div>
+      <div class="np-factor" id="npf_social">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Social Media Following</span>
+      </div>
+      <div class="np-factor" id="npf_offers">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">College Offers</span>
+      </div>
+      <div class="np-factor" id="npf_achievements">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Achievements / Awards</span>
+      </div>
+    </div>
+    <div class="np-hint">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      You can type <strong>"give me my score now"</strong> at any time — but the more factors covered, the more accurate your rating will be.
     </div>
   </div>
 
@@ -146,6 +238,39 @@ Let's start: **What's your name, position, and what year do you graduate?**`;
 
 let nilChat = null;
 
+
+// Progress tracking
+var nilFactorsDone = {};
+var nilFactorMap = {
+  npf_identity: ['name','position','pos','year','grade','class','quarterback','receiver','corner','linebacker','running back','wide receiver','safety'],
+  npf_location: ['city','state','georgia','florida','texas','california','atlanta','miami','dallas','los angeles','market','metro'],
+  npf_stars: ['star','ranked','ranking','247','rivals','on3','unranked','composite'],
+  npf_social: ['instagram','followers','tiktok','twitter','social media','following'],
+  npf_offers: ['offer','offers','d1','division','scholarship','committed','visit'],
+  npf_achievements: ['all-state','all state','award','mvp','championship','state','region','honor']
+};
+
+function updateNilProgress(messages) {
+  var allText = messages.map(function(m){ return (m.content||'').toLowerCase(); }).join(' ');
+  var done = 0;
+  var total = Object.keys(nilFactorMap).length;
+  Object.keys(nilFactorMap).forEach(function(factor) {
+    var keywords = nilFactorMap[factor];
+    var found = keywords.some(function(kw){ return allText.includes(kw); });
+    var el = document.getElementById(factor);
+    if(found && el) {
+      nilFactorsDone[factor] = true;
+      el.classList.add('done');
+      el.querySelector('.npf-icon').textContent = '✅';
+    }
+    if(nilFactorsDone[factor]) done++;
+  });
+  var pct = Math.round((done/total)*100);
+  var bar = document.getElementById('nilProgressBar');
+  var pctEl = document.getElementById('nilProgressPct');
+  if(bar) bar.style.width = pct+'%';
+  if(pctEl) pctEl.textContent = pct+'% data collected';
+}
 function initNilChat() {
   const container = document.getElementById('nilRateContainer');
   nilChat = CAMP8_AI.buildChatUI({
@@ -158,10 +283,54 @@ function initNilChat() {
 }
 
 function resetNilChat() {
-  if (nilChat) nilChat.reset();
+  if (nilChat) {
+    nilChat.reset();
+    updateNilProgress([]);
+  }
 }
 
-document.addEventListener('DOMContentLoaded', initNilChat);
+// ---- NIL Progress Tracker ----
+const NIL_FACTORS = [
+  { id: 'location',     keywords: ['atlanta','georgia','florida','texas','california','city','market','metro','town','live','from','located'] },
+  { id: 'stars',        keywords: ['star','ranked','ranking','247','on3','rivals','unranked','recruit','rated','3 star','4 star','5 star'] },
+  { id: 'social',       keywords: ['follower','instagram','tiktok','twitter','social','k followers','subscribers','following','reach'] },
+  { id: 'position',     keywords: ['quarterback','qb','receiver','wr','running back','rb','cornerback','cb','safety','linebacker','lb','defensive','offensive','lineman','tight end','te'] },
+  { id: 'offers',       keywords: ['offer','offered','scholarship','d1','d2','fbs','fcs','verbal','commit','visit'] },
+  { id: 'achievements', keywords: ['all-state','all state','award','mvp','player of the year','championship','state','honor','recognition','featured','article','news'] },
+];
+
+function updateNilProgress(messages) {
+  const allText = messages.map(function(m){ return m.content.toLowerCase(); }).join(' ');
+  let filled = 0;
+  NIL_FACTORS.forEach(function(f) {
+    const found = f.keywords.some(function(k){ return allText.includes(k); });
+    const dot = document.getElementById('dot-' + f.id);
+    const st  = document.getElementById('st-'  + f.id);
+    if (dot && st) {
+      dot.className = 'nri-factor-dot ' + (found ? 'filled' : 'empty');
+      st.className  = 'nri-factor-status' + (found ? ' got' : '');
+      st.textContent = found ? '✓ Got it' : 'Needed';
+    }
+    if (found) filled++;
+  });
+  const pct = Math.round((filled / NIL_FACTORS.length) * 100);
+  const fill = document.getElementById('nilProgressFill');
+  const lbl  = document.getElementById('nilProgressPct');
+  if (fill) fill.style.width = pct + '%';
+  if (lbl)  lbl.textContent  = filled + ' / ' + NIL_FACTORS.length;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initNilChat();
+  // Hook into chat to update progress on each message
+  const origSend = window._c8SendMsg;
+  if (origSend) {
+    window._c8SendMsg = async function() {
+      await origSend();
+      if (nilChat) updateNilProgress(nilChat.getMessages());
+    };
+  }
+});
 </script>
 </body>
 </html>

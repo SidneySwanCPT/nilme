@@ -15,6 +15,12 @@
     /* Header */
     .coaches-header { padding: var(--space-xl); background: linear-gradient(135deg,rgba(212,168,67,0.07) 0%,transparent 100%); border-bottom: 1px solid var(--border-color); }
     .coaches-header-inner { max-width: 1100px; margin: 0 auto; }
+    .coaches-disclaimer {
+      display:flex;align-items:flex-start;gap:8px;
+      padding:10px 14px;margin-bottom:var(--space-lg);
+      background:rgba(232,135,43,0.08);border:1px solid rgba(232,135,43,0.2);
+      border-radius:var(--radius-sm);font-size:.78rem;color:#e8872b;line-height:1.5;
+    }
     .coaches-eyebrow { font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:var(--gold);margin-bottom:6px; }
     .coaches-title { font-family:var(--font-display);font-size:clamp(2rem,4vw,3.5rem);letter-spacing:.04em;color:var(--text-primary);margin-bottom:8px; }
     .coaches-title span { color:var(--gold); }
@@ -41,7 +47,7 @@
 
     .coaches-list-header {
       display:grid;
-      grid-template-columns:48px 1fr 80px 130px 48px 1fr;
+      grid-template-columns:48px 1fr 80px 120px 40px 120px 140px;
       padding:8px 16px;
       font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);
       border-bottom:1px solid var(--border-color);
@@ -50,9 +56,9 @@
 
     .coach-row {
       display:grid;
-      grid-template-columns:48px 1fr 80px 130px 48px 1fr;
+      grid-template-columns:48px 1fr 80px 120px 40px 120px 140px;
       align-items:center;
-      padding:10px 16px;
+      padding:14px 16px;
       border:1px solid var(--border-color);
       border-radius:var(--radius-sm);
       margin-bottom:4px;
@@ -64,12 +70,12 @@
     .coach-row:hover { border-color:rgba(212,168,67,.4);background:var(--gold-dim); }
 
     /* Logo cell */
-    .cr-logo { width:36px;height:36px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
-    .cr-logo img { width:32px;height:32px;object-fit:contain; }
+    .cr-logo { width:44px;height:44px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .cr-logo img { width:38px;height:38px;object-fit:contain; }
     .cr-logo-fallback { font-size:.8rem;font-weight:800;color:var(--gold); }
 
     /* School cell */
-    .cr-school-name { font-size:.88rem;font-weight:700;color:var(--text-primary);line-height:1.2; }
+    .cr-school-name { font-size:.95rem;font-weight:700;color:var(--text-primary);line-height:1.2; }
     .cr-nickname { font-size:.72rem;color:var(--text-muted); }
 
     /* Division badge */
@@ -158,8 +164,9 @@
 
     @media(max-width:900px) {
       .coaches-list-header { display:none; }
-      .coach-row { grid-template-columns:40px 1fr 70px; }
-      .coach-row .cr-coach,.coach-row .cr-social { display:none; }
+      .coach-row { grid-template-columns:44px 1fr 80px 100px; }
+      .coach-row .cr-coach,.coach-row .cr-social,.coach-row .cr-conf { display:none; }
+      .coach-row .cr-conf { display:none; }
     }
     @media(max-width:600px) {
       .coaches-header,.coaches-body { padding:var(--space-lg) var(--space-md); }
@@ -180,6 +187,10 @@
       <div class="coaches-eyebrow">Recruiting Resource</div>
       <h1 class="coaches-title">Coaches <span>Directory</span></h1>
       <p class="coaches-subtitle">Search every college football program from FBS to JUCO. Click any school to see the full staff and write a personalized coach email with AI.</p>
+      <div class="coaches-disclaimer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Coaching staffs change frequently. We update this directory as changes are reported — if you spot an error, verify with the school's official athletics site before reaching out.
+      </div>
       <div class="coaches-stats">
         <div class="cs-stat"><div class="cs-num" id="statTotal">—</div><div class="cs-lbl">Programs</div></div>
         <div class="cs-stat"><div class="cs-num">FBS–JUCO</div><div class="cs-lbl">All Divisions</div></div>
@@ -219,10 +230,17 @@
       <div>Division</div>
       <div>Head Coach</div>
       <div>ST</div>
-      <div>Recruiting Coord / Social</div>
+      <div>Conference</div>
+      <div>RC Social</div>
     </div>
     <div id="coachesList"><div style="padding:var(--space-xl);text-align:center;color:var(--text-muted)">Loading programs…</div></div>
     <div class="coaches-empty" id="coachesEmpty" style="display:none">No programs match your search. Try adjusting the filters.</div>
+  </div>
+  <div style="max-width:1100px;margin:var(--space-lg) auto 0;padding:0 var(--space-xl) var(--space-xl)">
+    <p style="font-size:.75rem;color:var(--text-muted);line-height:1.6;display:flex;align-items:flex-start;gap:8px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-sm)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Coaching staffs change frequently — hires, transfers, and reassignments happen year-round. We update this directory as changes become available, but always verify current staff on the school's official athletics website before reaching out.
+    </p>
   </div>
 </div>
 
@@ -297,9 +315,9 @@ function igIcon(){ return '<svg width="13" height="13" viewBox="0 0 24 24" fill=
 
 function rcSocialHtml(c){
   var html='';
-  if(c.rcTwitter) html+='<a href="https://x.com/'+c.rcTwitter+'" target="_blank" rel="noopener" class="social-pill x-pill" onclick="event.stopPropagation()">'+xIcon()+'@'+ex(c.rcTwitter)+'</a>';
-  if(c.rcInstagram) html+='<a href="https://instagram.com/'+c.rcInstagram+'" target="_blank" rel="noopener" class="social-pill ig-pill" onclick="event.stopPropagation()">'+igIcon()+'</a>';
-  if(!html) html='<span style="font-size:.72rem;color:var(--text-muted)">'+ex(c.conference||'')+'</span>';
+  if(c.rcTwitter) html+='<a href="https://x.com/'+c.rcTwitter+'" target="_blank" rel="noopener" class="social-pill x-pill" onclick="event.stopPropagation()" title="@'+ex(c.rcTwitter)+'">'+xIcon()+'@'+ex(c.rcTwitter)+'</a>';
+  if(c.rcInstagram) html+='<a href="https://instagram.com/'+c.rcInstagram+'" target="_blank" rel="noopener" class="social-pill ig-pill" onclick="event.stopPropagation()" title="@'+ex(c.rcInstagram)+'">'+igIcon()+'</a>';
+  if(!html) html='<span style="font-size:.72rem;color:var(--text-muted);font-style:italic">—</span>';
   return html;
 }
 
@@ -366,6 +384,8 @@ function renderList(){
       '<div><span class="cr-div '+dc+'">'+ex(c.division)+'</span></div>'+
       '<div class="cr-coach">'+hc+'<span>'+ex(c.city||'')+'</span></div>'+
       '<div class="cr-state">'+ex(c.state||'')+'</div>'+
+      '<div class="cr-conf">'+ex(c.conference||'')+'</div>'+
+      '<div class="cr-conf">'+ex(c.conference||'')+'</div>'+
       '<div class="cr-social">'+rcSocialHtml(c)+'</div>'+
     '</div>';
   }).join('');

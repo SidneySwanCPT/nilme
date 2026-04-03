@@ -103,13 +103,9 @@
   <!-- External buttons -->
   <div class="nav-external">
     <a href="login.html" class="nav-login-btn" id="navLoginBtn">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Athlete Login
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      My Dashboard
     </a>
-    <a href="https://www.hudl.com" target="_blank" rel="noopener" class="ext-btn">Hudl</a>
-    <a href="https://www.maxpreps.com" target="_blank" rel="noopener" class="ext-btn">MaxPreps</a>
-    <a href="https://247sports.com" target="_blank" rel="noopener" class="ext-btn">247Sports</a>
-    <a href="https://www.on3.com" target="_blank" rel="noopener" class="ext-btn">On3</a>
   </div>
 </nav>
 `;
