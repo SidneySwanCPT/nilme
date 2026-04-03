@@ -85,6 +85,16 @@
         <li><a href="powerhouse.html" data-page="powerhouse.html">
           <span class="ddm-icon">🏆</span>Powerhouse Central
         </a></li>
+        <li><a href="ncaa-rules.html" data-page="ncaa-rules.html">
+          <span class="ddm-icon">📋</span>NCAA Recruiting Rules
+        </a></li>
+        <li><a href="coaches.html" data-page="coaches.html">
+          <span class="ddm-icon">🎓</span>Coaches Directory
+        </a></li>
+        <li class="ddm-divider"></li>
+        <li><a href="dashboard.html" data-page="dashboard.html">
+          <span class="ddm-icon">📊</span>My Dashboard
+        </a></li>
       </ul>
     </li>
 
