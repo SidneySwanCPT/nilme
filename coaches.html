@@ -1,253 +1,365 @@
-    return;
-  }
-  empty.style.display = 'none';
-  grid.innerHTML = filtered.map(renderCard).join('');
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Coaches Directory</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth-guard.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body { overflow-y: auto; height: auto; }
+    .coaches-page { margin-top: var(--nav-height); }
+    .coaches-header { padding: var(--space-xl); background: linear-gradient(135deg,rgba(212,168,67,0.07) 0%,transparent 100%); border-bottom: 1px solid var(--border-color); }
+    .coaches-header-inner { max-width: 1200px; margin: 0 auto; }
+    .coaches-eyebrow { font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;color:var(--gold);margin-bottom:6px; }
+    .coaches-title { font-family:var(--font-display);font-size:clamp(2rem,4vw,3.5rem);letter-spacing:0.04em;color:var(--text-primary);margin-bottom:8px; }
+    .coaches-title span { color:var(--gold); }
+    .coaches-subtitle { font-size:0.88rem;color:var(--text-secondary);line-height:1.6;max-width:560px;margin-bottom:var(--space-lg); }
+    .coaches-stats-row { display:flex;gap:var(--space-xl);flex-wrap:wrap; }
+    .coaches-stat { text-align:center; }
+    .cs-num { font-family:var(--font-display);font-size:2rem;color:var(--gold);line-height:1; }
+    .cs-lbl { font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-top:2px; }
+    .coaches-controls { position:sticky;top:var(--nav-height);z-index:100;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);padding:var(--space-md) var(--space-xl); }
+    .coaches-controls-inner { max-width:1200px;margin:0 auto;display:flex;gap:var(--space-md);flex-wrap:wrap;align-items:center; }
+    .coach-search-wrap { position:relative;flex:1;min-width:220px; }
+    .coach-search-icon { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none; }
+    .coach-search { width:100%;padding:9px 12px 9px 36px;font-size:0.85rem;font-family:var(--font-body);background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary);outline:none;transition:border-color 0.15s;box-sizing:border-box; }
+    .coach-search:focus { border-color:var(--gold); }
+    .coach-search::placeholder { color:var(--text-muted); }
+    .coach-filter { padding:9px 12px;font-size:0.82rem;font-family:var(--font-body);background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-secondary);outline:none;cursor:pointer; }
+    .coach-filter:focus { border-color:var(--gold); }
+    .coaches-count { font-size:0.78rem;color:var(--text-muted);white-space:nowrap;margin-left:auto; }
+    .coaches-body { max-width:1200px;margin:0 auto;padding:var(--space-lg) var(--space-xl); }
+    .coaches-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:var(--space-md); }
+    .coach-card { background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;transition:all 0.15s; }
+    .coach-card:hover { border-color:rgba(212,168,67,0.3);transform:translateY(-2px); }
+    .cc-top { padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--border-color);display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-md); }
+    .cc-school { font-size:0.95rem;font-weight:700;color:var(--text-primary);margin-bottom:4px;line-height:1.3; }
+    .cc-nickname { font-size:0.72rem;color:var(--text-muted); }
+    .cc-badges { display:flex;gap:5px;flex-wrap:wrap;margin-top:6px; }
+    .cc-badge { padding:2px 8px;border-radius:100px;font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase; }
+    .cc-badge.fbs  { background:rgba(212,168,67,0.15);color:var(--gold); }
+    .cc-badge.fcs  { background:rgba(74,144,217,0.15);color:#4a90d9; }
+    .cc-badge.d2   { background:rgba(80,200,120,0.15);color:#50c878; }
+    .cc-badge.d3   { background:rgba(232,135,43,0.15);color:#e8872b; }
+    .cc-badge.juco { background:rgba(196,30,58,0.15);color:#c41e3a; }
+    .cc-badge.naia { background:rgba(160,80,200,0.15);color:#a050c8; }
+    .cc-badge.conf { background:rgba(255,255,255,0.06);color:var(--text-muted); }
+    .cc-email-btn { flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:7px 12px;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.3);border-radius:var(--radius-sm);font-size:0.74rem;font-weight:700;color:var(--gold);cursor:pointer;transition:all 0.15s;font-family:var(--font-body);white-space:nowrap; }
+    .cc-email-btn:hover { background:rgba(212,168,67,0.2); }
+    .cc-staff { padding:var(--space-sm) var(--space-lg); }
+    .cc-staff-row { display:flex;gap:var(--space-sm);align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.8rem; }
+    .cc-staff-row:last-child { border-bottom:none; }
+    .cc-staff-label { color:var(--text-muted);font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;min-width:96px;flex-shrink:0; }
+    .cc-staff-name { color:var(--text-primary);font-weight:500; }
+    .cc-staff-tbd { color:var(--text-muted);font-style:italic; }
+    .cc-footer { padding:8px var(--space-lg);background:rgba(255,255,255,0.02);border-top:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between; }
+    .cc-location { font-size:0.72rem;color:var(--text-muted); }
+    .cc-staff-link { font-size:0.72rem;color:var(--text-muted);text-decoration:none;transition:color 0.15s;display:flex;align-items:center;gap:4px; }
+    .cc-staff-link:hover { color:var(--gold); }
+    .coaches-empty { text-align:center;padding:var(--space-xl);color:var(--text-muted); }
+    .email-modal { display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;padding:var(--space-lg); }
+    .email-modal.open { display:flex; }
+    .email-modal-box { background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-lg);width:100%;max-width:720px;max-height:90vh;overflow-y:auto; }
+    .em-header { padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-secondary);z-index:1; }
+    .em-title { font-family:var(--font-display);font-size:1.3rem;color:var(--text-primary); }
+    .em-close { width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid var(--border-color);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem; }
+    .em-coach-strip { padding:var(--space-md) var(--space-lg);background:var(--gold-dim);border-bottom:1px solid rgba(212,168,67,0.2);display:flex;gap:var(--space-md);align-items:center;flex-wrap:wrap; }
+    .em-coach-school { font-weight:700;color:var(--text-primary);font-size:0.9rem; }
+    .em-coach-name { color:var(--text-secondary);font-size:0.82rem; }
+    .em-body { padding:var(--space-lg); }
+    .em-step-label { font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);margin-bottom:var(--space-sm); }
+    .em-grid { display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);margin-bottom:var(--space-lg); }
+    .em-field { display:flex;flex-direction:column;gap:5px; }
+    .em-field-label { font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted); }
+    .em-input,.em-select { padding:9px 12px;font-size:0.85rem;font-family:var(--font-body);background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary);outline:none;width:100%;box-sizing:border-box; }
+    .em-input:focus,.em-select:focus { border-color:var(--gold); }
+    .em-input::placeholder { color:var(--text-muted); }
+    .em-full { grid-column:1/-1; }
+    .em-generate-btn { width:100%;padding:12px;background:var(--gold);color:#0a0a12;border:none;border-radius:var(--radius-md);font-size:0.9rem;font-weight:800;cursor:pointer;font-family:var(--font-body);text-transform:uppercase;letter-spacing:0.06em; }
+    .em-generate-btn:disabled { opacity:0.5;cursor:not-allowed; }
+    .em-result { margin-top:var(--space-lg);display:none; }
+    .em-result.visible { display:block; }
+    .em-output { background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--space-lg);font-size:0.85rem;color:var(--text-primary);line-height:1.7;white-space:pre-wrap;margin-bottom:var(--space-md);min-height:200px; }
+    .em-actions { display:flex;gap:var(--space-sm);flex-wrap:wrap; }
+    .em-btn { display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.15s; }
+    .em-btn.copy { background:var(--gold);color:#0a0a12;border:none; }
+    .em-btn.gmail { background:rgba(234,67,53,0.15);border:1px solid rgba(234,67,53,0.3);color:#ea4335; }
+    .em-btn.regen { background:transparent;border:1px solid var(--border-color);color:var(--text-muted); }
+    @media(max-width:768px) {
+      .coaches-header,.coaches-body { padding:var(--space-lg) var(--space-md); }
+      .coaches-controls { padding:var(--space-sm) var(--space-md); }
+      .coaches-grid { grid-template-columns:1fr; }
+      .em-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="nav-root"></div>
+<script src="nav.js"></script>
 
-function renderCard(c) {
-  const dc = DIV_CLASS[c.division] || 'fbs';
-  return `<div class="coach-card">
-    <div class="cc-top">
-      <div>
-        <div class="cc-school">${esc(c.school)}</div>
-        <div class="cc-nickname">${esc(c.nickname || '')}</div>
-        <div class="cc-badges">
-          <span class="cc-badge ${dc}">${esc(c.division)}</span>
-          <span class="cc-badge conf">${esc(c.conference)}</span>
+<div class="coaches-page">
+  <div class="coaches-header">
+    <div class="coaches-header-inner">
+      <div class="coaches-eyebrow">Recruiting Resource</div>
+      <h1 class="coaches-title">Coaches <span>Directory</span></h1>
+      <p class="coaches-subtitle">Search college football programs from FBS to JUCO. Find coaches recruiting in your area, then write a personalized outreach email with Camp 8 AI in seconds.</p>
+      <div class="coaches-stats-row">
+        <div class="coaches-stat"><div class="cs-num" id="statTotal">0</div><div class="cs-lbl">Programs</div></div>
+        <div class="coaches-stat"><div class="cs-num">FBS–JUCO</div><div class="cs-lbl">All Divisions</div></div>
+        <div class="coaches-stat"><div class="cs-num" id="statStates">0</div><div class="cs-lbl">States</div></div>
+        <div class="coaches-stat"><div class="cs-num" id="statConfs">0</div><div class="cs-lbl">Conferences</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="coaches-controls">
+    <div class="coaches-controls-inner">
+      <div class="coach-search-wrap">
+        <svg class="coach-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="coach-search" id="coachSearch" placeholder="Search school, coach, or city…" oninput="filterCoaches()">
+      </div>
+      <select class="coach-filter" id="filterDivision" onchange="filterCoaches()">
+        <option value="">All Divisions</option>
+        <option value="FBS">FBS</option>
+        <option value="FCS">FCS</option>
+        <option value="D2">Division II</option>
+        <option value="D3">Division III</option>
+        <option value="JUCO">JUCO</option>
+      </select>
+      <select class="coach-filter" id="filterState" onchange="filterCoaches()"></select>
+      <select class="coach-filter" id="filterConf" onchange="filterCoaches()"></select>
+      <div class="coaches-count" id="coachCount">Loading…</div>
+    </div>
+  </div>
+
+  <div class="coaches-body">
+    <div class="coaches-grid" id="coachesGrid"><div style="padding:var(--space-xl);color:var(--text-muted);grid-column:1/-1;text-align:center">Loading programs…</div></div>
+    <div class="coaches-empty" id="coachesEmpty" style="display:none">No programs match your search.</div>
+  </div>
+</div>
+
+<!-- Email Modal -->
+<div class="email-modal" id="emailModal" onclick="if(event.target===this)closeEmailModal()">
+  <div class="email-modal-box">
+    <div class="em-header">
+      <div class="em-title">Write Coach Email</div>
+      <button class="em-close" onclick="closeEmailModal()">&#x2715;</button>
+    </div>
+    <div class="em-coach-strip" id="emStrip"></div>
+    <div class="em-body">
+      <div class="em-step-label">Your Profile</div>
+      <div class="em-grid">
+        <div class="em-field"><label class="em-field-label">Your Name</label><input class="em-input" id="em_name" placeholder="First Last"></div>
+        <div class="em-field"><label class="em-field-label">Position</label><input class="em-input" id="em_pos" placeholder="QB, WR, CB…"></div>
+        <div class="em-field"><label class="em-field-label">Height / Weight</label><input class="em-input" id="em_size" placeholder="6-1 / 185 lbs"></div>
+        <div class="em-field"><label class="em-field-label">Graduation Year</label><input class="em-input" id="em_year" placeholder="2026"></div>
+        <div class="em-field"><label class="em-field-label">High School</label><input class="em-input" id="em_school" placeholder="School name, State"></div>
+        <div class="em-field"><label class="em-field-label">GPA</label><input class="em-input" id="em_gpa" placeholder="3.8"></div>
+        <div class="em-field em-full"><label class="em-field-label">Key Stats / Achievements</label><input class="em-input" id="em_stats" placeholder="4.52 forty, 38 vertical, All-State 2025…"></div>
+        <div class="em-field em-full"><label class="em-field-label">Current Offers (optional)</label><input class="em-input" id="em_offers" placeholder="Georgia, Florida, Auburn…"></div>
+        <div class="em-field em-full"><label class="em-field-label">Hudl / Film Link (optional)</label><input class="em-input" id="em_hudl" placeholder="https://hudl.com/…"></div>
+        <div class="em-field em-full"><label class="em-field-label">Tone</label>
+          <select class="em-select" id="em_tone">
+            <option value="professional">Professional — formal, polished</option>
+            <option value="confident">Confident — direct, assertive</option>
+            <option value="humble">Humble — respectful, eager</option>
+          </select>
         </div>
       </div>
-      <button class="cc-email-btn" onclick='openEmailModal(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        Write Email
-      </button>
-    </div>
-    <div class="cc-staff">
-      <div class="cc-staff-row">
-        <span class="cc-staff-label">Head Coach</span>
-        <span class="${c.headCoach && c.headCoach !== 'TBD' ? 'cc-staff-name' : 'cc-staff-tbd'}">${esc(c.headCoach || 'TBD')}</span>
-      </div>
-      <div class="cc-staff-row">
-        <span class="cc-staff-label">Off. Coordinator</span>
-        <span class="${c.oc && c.oc !== 'TBD' ? 'cc-staff-name' : 'cc-staff-tbd'}">${esc(c.oc || 'TBD')}</span>
-      </div>
-      <div class="cc-staff-row">
-        <span class="cc-staff-label">Def. Coordinator</span>
-        <span class="${c.dc && c.dc !== 'TBD' ? 'cc-staff-name' : 'cc-staff-tbd'}">${esc(c.dc || 'TBD')}</span>
-      </div>
-      <div class="cc-staff-row">
-        <span class="cc-staff-label">Recruiting Coord</span>
-        <span class="${c.recruitingCoord && c.recruitingCoord !== 'TBD' ? 'cc-staff-name' : 'cc-staff-tbd'}">${esc(c.recruitingCoord || 'TBD')}</span>
+      <button class="em-generate-btn" id="emGenBtn" onclick="generateEmail()">Generate Email with Camp 8 AI &#x2192;</button>
+      <div class="em-result" id="emResult">
+        <div class="em-step-label" style="margin-top:var(--space-lg)">Your Personalized Email</div>
+        <div class="em-output" id="emOutput"></div>
+        <div class="em-actions">
+          <button class="em-btn copy" id="emCopyBtn" onclick="copyEmail()">Copy to Clipboard</button>
+          <button class="em-btn gmail" onclick="openGmail()">Open in Gmail</button>
+          <button class="em-btn regen" onclick="generateEmail()">&#x21BA; Regenerate</button>
+        </div>
+        <p style="font-size:0.74rem;color:var(--text-muted);margin-top:var(--space-md);line-height:1.5">Send from your own email — it looks more authentic to coaches than a platform send.</p>
       </div>
     </div>
-    <div class="cc-footer">
-      <span class="cc-location">${esc(c.city || '')}, ${esc(c.state || '')}</span>
-      ${c.staffPage ? `<a href="${esc(c.staffPage)}" target="_blank" rel="noopener" class="cc-staff-link">
-        Full Staff Page <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </a>` : ''}
-    </div>
-  </div>`;
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script src="coaches-data.js"></script>
+<script src="ai-chat.js"></script>
+<script>
+var allCoaches = [];
+var filtered   = [];
+var curCoach   = null;
+var genEmail   = '';
+var DC = {FBS:'fbs',FCS:'fcs',D2:'d2',D3:'d3',JUCO:'juco',NAIA:'naia'};
+
+function ex(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+
+function buildFilters(){
+  var states=[...new Set(allCoaches.map(function(c){return c.state;}))].filter(Boolean).sort();
+  var confs =[...new Set(allCoaches.map(function(c){return c.conference;}))].filter(Boolean).sort();
+  var se=document.getElementById('filterState');
+  se.innerHTML='<option value="">All States</option>';
+  states.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;se.appendChild(o);});
+  var ce=document.getElementById('filterConf');
+  ce.innerHTML='<option value="">All Conferences</option>';
+  confs.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;ce.appendChild(o);});
+  document.getElementById('statStates').textContent=states.length;
+  document.getElementById('statConfs').textContent=confs.length;
+  document.getElementById('statTotal').textContent=allCoaches.length;
 }
 
-// ---- Email Modal ----
-function openEmailModal(coach) {
-  currentCoach = coach;
-  generatedEmail = '';
+function filterCoaches(){
+  var q=document.getElementById('coachSearch').value.trim().toLowerCase();
+  var dv=document.getElementById('filterDivision').value;
+  var st=document.getElementById('filterState').value;
+  var cf=document.getElementById('filterConf').value;
+  filtered=allCoaches.filter(function(c){
+    if(dv&&c.division!==dv)return false;
+    if(st&&c.state!==st)return false;
+    if(cf&&c.conference!==cf)return false;
+    if(q){var h=[c.school,c.nickname,c.headCoach,c.oc,c.dc,c.recruitingCoord,c.city,c.conference].join(' ').toLowerCase();if(!h.includes(q))return false;}
+    return true;
+  });
+  renderGrid();
+}
 
-  const strip = document.getElementById('emCoachStrip');
-  const dc = DIV_CLASS[coach.division] || 'fbs';
-  strip.innerHTML = `
-    <div>
-      <div class="em-coach-school">${esc(coach.school)}</div>
-      <div class="em-coach-name">Head Coach: ${esc(coach.headCoach || 'TBD')}</div>
-    </div>
-    <div class="em-coach-badges">
-      <span class="cc-badge ${dc}">${esc(coach.division)}</span>
-      <span class="cc-badge conf">${esc(coach.conference)}</span>
-      <span class="cc-badge conf">${esc(coach.city)}, ${esc(coach.state)}</span>
-    </div>`;
+function renderGrid(){
+  var g=document.getElementById('coachesGrid');
+  var e=document.getElementById('coachesEmpty');
+  document.getElementById('coachCount').textContent=filtered.length+' programs';
+  if(!filtered.length){g.innerHTML='';e.style.display='';return;}
+  e.style.display='none';
+  g.innerHTML=filtered.map(function(c){
+    var dc=DC[c.division]||'fbs';
+    var sd=ex(c.school).replace(/"/g,'&quot;');
+    var jd=JSON.stringify(c).replace(/\\/g,'\\\\').replace(/"/g,'&quot;');
+    return '<div class="coach-card">'+
+      '<div class="cc-top">'+
+        '<div>'+
+          '<div class="cc-school">'+ex(c.school)+'</div>'+
+          '<div class="cc-nickname">'+ex(c.nickname||'')+'</div>'+
+          '<div class="cc-badges">'+
+            '<span class="cc-badge '+dc+'">'+ex(c.division)+'</span>'+
+            '<span class="cc-badge conf">'+ex(c.conference)+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<button class="cc-email-btn" onclick="openModal(&quot;'+jd+'&quot;)">Write Email</button>'+
+      '</div>'+
+      '<div class="cc-staff">'+
+        srow('Head Coach',c.headCoach)+
+        srow('Off. Coordinator',c.oc)+
+        srow('Def. Coordinator',c.dc)+
+        srow('Recruiting Coord',c.recruitingCoord)+
+      '</div>'+
+      '<div class="cc-footer">'+
+        '<span class="cc-location">'+ex(c.city||'')+', '+ex(c.state||'')+'</span>'+
+        (c.staffPage?'<a href="'+ex(c.staffPage)+'" target="_blank" rel="noopener" class="cc-staff-link">Staff Page &#x2197;</a>':'')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
 
+function srow(lbl,val){
+  var tbd=!val||val==='TBD';
+  return '<div class="cc-staff-row"><span class="cc-staff-label">'+ex(lbl)+'</span><span class="'+(tbd?'cc-staff-tbd':'cc-staff-name')+'">'+(tbd?'TBD':ex(val))+'</span></div>';
+}
+
+function openModal(coachJson){
+  try{curCoach=JSON.parse(coachJson);}catch(e){return;}
+  genEmail='';
+  var dc=DC[curCoach.division]||'fbs';
+  document.getElementById('emStrip').innerHTML=
+    '<div><div class="em-coach-school">'+ex(curCoach.school)+'</div>'+
+    '<div class="em-coach-name">Head Coach: '+ex(curCoach.headCoach||'TBD')+'</div></div>'+
+    '<div style="display:flex;gap:5px">'+
+      '<span class="cc-badge '+dc+'">'+ex(curCoach.division)+'</span>'+
+      '<span class="cc-badge conf">'+ex(curCoach.conference)+'</span>'+
+      '<span class="cc-badge conf">'+ex(curCoach.city)+', '+ex(curCoach.state)+'</span>'+
+    '</div>';
   document.getElementById('emResult').classList.remove('visible');
-  document.getElementById('emEmailOutput').textContent = '';
-
-  // Pre-fill from dashboard profile if available
-  if (window._athleteProfile) {
-    const p = window._athleteProfile;
-    if (p.name) document.getElementById('em_name').value = p.name;
-    if (p.position) document.getElementById('em_pos').value = p.position;
-    if (p.graduation_year) document.getElementById('em_year').value = p.graduation_year;
-    if (p.school) document.getElementById('em_school').value = p.school + (p.state ? ', ' + p.state : '');
-    if (p.hudl_url) document.getElementById('em_hudl').value = p.hudl_url;
-    if (p.height && p.weight) document.getElementById('em_size').value = p.height + ' / ' + p.weight + ' lbs';
+  document.getElementById('emOutput').textContent='';
+  if(window._ap){
+    var p=window._ap;
+    if(p.name)document.getElementById('em_name').value=p.name;
+    if(p.position)document.getElementById('em_pos').value=p.position;
+    if(p.graduation_year)document.getElementById('em_year').value=p.graduation_year;
+    if(p.school)document.getElementById('em_school').value=p.school+(p.state?', '+p.state:'');
+    if(p.hudl_url)document.getElementById('em_hudl').value=p.hudl_url;
+    if(p.height&&p.weight)document.getElementById('em_size').value=p.height+' / '+p.weight+' lbs';
   }
-
   document.getElementById('emailModal').classList.add('open');
 }
 
-function closeEmailModal() {
-  document.getElementById('emailModal').classList.remove('open');
+function closeEmailModal(){document.getElementById('emailModal').classList.remove('open');}
+
+async function generateEmail(){
+  var name=document.getElementById('em_name').value.trim();
+  var pos =document.getElementById('em_pos').value.trim();
+  if(!name||!pos){alert('Name and position are required.');return;}
+  var btn=document.getElementById('emGenBtn');
+  btn.disabled=true;btn.textContent='Generating…';
+  document.getElementById('emResult').classList.remove('visible');
+  var tone=document.getElementById('em_tone').value;
+  var td={professional:'formal and polished',confident:'direct and confident',humble:'respectful and humble'}[tone];
+  var p='Write a college football recruiting email.\n\nATHLETE:\n'+
+    'Name: '+name+'\nPosition: '+pos+'\n'+
+    'Height/Weight: '+(document.getElementById('em_size').value||'Not provided')+'\n'+
+    'Grad Year: '+(document.getElementById('em_year').value||'')+'\n'+
+    'High School: '+(document.getElementById('em_school').value||'Not provided')+'\n'+
+    'GPA: '+(document.getElementById('em_gpa').value||'Not provided')+'\n'+
+    'Stats: '+(document.getElementById('em_stats').value||'Not provided')+'\n'+
+    'Offers: '+(document.getElementById('em_offers').value||'None listed')+'\n'+
+    'Film: '+(document.getElementById('em_hudl').value||'Available upon request')+'\n\n'+
+    'SCHOOL:\nSchool: '+curCoach.school+' '+(curCoach.nickname||'')+'\nDivision: '+curCoach.division+'\nConference: '+curCoach.conference+'\nHead Coach: '+(curCoach.headCoach||'Coach')+'\nLocation: '+curCoach.city+', '+curCoach.state+'\n\n'+
+    'TONE: '+td+'\n\nWrite a complete email: Subject line starting "Subject: ", greeting to head coach by name, intro, key stats, why this program specifically, offers/status, film link, closing. Under 200 words. Just the email, no explanation.';
+  try{
+    var r=await CAMP8_AI.send({messages:[{role:'user',content:p}],system:'You write concise authentic college football recruiting emails for high school athletes.',max_tokens:600});
+    genEmail=r;
+    document.getElementById('emOutput').textContent=r;
+    document.getElementById('emResult').classList.add('visible');
+  }catch(e){alert('Error generating email. Try again.');}
+  btn.disabled=false;btn.textContent='Generate Email with Camp 8 AI \u2192';
 }
 
-async function generateEmail() {
-  const name   = document.getElementById('em_name').value.trim();
-  const pos    = document.getElementById('em_pos').value.trim();
-  const size   = document.getElementById('em_size').value.trim();
-  const year   = document.getElementById('em_year').value.trim();
-  const school = document.getElementById('em_school').value.trim();
-  const gpa    = document.getElementById('em_gpa').value.trim();
-  const stats  = document.getElementById('em_stats').value.trim();
-  const offers = document.getElementById('em_offers').value.trim();
-  const hudl   = document.getElementById('em_hudl').value.trim();
-  const tone   = document.getElementById('em_tone').value;
-
-  if (!name || !pos) { alert('Name and position are required.'); return; }
-
-  const btn = document.getElementById('emGenerateBtn');
-  btn.disabled = true;
-  btn.textContent = 'Generating…';
-
-  const resultEl = document.getElementById('emResult');
-  const outputEl = document.getElementById('emEmailOutput');
-  resultEl.classList.remove('visible');
-  outputEl.textContent = '';
-
-  const toneDesc = { professional: 'formal and polished', confident: 'direct and confident', humble: 'respectful and humble' }[tone];
-
-  const prompt = `Write a college football recruiting email from a high school athlete to a college coach.
-
-ATHLETE INFO:
-- Name: ${name}
-- Position: ${pos}
-- Height/Weight: ${size || 'Not provided'}
-- Graduation Year: ${year}
-- High School: ${school || 'Not provided'}
-- GPA: ${gpa || 'Not provided'}
-- Key Stats/Achievements: ${stats || 'Not provided'}
-- Current Offers: ${offers || 'None listed'}
-- Film Link: ${hudl || 'Available upon request'}
-
-COACH/SCHOOL INFO:
-- School: ${currentCoach.school} ${currentCoach.nickname || ''}
-- Division: ${currentCoach.division}
-- Conference: ${currentCoach.conference}
-- Head Coach: ${currentCoach.headCoach || 'Coach'}
-- City/State: ${currentCoach.city}, ${currentCoach.state}
-
-TONE: ${toneDesc}
-
-Write a complete recruiting email including:
-1. Subject line (start with "Subject: ")
-2. Greeting (address the head coach by name)
-3. Introduction with name, position, school, class year
-4. Key measurables and stats (2-3 sentences)
-5. Why this specific program interests the athlete (be specific to the school/program)
-6. Current offers and recruiting status
-7. Film link and request to be evaluated
-8. Professional closing
-
-Keep it under 200 words. Make it authentic and personal, not generic. Use ${toneDesc} tone. Do not add any preamble or explanation — just write the email.`;
-
-  try {
-    const reply = await CAMP8_AI.send({
-      messages: [{ role: 'user', content: prompt }],
-      system: 'You are an expert at writing college football recruiting emails for high school athletes. Write concise, authentic, personalized emails that coaches actually want to read.',
-      max_tokens: 600
-    });
-
-    generatedEmail = reply;
-    outputEl.textContent = reply;
-    resultEl.classList.add('visible');
-  } catch(e) {
-    alert('Error generating email. Please try again.');
-  }
-
-  btn.disabled = false;
-  btn.textContent = 'Generate Email with Camp 8 AI →';
-}
-
-function copyEmail() {
-  if (!generatedEmail) return;
-  navigator.clipboard.writeText(generatedEmail).then(() => {
-    const btn = document.querySelector('.em-action-btn.copy');
-    btn.textContent = '✓ Copied!';
-    setTimeout(() => {
-      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy to Clipboard';
-    }, 2000);
+function copyEmail(){
+  if(!genEmail)return;
+  navigator.clipboard.writeText(genEmail).then(function(){
+    var b=document.getElementById('emCopyBtn');
+    b.textContent='\u2713 Copied!';
+    setTimeout(function(){b.textContent='Copy to Clipboard';},2000);
   });
 }
 
-function openInGmail() {
-  if (!generatedEmail) return;
-  const lines = generatedEmail.split('\n');
-  const subjectLine = lines.find(l => l.startsWith('Subject:'));
-  const subject = subjectLine ? subjectLine.replace('Subject:', '').trim() : 'Football Recruiting Inquiry';
-  const body = generatedEmail.replace(subjectLine + '\n', '').trim();
-  const url = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.open(url, '_blank');
+function openGmail(){
+  if(!genEmail)return;
+  var lines=genEmail.split('\n');
+  var sl=lines.find(function(l){return l.startsWith('Subject:');});
+  var subj=sl?sl.replace('Subject:','').trim():'Football Recruiting Inquiry';
+  var body=genEmail.replace(sl+'\n','').trim();
+  window.open('https://mail.google.com/mail/?view=cm&fs=1&su='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body),'_blank');
 }
 
-// ---- Boot ----
-document.addEventListener('DOMContentLoaded', async function() {
-  initFilters();
-
-  // Start with static data
-  filtered = [...COACHES_DATA];
+document.addEventListener('DOMContentLoaded',async function(){
+  allCoaches=COACHES_DATA.slice().sort(function(a,b){return a.school.localeCompare(b.school);});
+  buildFilters();
+  filtered=allCoaches;
   renderGrid();
-
-  // Merge Supabase coaches on top
-  try {
-    const sb2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { data: dbCoaches } = await sb2.from('coaches_admin')
-      .select('*').eq('is_active', true);
-
-    if (dbCoaches && dbCoaches.length) {
-      // Map DB fields to match local data format
-      const mapped = dbCoaches.map(r => ({
-        school: r.school,
-        nickname: r.nickname || '',
-        division: r.division || 'FBS',
-        conference: r.conference || '',
-        state: r.state || '',
-        city: r.city || '',
-        headCoach: r.head_coach || 'TBD',
-        oc: r.oc || 'TBD',
-        dc: r.dc || 'TBD',
-        recruitingCoord: r.recruiting_coord || 'TBD',
-        staffPage: r.staff_page || '',
-        lastUpdated: r.updated_at?.slice(0,7) || '',
-      }));
-
-      // Merge — DB entries override static ones with same school name
-      const staticFiltered = COACHES_DATA.filter(c =>
-        !mapped.find(m => m.school.toLowerCase() === c.school.toLowerCase())
-      );
-
-      // Re-sort alphabetically
-      const merged = [...staticFiltered, ...mapped].sort((a,b) => a.school.localeCompare(b.school));
-
-      // Update stats
-      const allData = merged;
-      document.getElementById('statTotal').textContent = allData.length;
-
-      // Re-filter with merged data
-      filtered = merged;
-      renderGrid();
+  try{
+    var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    var res=await sb.from('coaches_admin').select('*').eq('is_active',true);
+    if(res.data&&res.data.length){
+      var mapped=res.data.map(function(r){return{school:r.school,nickname:r.nickname||'',division:r.division||'FBS',conference:r.conference||'',state:r.state||'',city:r.city||'',headCoach:r.head_coach||'TBD',oc:r.oc||'TBD',dc:r.dc||'TBD',recruitingCoord:r.recruiting_coord||'TBD',staffPage:r.staff_page||''};});
+      var base=COACHES_DATA.filter(function(c){return!mapped.find(function(m){return m.school.toLowerCase()===c.school.toLowerCase();});});
+      allCoaches=base.concat(mapped).sort(function(a,b){return a.school.localeCompare(b.school);});
+      buildFilters();filtered=allCoaches;renderGrid();
     }
-  } catch(e) {
-    // Supabase unavailable — static data still shows
-  }
-
-  // Load athlete profile for email pre-fill
-  try {
-    const sb3 = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { data: { user } } = await sb3.auth.getUser();
-    if (user) {
-      const { data: profile } = await sb3.from('athletes').select('*').eq('user_id', user.id).single();
-      if (profile) window._athleteProfile = profile;
-    }
-  } catch(e) {}
+    var u=await sb.auth.getUser();
+    if(u.data&&u.data.user){var pr=await sb.from('athletes').select('*').eq('user_id',u.data.user.id).single();if(pr.data)window._ap=pr.data;}
+  }catch(e){}
 });
-
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEmailModal(); });
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeEmailModal();});
 </script>
 </body>
 </html>
