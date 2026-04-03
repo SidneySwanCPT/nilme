@@ -281,14 +281,15 @@ var DC={FBS:'fbs',FCS:'fcs',D2:'d2',D3:'d3',JUCO:'juco',NAIA:'naia'};
 function ex(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
 
 function logoUrl(c){
-  if(c.domain) return 'https://logo.clearbit.com/'+c.domain;
+  if(c.espnId) return 'https://a.espncdn.com/i/teamlogos/ncaa/500/'+c.espnId+'.png';
+  if(c.domain) return 'https://www.google.com/s2/favicons?domain='+c.domain+'&sz=128';
   return null;
 }
 
 function logoHtml(c, size){
   var sz=size||36;
   var url=logoUrl(c);
-  var initials=(c.school||'?').split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
+  var initials=(c.school||'?').split(' ').filter(function(w){return w.length>2;}).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase()||'?';
   if(url){
     return '<img src="'+url+'" width="'+(sz-4)+'" height="'+(sz-4)+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'" style="object-fit:contain" alt="">' +
            '<span class="cr-logo-fallback" style="display:none">'+ex(initials)+'</span>';

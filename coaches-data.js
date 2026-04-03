@@ -30,6 +30,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Bryan McClendon',
     staffPage: 'https://georgiadogs.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 61,
   },
   {
     school: 'University of Alabama',
@@ -45,6 +46,7 @@ const COACHES_DATA = [
     recruitingCoord: 'JaMarcus Shephard',
     staffPage: 'https://rolltide.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 333,
   },
   {
     school: 'University of Florida',
@@ -60,6 +62,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Corey Raymond',
     staffPage: 'https://floridagators.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 57,
   },
   {
     school: 'University of Tennessee',
@@ -75,6 +78,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Tee Martin',
     staffPage: 'https://utsports.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 2633,
   },
   {
     school: 'LSU',
@@ -90,6 +94,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Robert Steeples',
     staffPage: 'https://lsusports.net/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 99,
   },
   {
     school: 'University of Texas',
@@ -105,6 +110,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Jeff Banks',
     staffPage: 'https://texassports.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 251,
   },
   {
     school: 'Texas A&M University',
@@ -120,6 +126,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Terry Price',
     staffPage: 'https://12thman.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 245,
   },
   {
     school: 'University of Mississippi',
@@ -135,6 +142,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Jamar Cain',
     staffPage: 'https://olemisssports.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 145,
   },
   {
     school: 'Auburn University',
@@ -150,6 +158,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Carnell Williams',
     staffPage: 'https://auburntigers.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 2,
   },
   {
     school: 'University of South Carolina',
@@ -165,6 +174,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Des Kitchings',
     staffPage: 'https://gamecocksonline.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 2579,
   },
   {
     school: 'Vanderbilt University',
@@ -180,6 +190,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Bryan Ellis',
     staffPage: 'https://vucommodores.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 238,
   },
   {
     school: 'Mississippi State University',
@@ -195,6 +206,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Marcus Woodson',
     staffPage: 'https://hailstate.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 344,
   },
   {
     school: 'University of Kentucky',
@@ -210,6 +222,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Vince Marrow',
     staffPage: 'https://ukathletics.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 96,
   },
   {
     school: 'University of Missouri',
@@ -225,6 +238,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Marcus Johnson',
     staffPage: 'https://mutigers.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 142,
   },
   {
     school: 'University of Arkansas',
@@ -240,6 +254,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Marcus Woodson',
     staffPage: 'https://arkansasrazorbacks.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 8,
   },
 
   // ============================================
@@ -259,6 +274,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Kyle Richardson',
     staffPage: 'https://clemsontigers.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 228,
   },
   {
     school: 'Florida State University',
@@ -274,6 +290,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Jason Leach',
     staffPage: 'https://seminoles.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 52,
   },
   {
     school: 'University of Miami',
@@ -289,6 +306,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Gino Guidugli',
     staffPage: 'https://hurricanesports.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 2390,
   },
   {
     school: 'Georgia Tech',
@@ -304,6 +322,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Lamar Owens',
     staffPage: 'https://ramblinwreck.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 59,
   },
   {
     school: 'University of North Carolina',
@@ -319,6 +338,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://goheels.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 153,
   },
   {
     school: 'NC State University',
@@ -334,6 +354,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Tre Thompson',
     staffPage: 'https://gopack.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 152,
   },
 
   // ============================================
@@ -353,6 +374,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Steve Clinkscale',
     staffPage: 'https://mgoblue.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 130,
   },
   {
     school: 'Ohio State University',
@@ -368,6 +390,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Brian Hartline',
     staffPage: 'https://ohiostatebuckeyes.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 194,
   },
   {
     school: 'Penn State University',
@@ -383,6 +406,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Ja\'Juan Seider',
     staffPage: 'https://gopsusports.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 213,
   },
   {
     school: 'USC',
@@ -398,6 +422,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Donte Williams',
     staffPage: 'https://usctrojans.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 30,
   },
   {
     school: 'UCLA',
@@ -413,6 +438,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Brian Norwood',
     staffPage: 'https://uclabruins.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 26,
   },
 
   // ============================================
@@ -432,6 +458,7 @@ const COACHES_DATA = [
     recruitingCoord: 'DeMarco Murray',
     staffPage: 'https://soonersports.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 201,
   },
   {
     school: 'TCU',
@@ -447,6 +474,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Tre Richardson',
     staffPage: 'https://gofrogs.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 2628,
   },
   {
     school: 'Baylor University',
@@ -462,6 +490,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Terrel Bernard',
     staffPage: 'https://baylorbears.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 239,
   },
   {
     school: 'University of Houston',
@@ -477,6 +506,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://uhcougars.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 248,
   },
 
   // ============================================
@@ -496,6 +526,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Marcus Satterfield',
     staffPage: 'https://gseagles.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 290,
   },
   {
     school: 'Kennesaw State University',
@@ -511,6 +542,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Carlos White',
     staffPage: 'https://ksuowls.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 2391,
   },
   {
     school: 'Jackson State University',
@@ -526,6 +558,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://gojagsports.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 2344,
   },
   {
     school: 'North Dakota State University',
@@ -541,6 +574,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Andrew Herbst',
     staffPage: 'https://gobison.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 2449,
   },
   {
     school: 'South Dakota State University',
@@ -556,6 +590,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Dan Kroger',
     staffPage: 'https://gojacks.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 2571,
   },
   {
     school: 'University of Montana',
@@ -571,6 +606,7 @@ const COACHES_DATA = [
     recruitingCoord: 'Joe Hauck',
     staffPage: 'https://gogriz.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 149,
   },
   {
     school: 'Villanova University',
@@ -586,6 +622,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://villanova.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 222,
   },
   {
     school: 'James Madison University',
@@ -601,6 +638,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://jmusports.com/sports/football/roster/coaches',
     lastUpdated: '2026-04'
+    espnId: 256,
   },
   {
     school: 'Bethune-Cookman University',
@@ -616,6 +654,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://bcu.edu/athletics/football',
     lastUpdated: '2026-04'
+    espnId: 2065,
   },
   {
     school: 'Florida A&M University',
@@ -631,6 +670,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://famuathletics.com/sports/football',
     lastUpdated: '2026-04'
+    espnId: 50,
   },
 
   // ============================================
@@ -650,6 +690,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://valdostastateblazers.com/sports/football',
     lastUpdated: '2026-04'
+    espnId: 2674,
   },
   {
     school: 'Delta State University',
@@ -680,6 +721,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://ferrisstatebulldogs.com/sports/football',
     lastUpdated: '2026-04'
+    espnId: 2209,
   },
   {
     school: 'Pittsburg State University',
@@ -710,6 +752,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://uwfargos.com/sports/football',
     lastUpdated: '2026-04'
+    espnId: 2734,
   },
   {
     school: 'Colorado School of Mines',
@@ -740,6 +783,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://tarletonsports.com/sports/football',
     lastUpdated: '2026-04'
+    espnId: 2653,
   },
   {
     school: 'Angelo State University',
@@ -755,6 +799,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://angelosports.com/sports/football',
     lastUpdated: '2026-04'
+    espnId: 2006,
   },
 
   // ============================================
@@ -774,6 +819,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://athletics.northcentralcollege.edu/sports/football',
     lastUpdated: '2026-04'
+    espnId: 2461,
   },
   {
     school: 'Mary Hardin-Baylor University',
@@ -789,6 +835,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://crusaders.umhb.edu/sports/football',
     lastUpdated: '2026-04'
+    espnId: 2374,
   },
   {
     school: 'Wartburg College',
@@ -834,6 +881,7 @@ const COACHES_DATA = [
     recruitingCoord: 'TBD',
     staffPage: 'https://hsucowboys.com/sports/football',
     lastUpdated: '2026-04'
+    espnId: 2296,
   },
 
   // ============================================
