@@ -231,7 +231,7 @@
       <div>Head Coach</div>
       <div>ST</div>
       <div>Conference</div>
-      <div>RC Social</div>
+      <div>Social</div>
     </div>
     <div id="coachesList"><div style="padding:var(--space-xl);text-align:center;color:var(--text-muted)">Loading programs…</div></div>
     <div class="coaches-empty" id="coachesEmpty" style="display:none">No programs match your search. Try adjusting the filters.</div>
@@ -384,7 +384,6 @@ function renderList(){
       '<div><span class="cr-div '+dc+'">'+ex(c.division)+'</span></div>'+
       '<div class="cr-coach">'+hc+'<span>'+ex(c.city||'')+'</span></div>'+
       '<div class="cr-state">'+ex(c.state||'')+'</div>'+
-      '<div class="cr-conf">'+ex(c.conference||'')+'</div>'+
       '<div class="cr-conf">'+ex(c.conference||'')+'</div>'+
       '<div class="cr-social">'+rcSocialHtml(c)+'</div>'+
     '</div>';
