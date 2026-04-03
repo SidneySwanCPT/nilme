@@ -220,3 +220,25 @@ CREATE POLICY "Public can read nil deals" ON nil_deals_admin FOR SELECT USING (v
 -- ============================================
 -- Run this and you're done!
 -- ============================================
+
+-- ---- COACHES (admin-managed, supplements coaches-data.js) ----
+CREATE TABLE IF NOT EXISTS coaches_admin (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  school TEXT NOT NULL,
+  nickname TEXT,
+  division TEXT,
+  conference TEXT,
+  state TEXT,
+  city TEXT,
+  head_coach TEXT,
+  oc TEXT,
+  dc TEXT,
+  recruiting_coord TEXT,
+  staff_page TEXT,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE coaches_admin ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated users can read coaches" ON coaches_admin FOR SELECT USING (auth.role() = 'authenticated');

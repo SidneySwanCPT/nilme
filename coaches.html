@@ -1,0 +1,253 @@
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = filtered.map(renderCard).join('');
+}
+
+function renderCard(c) {
+  const dc = DIV_CLASS[c.division] || 'fbs';
+  return `<div class="coach-card">
+    <div class="cc-top">
+      <div>
+        <div class="cc-school">${esc(c.school)}</div>
+        <div class="cc-nickname">${esc(c.nickname || '')}</div>
+        <div class="cc-badges">
+          <span class="cc-badge ${dc}">${esc(c.division)}</span>
+          <span class="cc-badge conf">${esc(c.conference)}</span>
+        </div>
+      </div>
+      <button class="cc-email-btn" onclick='openEmailModal(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Write Email
+      </button>
+    </div>
+    <div class="cc-staff">
+      <div class="cc-staff-row">
+        <span class="cc-staff-label">Head Coach</span>
+        <span class="${c.headCoach && c.headCoach !== 'TBD' ? 'cc-staff-name' : 'cc-staff-tbd'}">${esc(c.headCoach || 'TBD')}</span>
+      </div>
+      <div class="cc-staff-row">
+        <span class="cc-staff-label">Off. Coordinator</span>
+        <span class="${c.oc && c.oc !== 'TBD' ? 'cc-staff-name' : 'cc-staff-tbd'}">${esc(c.oc || 'TBD')}</span>
+      </div>
+      <div class="cc-staff-row">
+        <span class="cc-staff-label">Def. Coordinator</span>
+        <span class="${c.dc && c.dc !== 'TBD' ? 'cc-staff-name' : 'cc-staff-tbd'}">${esc(c.dc || 'TBD')}</span>
+      </div>
+      <div class="cc-staff-row">
+        <span class="cc-staff-label">Recruiting Coord</span>
+        <span class="${c.recruitingCoord && c.recruitingCoord !== 'TBD' ? 'cc-staff-name' : 'cc-staff-tbd'}">${esc(c.recruitingCoord || 'TBD')}</span>
+      </div>
+    </div>
+    <div class="cc-footer">
+      <span class="cc-location">${esc(c.city || '')}, ${esc(c.state || '')}</span>
+      ${c.staffPage ? `<a href="${esc(c.staffPage)}" target="_blank" rel="noopener" class="cc-staff-link">
+        Full Staff Page <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>` : ''}
+    </div>
+  </div>`;
+}
+
+// ---- Email Modal ----
+function openEmailModal(coach) {
+  currentCoach = coach;
+  generatedEmail = '';
+
+  const strip = document.getElementById('emCoachStrip');
+  const dc = DIV_CLASS[coach.division] || 'fbs';
+  strip.innerHTML = `
+    <div>
+      <div class="em-coach-school">${esc(coach.school)}</div>
+      <div class="em-coach-name">Head Coach: ${esc(coach.headCoach || 'TBD')}</div>
+    </div>
+    <div class="em-coach-badges">
+      <span class="cc-badge ${dc}">${esc(coach.division)}</span>
+      <span class="cc-badge conf">${esc(coach.conference)}</span>
+      <span class="cc-badge conf">${esc(coach.city)}, ${esc(coach.state)}</span>
+    </div>`;
+
+  document.getElementById('emResult').classList.remove('visible');
+  document.getElementById('emEmailOutput').textContent = '';
+
+  // Pre-fill from dashboard profile if available
+  if (window._athleteProfile) {
+    const p = window._athleteProfile;
+    if (p.name) document.getElementById('em_name').value = p.name;
+    if (p.position) document.getElementById('em_pos').value = p.position;
+    if (p.graduation_year) document.getElementById('em_year').value = p.graduation_year;
+    if (p.school) document.getElementById('em_school').value = p.school + (p.state ? ', ' + p.state : '');
+    if (p.hudl_url) document.getElementById('em_hudl').value = p.hudl_url;
+    if (p.height && p.weight) document.getElementById('em_size').value = p.height + ' / ' + p.weight + ' lbs';
+  }
+
+  document.getElementById('emailModal').classList.add('open');
+}
+
+function closeEmailModal() {
+  document.getElementById('emailModal').classList.remove('open');
+}
+
+async function generateEmail() {
+  const name   = document.getElementById('em_name').value.trim();
+  const pos    = document.getElementById('em_pos').value.trim();
+  const size   = document.getElementById('em_size').value.trim();
+  const year   = document.getElementById('em_year').value.trim();
+  const school = document.getElementById('em_school').value.trim();
+  const gpa    = document.getElementById('em_gpa').value.trim();
+  const stats  = document.getElementById('em_stats').value.trim();
+  const offers = document.getElementById('em_offers').value.trim();
+  const hudl   = document.getElementById('em_hudl').value.trim();
+  const tone   = document.getElementById('em_tone').value;
+
+  if (!name || !pos) { alert('Name and position are required.'); return; }
+
+  const btn = document.getElementById('emGenerateBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+
+  const resultEl = document.getElementById('emResult');
+  const outputEl = document.getElementById('emEmailOutput');
+  resultEl.classList.remove('visible');
+  outputEl.textContent = '';
+
+  const toneDesc = { professional: 'formal and polished', confident: 'direct and confident', humble: 'respectful and humble' }[tone];
+
+  const prompt = `Write a college football recruiting email from a high school athlete to a college coach.
+
+ATHLETE INFO:
+- Name: ${name}
+- Position: ${pos}
+- Height/Weight: ${size || 'Not provided'}
+- Graduation Year: ${year}
+- High School: ${school || 'Not provided'}
+- GPA: ${gpa || 'Not provided'}
+- Key Stats/Achievements: ${stats || 'Not provided'}
+- Current Offers: ${offers || 'None listed'}
+- Film Link: ${hudl || 'Available upon request'}
+
+COACH/SCHOOL INFO:
+- School: ${currentCoach.school} ${currentCoach.nickname || ''}
+- Division: ${currentCoach.division}
+- Conference: ${currentCoach.conference}
+- Head Coach: ${currentCoach.headCoach || 'Coach'}
+- City/State: ${currentCoach.city}, ${currentCoach.state}
+
+TONE: ${toneDesc}
+
+Write a complete recruiting email including:
+1. Subject line (start with "Subject: ")
+2. Greeting (address the head coach by name)
+3. Introduction with name, position, school, class year
+4. Key measurables and stats (2-3 sentences)
+5. Why this specific program interests the athlete (be specific to the school/program)
+6. Current offers and recruiting status
+7. Film link and request to be evaluated
+8. Professional closing
+
+Keep it under 200 words. Make it authentic and personal, not generic. Use ${toneDesc} tone. Do not add any preamble or explanation — just write the email.`;
+
+  try {
+    const reply = await CAMP8_AI.send({
+      messages: [{ role: 'user', content: prompt }],
+      system: 'You are an expert at writing college football recruiting emails for high school athletes. Write concise, authentic, personalized emails that coaches actually want to read.',
+      max_tokens: 600
+    });
+
+    generatedEmail = reply;
+    outputEl.textContent = reply;
+    resultEl.classList.add('visible');
+  } catch(e) {
+    alert('Error generating email. Please try again.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Generate Email with Camp 8 AI →';
+}
+
+function copyEmail() {
+  if (!generatedEmail) return;
+  navigator.clipboard.writeText(generatedEmail).then(() => {
+    const btn = document.querySelector('.em-action-btn.copy');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => {
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy to Clipboard';
+    }, 2000);
+  });
+}
+
+function openInGmail() {
+  if (!generatedEmail) return;
+  const lines = generatedEmail.split('\n');
+  const subjectLine = lines.find(l => l.startsWith('Subject:'));
+  const subject = subjectLine ? subjectLine.replace('Subject:', '').trim() : 'Football Recruiting Inquiry';
+  const body = generatedEmail.replace(subjectLine + '\n', '').trim();
+  const url = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.open(url, '_blank');
+}
+
+// ---- Boot ----
+document.addEventListener('DOMContentLoaded', async function() {
+  initFilters();
+
+  // Start with static data
+  filtered = [...COACHES_DATA];
+  renderGrid();
+
+  // Merge Supabase coaches on top
+  try {
+    const sb2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: dbCoaches } = await sb2.from('coaches_admin')
+      .select('*').eq('is_active', true);
+
+    if (dbCoaches && dbCoaches.length) {
+      // Map DB fields to match local data format
+      const mapped = dbCoaches.map(r => ({
+        school: r.school,
+        nickname: r.nickname || '',
+        division: r.division || 'FBS',
+        conference: r.conference || '',
+        state: r.state || '',
+        city: r.city || '',
+        headCoach: r.head_coach || 'TBD',
+        oc: r.oc || 'TBD',
+        dc: r.dc || 'TBD',
+        recruitingCoord: r.recruiting_coord || 'TBD',
+        staffPage: r.staff_page || '',
+        lastUpdated: r.updated_at?.slice(0,7) || '',
+      }));
+
+      // Merge — DB entries override static ones with same school name
+      const staticFiltered = COACHES_DATA.filter(c =>
+        !mapped.find(m => m.school.toLowerCase() === c.school.toLowerCase())
+      );
+
+      // Re-sort alphabetically
+      const merged = [...staticFiltered, ...mapped].sort((a,b) => a.school.localeCompare(b.school));
+
+      // Update stats
+      const allData = merged;
+      document.getElementById('statTotal').textContent = allData.length;
+
+      // Re-filter with merged data
+      filtered = merged;
+      renderGrid();
+    }
+  } catch(e) {
+    // Supabase unavailable — static data still shows
+  }
+
+  // Load athlete profile for email pre-fill
+  try {
+    const sb3 = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: { user } } = await sb3.auth.getUser();
+    if (user) {
+      const { data: profile } = await sb3.from('athletes').select('*').eq('user_id', user.id).single();
+      if (profile) window._athleteProfile = profile;
+    }
+  } catch(e) {}
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEmailModal(); });
+</script>
+</body>
+</html>

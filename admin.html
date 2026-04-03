@@ -207,6 +207,7 @@
       <div class="sidebar-link" onclick="showSection('commitments',this)">✅ Commitments</div>
       <div class="sidebar-link" onclick="showSection('nildeals',this)">💰 NIL Deals</div>
       <div class="sidebar-link" onclick="showSection('camps',this)">🏕️ Camps</div>
+      <div class="sidebar-link" onclick="showSection('coaches',this)">🎓 Coaches</div>
 
       <div class="sidebar-section-label" style="margin-top:var(--space-lg)">Info</div>
       <div class="sidebar-link" onclick="showSection('instructions',this)">📋 Instructions</div>
@@ -249,6 +250,15 @@
           <button class="add-btn" onclick="openForm('camp')">+ Add Camp</button>
         </div>
         <div id="campsList"><div class="loading-state">Loading…</div></div>
+      </div>
+
+      <!-- Coaches -->
+      <div class="admin-section" id="section-coaches">
+        <div class="section-header">
+          <div class="section-title">Coaches <span>Directory</span></div>
+          <button class="add-btn" onclick="openForm('coach')">+ Add Program</button>
+        </div>
+        <div id="coachesList"><div class="loading-state">Loading…</div></div>
       </div>
 
       <!-- Instructions -->
@@ -339,6 +349,7 @@ function loadSection(name) {
   if (name === 'commitments') loadCommitments();
   if (name === 'nildeals') loadNilDeals();
   if (name === 'camps') loadCamps();
+  if (name === 'coaches') loadCoaches();
 }
 
 function esc(s) { const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
@@ -545,6 +556,27 @@ function openForm(type) {
     <button class="form-submit" onclick="submitCamp()">Save Camp</button>`;
   }
 
+  } else if (type === 'coach') {
+    title.textContent = 'Add Program';
+    body.innerHTML = `<div class="form-grid">
+      <div class="form-group form-full"><label class="form-label">School Name *</label><input class="form-input" id="fc_school" placeholder="University of Georgia"></div>
+      <div class="form-group"><label class="form-label">Nickname</label><input class="form-input" id="fc_nickname" placeholder="Bulldogs"></div>
+      <div class="form-group"><label class="form-label">Division *</label><select class="form-select" id="fc_division">
+        <option value="FBS">FBS</option><option value="FCS">FCS</option>
+        <option value="D2">D2</option><option value="D3">D3</option>
+        <option value="JUCO">JUCO</option><option value="NAIA">NAIA</option>
+      </select></div>
+      <div class="form-group"><label class="form-label">Conference</label><input class="form-input" id="fc_conference" placeholder="SEC"></div>
+      <div class="form-group"><label class="form-label">State *</label><input class="form-input" id="fc_state" placeholder="GA" maxlength="2"></div>
+      <div class="form-group"><label class="form-label">City</label><input class="form-input" id="fc_city" placeholder="Athens"></div>
+      <div class="form-group"><label class="form-label">Head Coach</label><input class="form-input" id="fc_hc" placeholder="Coach name"></div>
+      <div class="form-group"><label class="form-label">Offensive Coordinator</label><input class="form-input" id="fc_oc" placeholder="OC name"></div>
+      <div class="form-group"><label class="form-label">Defensive Coordinator</label><input class="form-input" id="fc_dc" placeholder="DC name"></div>
+      <div class="form-group"><label class="form-label">Recruiting Coordinator</label><input class="form-input" id="fc_rc" placeholder="Recruiting coord name"></div>
+      <div class="form-group form-full"><label class="form-label">Staff Page URL</label><input class="form-input" id="fc_staff" placeholder="https://..."></div>
+    </div>
+    <button class="form-submit" onclick="submitCoach()">Save Program</button>`;
+
   modal.classList.add('open');
 }
 
@@ -613,6 +645,50 @@ async function submitCamp() {
   });
   if (error) { alert('Error: ' + error.message); return; }
   closeForm(); loadCamps();
+}
+
+// ---- Coaches ----
+async function loadCoaches() {
+  const el = document.getElementById('coachesList');
+  el.innerHTML = '<div class="loading-state">Loading…</div>';
+  const { data } = await sb.from('coaches_admin').select('*').order('school', { ascending: true }).limit(100);
+  if (!data?.length) { el.innerHTML = '<div class="empty-state">No coaches added yet. Add programs using the button above.</div>'; return; }
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>School</th><th>Division</th><th>Conference</th><th>State</th><th>Head Coach</th><th>OC</th><th>DC</th><th>Rec. Coord</th><th>Actions</th></tr></thead>
+    <tbody>${data.map(r => `<tr>
+      <td style="font-weight:700">${esc(r.school)}</td>
+      <td><span style="padding:2px 7px;border-radius:100px;font-size:0.65rem;font-weight:700;background:rgba(212,168,67,0.12);color:var(--gold)">${esc(r.division||'')}</span></td>
+      <td>${esc(r.conference||'')}</td>
+      <td>${esc(r.state||'')}</td>
+      <td>${esc(r.head_coach||'')}</td>
+      <td>${esc(r.oc||'—')}</td>
+      <td>${esc(r.dc||'—')}</td>
+      <td>${esc(r.recruiting_coord||'—')}</td>
+      <td><button onclick="deleteEntry('coaches_admin','${r.id}','coaches')" style="padding:3px 10px;background:rgba(196,30,58,0.1);border:1px solid rgba(196,30,58,0.3);border-radius:100px;color:#c41e3a;font-size:0.72rem;cursor:pointer">Delete</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+async function submitCoach() {
+  const school = v('fc_school');
+  if (!school) { alert('School name is required.'); return; }
+  const isDup = await checkDuplicate('coaches_admin', 'school', school);
+  if (isDup && !confirm(`"${school}" may already exist. Add anyway?`)) return;
+  const { error } = await sb.from('coaches_admin').insert({
+    school,
+    nickname: v('fc_nickname'),
+    division: v('fc_division'),
+    conference: v('fc_conference'),
+    state: v('fc_state')?.toUpperCase(),
+    city: v('fc_city'),
+    head_coach: v('fc_hc'),
+    oc: v('fc_oc'),
+    dc: v('fc_dc'),
+    recruiting_coord: v('fc_rc'),
+    staff_page: v('fc_staff'),
+  });
+  if (error) { alert('Error: ' + error.message); return; }
+  closeForm(); loadCoaches();
 }
 
 // Close on escape

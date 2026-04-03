@@ -19,6 +19,7 @@
     'commitments.html':    { label: 'Commitment Tracker',  parent: 'recruiting', parentLabel: 'Recruiting' },
     'transfer-portal.html':{ label: 'Transfer Portal',     parent: 'recruiting', parentLabel: 'Recruiting' },
     'ncaa-rules.html':     { label: 'NCAA Recruiting Rules', parent: 'recruiting', parentLabel: 'Recruiting' },
+    'coaches.html':        { label: 'Coaches Directory',  parent: 'recruiting', parentLabel: 'Recruiting' },
     'dashboard.html':      { label: 'My Dashboard',         parent: null,        parentLabel: null },
     'admin.html':          { label: 'Admin',                 parent: null,        parentLabel: null },
     'by-school.html':      { label: 'By School',           parent: 'recruiting', parentLabel: 'Recruiting' },
