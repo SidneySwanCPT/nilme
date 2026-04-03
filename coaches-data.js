@@ -18,6 +18,7 @@ const COACHES_DATA = [
   // ============================================
   {
     school: 'University of Georgia',
+    domain: 'uga.edu',
     nickname: 'Bulldogs',
     division: 'FBS',
     conference: 'SEC',
@@ -32,6 +33,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Alabama',
+    domain: 'ua.edu',
     nickname: 'Crimson Tide',
     division: 'FBS',
     conference: 'SEC',
@@ -46,6 +48,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Florida',
+    domain: 'ufl.edu',
     nickname: 'Gators',
     division: 'FBS',
     conference: 'SEC',
@@ -60,6 +63,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Tennessee',
+    domain: 'utk.edu',
     nickname: 'Volunteers',
     division: 'FBS',
     conference: 'SEC',
@@ -74,6 +78,7 @@ const COACHES_DATA = [
   },
   {
     school: 'LSU',
+    domain: 'lsu.edu',
     nickname: 'Tigers',
     division: 'FBS',
     conference: 'SEC',
@@ -88,6 +93,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Texas',
+    domain: 'utexas.edu',
     nickname: 'Longhorns',
     division: 'FBS',
     conference: 'SEC',
@@ -102,6 +108,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Texas A&M University',
+    domain: 'tamu.edu',
     nickname: 'Aggies',
     division: 'FBS',
     conference: 'SEC',
@@ -116,6 +123,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Mississippi',
+    domain: 'olemiss.edu',
     nickname: 'Rebels',
     division: 'FBS',
     conference: 'SEC',
@@ -130,6 +138,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Auburn University',
+    domain: 'auburn.edu',
     nickname: 'Tigers',
     division: 'FBS',
     conference: 'SEC',
@@ -144,6 +153,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of South Carolina',
+    domain: 'sc.edu',
     nickname: 'Gamecocks',
     division: 'FBS',
     conference: 'SEC',
@@ -158,6 +168,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Vanderbilt University',
+    domain: 'vanderbilt.edu',
     nickname: 'Commodores',
     division: 'FBS',
     conference: 'SEC',
@@ -172,6 +183,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Mississippi State University',
+    domain: 'msstate.edu',
     nickname: 'Bulldogs',
     division: 'FBS',
     conference: 'SEC',
@@ -186,6 +198,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Kentucky',
+    domain: 'uky.edu',
     nickname: 'Wildcats',
     division: 'FBS',
     conference: 'SEC',
@@ -200,6 +213,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Missouri',
+    domain: 'missouri.edu',
     nickname: 'Tigers',
     division: 'FBS',
     conference: 'SEC',
@@ -214,6 +228,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Arkansas',
+    domain: 'uark.edu',
     nickname: 'Razorbacks',
     division: 'FBS',
     conference: 'SEC',
@@ -232,6 +247,7 @@ const COACHES_DATA = [
   // ============================================
   {
     school: 'Clemson University',
+    domain: 'clemson.edu',
     nickname: 'Tigers',
     division: 'FBS',
     conference: 'ACC',
@@ -246,6 +262,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Florida State University',
+    domain: 'fsu.edu',
     nickname: 'Seminoles',
     division: 'FBS',
     conference: 'ACC',
@@ -260,6 +277,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Miami',
+    domain: 'miami.edu',
     nickname: 'Hurricanes',
     division: 'FBS',
     conference: 'ACC',
@@ -274,6 +292,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Georgia Tech',
+    domain: 'gatech.edu',
     nickname: 'Yellow Jackets',
     division: 'FBS',
     conference: 'ACC',
@@ -288,6 +307,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of North Carolina',
+    domain: 'unc.edu',
     nickname: 'Tar Heels',
     division: 'FBS',
     conference: 'ACC',
@@ -302,6 +322,7 @@ const COACHES_DATA = [
   },
   {
     school: 'NC State University',
+    domain: 'ncsu.edu',
     nickname: 'Wolfpack',
     division: 'FBS',
     conference: 'ACC',
@@ -320,6 +341,7 @@ const COACHES_DATA = [
   // ============================================
   {
     school: 'University of Michigan',
+    domain: 'umich.edu',
     nickname: 'Wolverines',
     division: 'FBS',
     conference: 'Big Ten',
@@ -334,6 +356,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Ohio State University',
+    domain: 'osu.edu',
     nickname: 'Buckeyes',
     division: 'FBS',
     conference: 'Big Ten',
@@ -348,6 +371,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Penn State University',
+    domain: 'psu.edu',
     nickname: 'Nittany Lions',
     division: 'FBS',
     conference: 'Big Ten',
@@ -362,6 +386,7 @@ const COACHES_DATA = [
   },
   {
     school: 'USC',
+    domain: 'usc.edu',
     nickname: 'Trojans',
     division: 'FBS',
     conference: 'Big Ten',
@@ -376,6 +401,7 @@ const COACHES_DATA = [
   },
   {
     school: 'UCLA',
+    domain: 'ucla.edu',
     nickname: 'Bruins',
     division: 'FBS',
     conference: 'Big Ten',
@@ -394,6 +420,7 @@ const COACHES_DATA = [
   // ============================================
   {
     school: 'University of Oklahoma',
+    domain: 'ou.edu',
     nickname: 'Sooners',
     division: 'FBS',
     conference: 'SEC',
@@ -408,6 +435,7 @@ const COACHES_DATA = [
   },
   {
     school: 'TCU',
+    domain: 'tcu.edu',
     nickname: 'Horned Frogs',
     division: 'FBS',
     conference: 'Big 12',
@@ -422,6 +450,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Baylor University',
+    domain: 'baylor.edu',
     nickname: 'Bears',
     division: 'FBS',
     conference: 'Big 12',
@@ -436,6 +465,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Houston',
+    domain: 'uh.edu',
     nickname: 'Cougars',
     division: 'FBS',
     conference: 'Big 12',
@@ -454,6 +484,7 @@ const COACHES_DATA = [
   // ============================================
   {
     school: 'Georgia Southern University',
+    domain: 'georgiasouthern.edu',
     nickname: 'Eagles',
     division: 'FCS',
     conference: 'Sun Belt',
@@ -468,6 +499,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Kennesaw State University',
+    domain: 'kennesaw.edu',
     nickname: 'Owls',
     division: 'FCS',
     conference: 'ASUN',
@@ -482,6 +514,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Jackson State University',
+    domain: 'jsums.edu',
     nickname: 'Tigers',
     division: 'FCS',
     conference: 'SWAC',
@@ -496,6 +529,7 @@ const COACHES_DATA = [
   },
   {
     school: 'North Dakota State University',
+    domain: 'ndsu.edu',
     nickname: 'Bison',
     division: 'FCS',
     conference: 'Missouri Valley',
@@ -510,6 +544,7 @@ const COACHES_DATA = [
   },
   {
     school: 'South Dakota State University',
+    domain: 'sdstate.edu',
     nickname: 'Jackrabbits',
     division: 'FCS',
     conference: 'Missouri Valley',
@@ -524,6 +559,7 @@ const COACHES_DATA = [
   },
   {
     school: 'University of Montana',
+    domain: 'umt.edu',
     nickname: 'Grizzlies',
     division: 'FCS',
     conference: 'Big Sky',
@@ -538,6 +574,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Villanova University',
+    domain: 'villanova.edu',
     nickname: 'Wildcats',
     division: 'FCS',
     conference: 'CAA',
@@ -552,6 +589,7 @@ const COACHES_DATA = [
   },
   {
     school: 'James Madison University',
+    domain: 'jmu.edu',
     nickname: 'Dukes',
     division: 'FBS',
     conference: 'Sun Belt',
@@ -566,6 +604,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Bethune-Cookman University',
+    domain: 'cookman.edu',
     nickname: 'Wildcats',
     division: 'FCS',
     conference: 'SWAC',
@@ -580,6 +619,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Florida A&M University',
+    domain: 'famu.edu',
     nickname: 'Rattlers',
     division: 'FCS',
     conference: 'SWAC',
@@ -598,6 +638,7 @@ const COACHES_DATA = [
   // ============================================
   {
     school: 'Valdosta State University',
+    domain: 'valdosta.edu',
     nickname: 'Blazers',
     division: 'D2',
     conference: 'Gulf South',
@@ -612,6 +653,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Delta State University',
+    domain: 'deltastate.edu',
     nickname: 'Statesmen',
     division: 'D2',
     conference: 'Gulf South',
@@ -626,6 +668,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Ferris State University',
+    domain: 'ferris.edu',
     nickname: 'Bulldogs',
     division: 'D2',
     conference: 'GLIAC',
@@ -640,6 +683,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Pittsburg State University',
+    domain: 'pittstate.edu',
     nickname: 'Gorillas',
     division: 'D2',
     conference: 'MIAA',
@@ -654,6 +698,7 @@ const COACHES_DATA = [
   },
   {
     school: 'West Florida University',
+    domain: 'uwf.edu',
     nickname: 'Argonauts',
     division: 'D2',
     conference: 'Gulf South',
@@ -668,6 +713,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Colorado School of Mines',
+    domain: 'mines.edu',
     nickname: 'Orediggers',
     division: 'D2',
     conference: 'RMAC',
@@ -682,6 +728,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Tarleton State University',
+    domain: 'tarleton.edu',
     nickname: 'Texans',
     division: 'D2',
     conference: 'Lone Star',
@@ -696,6 +743,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Angelo State University',
+    domain: 'angelo.edu',
     nickname: 'Rams',
     division: 'D2',
     conference: 'Lone Star',
@@ -714,6 +762,7 @@ const COACHES_DATA = [
   // ============================================
   {
     school: 'North Central College',
+    domain: 'northcentralcollege.edu',
     nickname: 'Cardinals',
     division: 'D3',
     conference: 'CCIW',
@@ -728,6 +777,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Mary Hardin-Baylor University',
+    domain: 'umhb.edu',
     nickname: 'Crusaders',
     division: 'D3',
     conference: 'ASC',
@@ -742,6 +792,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Wartburg College',
+    domain: 'wartburg.edu',
     nickname: 'Knights',
     division: 'D3',
     conference: 'ARC',
@@ -756,6 +807,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Wheaton College',
+    domain: 'wheaton.edu',
     nickname: 'Thunder',
     division: 'D3',
     conference: 'CCIW',
@@ -770,6 +822,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Hardin-Simmons University',
+    domain: 'hsutx.edu',
     nickname: 'Cowboys',
     division: 'D3',
     conference: 'ASC',
@@ -788,6 +841,7 @@ const COACHES_DATA = [
   // ============================================
   {
     school: 'Georgia Military College',
+    domain: 'gmc.cc.ga.us',
     nickname: 'Bulldogs',
     division: 'JUCO',
     conference: 'GCAA',
@@ -816,6 +870,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Coffeyville Community College',
+    domain: 'coffeyville.edu',
     nickname: 'Ravens',
     division: 'JUCO',
     conference: 'KJCCC',
@@ -830,6 +885,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Iowa Western Community College',
+    domain: 'iwcc.edu',
     nickname: 'Reivers',
     division: 'JUCO',
     conference: 'ICCAC',
@@ -844,6 +900,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Itawamba Community College',
+    domain: 'iccms.edu',
     nickname: 'Indians',
     division: 'JUCO',
     conference: 'MACJC',
@@ -858,6 +915,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Blinn College',
+    domain: 'blinn.edu',
     nickname: 'Buccaneers',
     division: 'JUCO',
     conference: 'SWJCFC',
@@ -872,6 +930,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Northwest Mississippi Community College',
+    domain: 'northwestms.edu',
     nickname: 'Rangers',
     division: 'JUCO',
     conference: 'MACJC',
@@ -886,6 +945,7 @@ const COACHES_DATA = [
   },
   {
     school: 'East Mississippi Community College',
+    domain: 'eastms.edu',
     nickname: 'Lions',
     division: 'JUCO',
     conference: 'MACJC',
@@ -900,6 +960,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Snow College',
+    domain: 'snow.edu',
     nickname: 'Badgers',
     division: 'JUCO',
     conference: 'SWAC',
@@ -914,6 +975,7 @@ const COACHES_DATA = [
   },
   {
     school: 'Garden City Community College',
+    domain: 'gcccks.edu',
     nickname: 'Broncbusters',
     division: 'JUCO',
     conference: 'KJCCC',
