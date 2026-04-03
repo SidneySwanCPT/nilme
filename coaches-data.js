@@ -29,7 +29,14 @@ const COACHES_DATA = [
     dc: 'Glenn Schumann',
     recruitingCoord: 'Bryan McClendon',
     staffPage: 'https://georgiadogs.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'ahunt@sports.uga.edu',
+    contactPhone: '(706) 542-7915',
+    mailingAddress: 'UGA Athletics/Football, P.O. Box 1472, Athens, GA 30603',
+    lastUpdated: '2026-04',
+    hcTwitter: 'KirbySmartUGA',
+    hcInstagram: 'kirbysmart',
+    rcTwitter: 'CoachMcClendon',
+    rcInstagram: 'coachmcclendon',
     espnId: 61,
   },
   {
@@ -45,7 +52,14 @@ const COACHES_DATA = [
     dc: 'Kane Wommack',
     recruitingCoord: 'JaMarcus Shephard',
     staffPage: 'https://rolltide.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'fgaston@ia.ua.edu',
+    contactPhone: '(205) 348-3600',
+    mailingAddress: 'UA Football, Box 870323, Tuscaloosa, AL 35487',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachDeBoer',
+    hcInstagram: 'coachdeboer',
+    rcTwitter: 'CoachJShephard',
+    rcInstagram: '',
     espnId: 333,
   },
   {
@@ -61,7 +75,14 @@ const COACHES_DATA = [
     dc: 'Austin Armstrong',
     recruitingCoord: 'Corey Raymond',
     staffPage: 'https://floridagators.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'sams@gators.ufl.edu',
+    contactPhone: '(352) 375-4683',
+    mailingAddress: 'UAA Football, P.O. Box 14485, Gainesville, FL 32604',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachBillyNapier',
+    hcInstagram: 'coachbillynapier',
+    rcTwitter: 'CoachCRaymond',
+    rcInstagram: '',
     espnId: 57,
   },
   {
@@ -77,7 +98,14 @@ const COACHES_DATA = [
     dc: 'Tim Banks',
     recruitingCoord: 'Tee Martin',
     staffPage: 'https://utsports.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'utad@utk.edu',
+    contactPhone: '(865) 974-1234',
+    mailingAddress: 'UT Football, P.O. Box 15162, Knoxville, TN 37901',
+    lastUpdated: '2026-04',
+    hcTwitter: 'HeupelJosh',
+    hcInstagram: 'heupeljosh',
+    rcTwitter: 'TeeMartin8',
+    rcInstagram: 'teemartin8',
     espnId: 2633,
   },
   {
@@ -93,7 +121,14 @@ const COACHES_DATA = [
     dc: 'Blake Baker',
     recruitingCoord: 'Robert Steeples',
     staffPage: 'https://lsusports.net/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'football@lsu.edu',
+    contactPhone: '(225) 578-8001',
+    mailingAddress: 'LSU Athletics/Football, P.O. Box 2509, Baton Rouge, LA 70894',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachBrianKelly',
+    hcInstagram: 'coachbriankelly',
+    rcTwitter: 'CoachSteeples',
+    rcInstagram: '',
     espnId: 99,
   },
   {
@@ -109,7 +144,14 @@ const COACHES_DATA = [
     dc: 'Pete Kwiatkowski',
     recruitingCoord: 'Jeff Banks',
     staffPage: 'https://texassports.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'kasey.johnson@athletics.utexas.edu',
+    contactPhone: '(512) 471-3050',
+    mailingAddress: 'UT Athletic Dept, Austin, TX 78713',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachSark',
+    hcInstagram: 'coachsark',
+    rcTwitter: 'CoachJeffBanks',
+    rcInstagram: '',
     espnId: 251,
   },
   {
@@ -125,7 +167,14 @@ const COACHES_DATA = [
     dc: 'Jay Bateman',
     recruitingCoord: 'Terry Price',
     staffPage: 'https://12thman.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'recruiting-fb@athletics.tamu.edu',
+    contactPhone: '(979) 845-3500',
+    mailingAddress: 'TAMU Football Office, P.O. Box 30017, College Station, TX 77843',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachMikeElko',
+    hcInstagram: '',
+    rcTwitter: 'CoachTerryPrice',
+    rcInstagram: '',
     espnId: 245,
   },
   {
@@ -141,7 +190,14 @@ const COACHES_DATA = [
     dc: 'Pete Golding',
     recruitingCoord: 'Jamar Cain',
     staffPage: 'https://olemisssports.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'chyna@olemiss.edu',
+    contactPhone: '(662) 915-7547',
+    mailingAddress: 'Ole Miss Football, 908 All-American Dr, University, MS 38677',
+    lastUpdated: '2026-04',
+    hcTwitter: 'Lane_Kiffin',
+    hcInstagram: 'lanekiffin',
+    rcTwitter: 'CoachJamarCain',
+    rcInstagram: 'coachjamar',
     espnId: 145,
   },
   {
@@ -157,7 +213,14 @@ const COACHES_DATA = [
     dc: 'Ron Roberts',
     recruitingCoord: 'Carnell Williams',
     staffPage: 'https://auburntigers.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'ezc0011@auburn.edu',
+    contactPhone: '(334) 844-9890',
+    mailingAddress: 'Auburn Football, 392 South Donahue Dr, Auburn, AL 36849',
+    lastUpdated: '2026-04',
+    hcTwitter: 'HughFreeze10',
+    hcInstagram: 'hughfreeze',
+    rcTwitter: 'CarnellWilliams',
+    rcInstagram: 'carnellwilliams',
     espnId: 2,
   },
   {
@@ -173,7 +236,14 @@ const COACHES_DATA = [
     dc: 'Clayton White',
     recruitingCoord: 'Des Kitchings',
     staffPage: 'https://gamecocksonline.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'shinep@mailbox.sc.edu',
+    contactPhone: '(803) 777-4271',
+    mailingAddress: 'SC Football, Rex Enright Athletic Ctr, 1300 Rosewood Dr, Columbia, SC 29208',
+    lastUpdated: '2026-04',
+    hcTwitter: 'ShaneBeamer',
+    hcInstagram: 'shanebeamer',
+    rcTwitter: 'CoachDesK',
+    rcInstagram: '',
     espnId: 2579,
   },
   {
@@ -189,7 +259,14 @@ const COACHES_DATA = [
     dc: 'Tevita Fifita',
     recruitingCoord: 'Bryan Ellis',
     staffPage: 'https://vucommodores.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'football_recruiting@vanderbilt.edu',
+    contactPhone: '(615) 322-3565',
+    mailingAddress: 'Vanderbilt Football, 2601 Jess Neely Dr, Nashville, TN 37212',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachClarkLea',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 238,
   },
   {
@@ -205,7 +282,14 @@ const COACHES_DATA = [
     dc: 'Zach Arnett',
     recruitingCoord: 'Marcus Woodson',
     staffPage: 'https://hailstate.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'felker@athletics.msstate.edu',
+    contactPhone: '(662) 325-2539',
+    mailingAddress: 'MSU Football, P.O. Box 5327, Mississippi State, MS 39762',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachLebby',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 344,
   },
   {
@@ -221,7 +305,14 @@ const COACHES_DATA = [
     dc: 'Brad White',
     recruitingCoord: 'Vince Marrow',
     staffPage: 'https://ukathletics.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'C.snow.iii@uky.edu',
+    contactPhone: '(859) 257-3611',
+    mailingAddress: 'UK Athletics/Football, 338 Lexington Ave, Lexington, KY 40506',
+    lastUpdated: '2026-04',
+    hcTwitter: 'UKCoachStoops',
+    hcInstagram: '',
+    rcTwitter: 'VinceMarrow',
+    rcInstagram: 'vincemarrow',
     espnId: 96,
   },
   {
@@ -237,9 +328,16 @@ const COACHES_DATA = [
     dc: 'Vernon Hargreaves',
     recruitingCoord: 'Marcus Johnson',
     staffPage: 'https://mutigers.com/sports/football/roster/coaches',
+        contactEmail: 'hillra@missouri.edu',
+    contactPhone: '(573) 882-2404',
+    mailingAddress: 'Mizzou Athletics, One Champions Drive, Columbia, MO 65205',
     lastUpdated: '2026-04'
     espnId: 142,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'University of Arkansas',
     domain: 'uark.edu',
@@ -253,7 +351,14 @@ const COACHES_DATA = [
     dc: 'Travis Williams',
     recruitingCoord: 'Marcus Woodson',
     staffPage: 'https://arkansasrazorbacks.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'rpetrino@uark.edu',
+    contactPhone: '(479) 575-4849',
+    mailingAddress: 'UA Football, 350 N Razorback Road, Fayetteville, AR 72702',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachSamPittman',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 8,
   },
 
@@ -273,7 +378,14 @@ const COACHES_DATA = [
     dc: 'Wes Goodwin',
     recruitingCoord: 'Kyle Richardson',
     staffPage: 'https://clemsontigers.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'footballrecruiting@clemson.edu',
+    contactPhone: '(864) 656-2101',
+    mailingAddress: 'Clemson Football, P.O. Box 31, Clemson, SC 29634',
+    lastUpdated: '2026-04',
+    hcTwitter: 'DaboSwinney',
+    hcInstagram: 'daboswinney',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 228,
   },
   {
@@ -289,7 +401,14 @@ const COACHES_DATA = [
     dc: 'Patrick Toney',
     recruitingCoord: 'Jason Leach',
     staffPage: 'https://seminoles.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'football@fsu.edu',
+    contactPhone: '(850) 644-1073',
+    mailingAddress: 'FSU Football, P.O. Box 2195, Tallahassee, FL 32316',
+    lastUpdated: '2026-04',
+    hcTwitter: 'Coach_Norvell',
+    hcInstagram: 'coachnorvellfsu',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 52,
   },
   {
@@ -305,7 +424,14 @@ const COACHES_DATA = [
     dc: 'Lance Leopold',
     recruitingCoord: 'Gino Guidugli',
     staffPage: 'https://hurricanesports.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'footballrecruiting@miami.edu',
+    contactPhone: '(305) 284-2263',
+    mailingAddress: 'UM Football, 6201 San Amaro Drive, Coral Gables, FL 33146',
+    lastUpdated: '2026-04',
+    hcTwitter: 'Coach_Cristobal',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 2390,
   },
   {
@@ -321,7 +447,14 @@ const COACHES_DATA = [
     dc: 'D.J. Crook',
     recruitingCoord: 'Lamar Owens',
     staffPage: 'https://ramblinwreck.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'gtfbrecruiting@athletics.gatech.edu',
+    contactPhone: '(404) 894-5411',
+    mailingAddress: 'GT Football, 150 Bobby Dodd Way NW, Atlanta, GA 30332',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachBrentKey',
+    hcInstagram: '',
+    rcTwitter: 'CoachLamarOwens',
+    rcInstagram: '',
     espnId: 59,
   },
   {
@@ -337,7 +470,14 @@ const COACHES_DATA = [
     dc: 'TBD',
     recruitingCoord: 'TBD',
     staffPage: 'https://goheels.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'fbrecruiting@unc.edu',
+    contactPhone: '(919) 962-2123',
+    mailingAddress: 'UNC Football, P.O. Box 2126, Chapel Hill, NC 27515',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachBelichick',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 153,
   },
   {
@@ -353,9 +493,16 @@ const COACHES_DATA = [
     dc: 'Tony Gibson',
     recruitingCoord: 'Tre Thompson',
     staffPage: 'https://gopack.com/sports/football/roster/coaches',
+        contactEmail: 'ncstatefootball@ncsu.edu',
+    contactPhone: '(919) 515-2101',
+    mailingAddress: 'NCSU Football, P.O. Box 8501, Raleigh, NC 27695',
     lastUpdated: '2026-04'
     espnId: 152,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
 
   // ============================================
   // FBS — Big Ten
@@ -373,7 +520,14 @@ const COACHES_DATA = [
     dc: 'Wink Martindale',
     recruitingCoord: 'Steve Clinkscale',
     staffPage: 'https://mgoblue.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'footballrecruiting@umich.edu',
+    contactPhone: '(734) 763-4423',
+    mailingAddress: 'UM Football, 1201 S Main St, Ann Arbor, MI 48104',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachSherrone',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 130,
   },
   {
@@ -389,7 +543,14 @@ const COACHES_DATA = [
     dc: 'Jim Knowles',
     recruitingCoord: 'Brian Hartline',
     staffPage: 'https://ohiostatebuckeyes.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'football@osu.edu',
+    contactPhone: '(614) 292-6861',
+    mailingAddress: 'OSU Football, Woody Hayes Athletic Ctr, Columbus, OH 43210',
+    lastUpdated: '2026-04',
+    hcTwitter: 'ryandayfootball',
+    hcInstagram: 'ryandayfootball',
+    rcTwitter: 'brianhartline',
+    rcInstagram: 'brianhartline',
     espnId: 194,
   },
   {
@@ -405,7 +566,14 @@ const COACHES_DATA = [
     dc: 'Tom Allen',
     recruitingCoord: 'Ja\'Juan Seider',
     staffPage: 'https://gopsusports.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'fbrecruiting@psu.edu',
+    contactPhone: '(814) 865-1000',
+    mailingAddress: 'PSU Football, Lasch Football Building, University Park, PA 16802',
+    lastUpdated: '2026-04',
+    hcTwitter: 'coachjfranklin',
+    hcInstagram: 'jamesfranklin22',
+    rcTwitter: 'JaJuanSeider',
+    rcInstagram: '',
     espnId: 213,
   },
   {
@@ -421,7 +589,14 @@ const COACHES_DATA = [
     dc: 'D\'Anton Lynn',
     recruitingCoord: 'Donte Williams',
     staffPage: 'https://usctrojans.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'footballrecruiting@usc.edu',
+    contactPhone: '(213) 740-4155',
+    mailingAddress: 'USC Football, Heritage Hall, Los Angeles, CA 90089',
+    lastUpdated: '2026-04',
+    hcTwitter: 'LincolnRiley',
+    hcInstagram: 'lincolnriley',
+    rcTwitter: 'donte_williams3',
+    rcInstagram: '',
     espnId: 30,
   },
   {
@@ -437,7 +612,14 @@ const COACHES_DATA = [
     dc: 'Jake Dickert',
     recruitingCoord: 'Brian Norwood',
     staffPage: 'https://uclabruins.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'football@athletics.ucla.edu',
+    contactPhone: '(310) 825-3321',
+    mailingAddress: 'UCLA Football, P.O. Box 24044, Los Angeles, CA 90024',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachDeShaunF',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 26,
   },
 
@@ -457,7 +639,14 @@ const COACHES_DATA = [
     dc: 'Todd Bates',
     recruitingCoord: 'DeMarco Murray',
     staffPage: 'https://soonersports.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'football@ou.edu',
+    contactPhone: '(405) 325-2345',
+    mailingAddress: 'OU Athletics, McClendon Center, 180 W Brooks, Norman, OK 73019',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachVenables',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 201,
   },
   {
@@ -473,7 +662,14 @@ const COACHES_DATA = [
     dc: 'Dennis Simmons',
     recruitingCoord: 'Tre Richardson',
     staffPage: 'https://gofrogs.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'football@tcu.edu',
+    contactPhone: '(817) 257-7965',
+    mailingAddress: 'TCU Football, P.O. Box 297600, Fort Worth, TX 76129',
+    lastUpdated: '2026-04',
+    hcTwitter: 'SonnyDykes',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 2628,
   },
   {
@@ -489,7 +685,14 @@ const COACHES_DATA = [
     dc: 'Ron Roberts',
     recruitingCoord: 'Terrel Bernard',
     staffPage: 'https://baylorbears.com/sports/football/roster/coaches',
-    lastUpdated: '2026-04'
+        contactEmail: 'football@baylor.edu',
+    contactPhone: '(254) 710-1234',
+    mailingAddress: 'Baylor Football, One Bear Place, Waco, TX 76798',
+    lastUpdated: '2026-04',
+    hcTwitter: 'CoachDaveAranda',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',
     espnId: 239,
   },
   {
@@ -505,9 +708,16 @@ const COACHES_DATA = [
     dc: 'Doug Belk',
     recruitingCoord: 'TBD',
     staffPage: 'https://uhcougars.com/sports/football/roster/coaches',
+        contactEmail: 'footballrecruiting@uh.edu',
+    contactPhone: '(832) 842-6900',
+    mailingAddress: 'UH Football, 3204 Cullen Blvd, Houston, TX 77204',
     lastUpdated: '2026-04'
     espnId: 248,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
 
   // ============================================
   // FCS — Top Programs
@@ -525,9 +735,16 @@ const COACHES_DATA = [
     dc: 'Scot Sloan',
     recruitingCoord: 'Marcus Satterfield',
     staffPage: 'https://gseagles.com/sports/football/roster/coaches',
+        contactEmail: 'fbrecruiting@georgiasouthern.edu',
+    contactPhone: '(912) 478-5436',
+    mailingAddress: 'GSU Football, P.O. Box 8082, Statesboro, GA 30460',
     lastUpdated: '2026-04'
     espnId: 290,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Kennesaw State University',
     domain: 'kennesaw.edu',
@@ -541,9 +758,16 @@ const COACHES_DATA = [
     dc: 'Erin Henderson',
     recruitingCoord: 'Carlos White',
     staffPage: 'https://ksuowls.com/sports/football/roster/coaches',
+        contactEmail: 'ksufootball@kennesaw.edu',
+    contactPhone: '(470) 578-6300',
+    mailingAddress: 'KSU Football, 590 Cobb Ave NW, Kennesaw, GA 30144',
     lastUpdated: '2026-04'
     espnId: 2391,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Jackson State University',
     domain: 'jsums.edu',
@@ -560,6 +784,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2344,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'North Dakota State University',
     domain: 'ndsu.edu',
@@ -576,6 +804,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2449,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'South Dakota State University',
     domain: 'sdstate.edu',
@@ -592,6 +824,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2571,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'University of Montana',
     domain: 'umt.edu',
@@ -608,6 +844,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 149,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Villanova University',
     domain: 'villanova.edu',
@@ -624,6 +864,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 222,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'James Madison University',
     domain: 'jmu.edu',
@@ -640,6 +884,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 256,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Bethune-Cookman University',
     domain: 'cookman.edu',
@@ -656,6 +904,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2065,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Florida A&M University',
     domain: 'famu.edu',
@@ -669,9 +921,16 @@ const COACHES_DATA = [
     dc: 'TBD',
     recruitingCoord: 'TBD',
     staffPage: 'https://famuathletics.com/sports/football',
+        contactEmail: 'football@famu.edu',
+    contactPhone: '(850) 599-3200',
+    mailingAddress: 'FAMU Football, 1800 Wahnish Way, Tallahassee, FL 32307',
     lastUpdated: '2026-04'
     espnId: 50,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
 
   // ============================================
   // Division II
@@ -692,6 +951,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2674,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Delta State University',
     domain: 'deltastate.edu',
@@ -707,6 +970,10 @@ const COACHES_DATA = [
     staffPage: 'https://deltastateathletics.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Ferris State University',
     domain: 'ferris.edu',
@@ -723,6 +990,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2209,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Pittsburg State University',
     domain: 'pittstate.edu',
@@ -738,6 +1009,10 @@ const COACHES_DATA = [
     staffPage: 'https://pittgorillas.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'West Florida University',
     domain: 'uwf.edu',
@@ -754,6 +1029,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2734,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Colorado School of Mines',
     domain: 'mines.edu',
@@ -769,6 +1048,10 @@ const COACHES_DATA = [
     staffPage: 'https://minesathletics.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Tarleton State University',
     domain: 'tarleton.edu',
@@ -785,6 +1068,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2653,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Angelo State University',
     domain: 'angelo.edu',
@@ -801,6 +1088,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2006,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
 
   // ============================================
   // Division III
@@ -821,6 +1112,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2461,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Mary Hardin-Baylor University',
     domain: 'umhb.edu',
@@ -837,6 +1132,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2374,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Wartburg College',
     domain: 'wartburg.edu',
@@ -852,6 +1151,10 @@ const COACHES_DATA = [
     staffPage: 'https://athletics.wartburg.edu/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Wheaton College',
     domain: 'wheaton.edu',
@@ -867,6 +1170,10 @@ const COACHES_DATA = [
     staffPage: 'https://athletics.wheaton.edu/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Hardin-Simmons University',
     domain: 'hsutx.edu',
@@ -883,6 +1190,10 @@ const COACHES_DATA = [
     lastUpdated: '2026-04'
     espnId: 2296,
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
 
   // ============================================
   // JUCO
@@ -902,6 +1213,10 @@ const COACHES_DATA = [
     staffPage: 'https://gmcbulldogs.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Georgia Northwestern Technical College',
     nickname: 'Cardinals',
@@ -916,6 +1231,10 @@ const COACHES_DATA = [
     staffPage: 'https://gntc.edu/athletics',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Coffeyville Community College',
     domain: 'coffeyville.edu',
@@ -931,6 +1250,10 @@ const COACHES_DATA = [
     staffPage: 'https://coffeyvilleravens.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Iowa Western Community College',
     domain: 'iwcc.edu',
@@ -946,6 +1269,10 @@ const COACHES_DATA = [
     staffPage: 'https://iwccreivers.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Itawamba Community College',
     domain: 'iccms.edu',
@@ -961,6 +1288,10 @@ const COACHES_DATA = [
     staffPage: 'https://iccathletics.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Blinn College',
     domain: 'blinn.edu',
@@ -976,6 +1307,10 @@ const COACHES_DATA = [
     staffPage: 'https://blinnbuccaneers.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Northwest Mississippi Community College',
     domain: 'northwestms.edu',
@@ -991,6 +1326,10 @@ const COACHES_DATA = [
     staffPage: 'https://northwestms.edu/athletics/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'East Mississippi Community College',
     domain: 'eastms.edu',
@@ -1006,6 +1345,10 @@ const COACHES_DATA = [
     staffPage: 'https://emcclions.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Snow College',
     domain: 'snow.edu',
@@ -1021,6 +1364,10 @@ const COACHES_DATA = [
     staffPage: 'https://snowbadgers.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
   {
     school: 'Garden City Community College',
     domain: 'gcccks.edu',
@@ -1036,6 +1383,10 @@ const COACHES_DATA = [
     staffPage: 'https://gcccbroncbusters.com/sports/football',
     lastUpdated: '2026-04'
   },
+    hcTwitter: '',
+    hcInstagram: '',
+    rcTwitter: '',
+    rcInstagram: '',,
 
 ];
 

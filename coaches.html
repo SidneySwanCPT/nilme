@@ -41,7 +41,7 @@
 
     .coaches-list-header {
       display:grid;
-      grid-template-columns:48px 1fr 80px 130px 48px 130px;
+      grid-template-columns:48px 1fr 80px 130px 48px 1fr;
       padding:8px 16px;
       font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);
       border-bottom:1px solid var(--border-color);
@@ -50,7 +50,7 @@
 
     .coach-row {
       display:grid;
-      grid-template-columns:48px 1fr 80px 130px 48px 130px;
+      grid-template-columns:48px 1fr 80px 130px 48px 1fr;
       align-items:center;
       padding:10px 16px;
       border:1px solid var(--border-color);
@@ -91,6 +91,17 @@
     /* Conference cell */
     .cr-conf { font-size:.75rem;color:var(--text-muted); }
 
+    .cr-social { display:flex;align-items:center;gap:5px;flex-wrap:wrap; }
+    .social-pill { display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:.7rem;font-weight:600;text-decoration:none;transition:all .15s;white-space:nowrap; }
+    .x-pill { background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text-secondary); }
+    .x-pill:hover { background:rgba(255,255,255,.12);color:#fff; }
+    .ig-pill { background:rgba(225,48,108,.1);border:1px solid rgba(225,48,108,.2);color:#e1306c;padding:3px 8px; }
+    .ig-pill:hover { background:rgba(225,48,108,.2); }
+    .social-link-full { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:100px;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .15s; }
+    .social-link-full.x { background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text-secondary); }
+    .social-link-full.x:hover { background:rgba(255,255,255,.12);color:#fff; }
+    .social-link-full.ig { background:rgba(225,48,108,.1);border:1px solid rgba(225,48,108,.2);color:#e1306c; }
+    .social-link-full.ig:hover { background:rgba(225,48,108,.2); }
     .coaches-empty { text-align:center;padding:var(--space-xl);color:var(--text-muted);font-size:.88rem; }
 
     /* ---- COACH DETAIL MODAL ---- */
@@ -148,7 +159,7 @@
     @media(max-width:900px) {
       .coaches-list-header { display:none; }
       .coach-row { grid-template-columns:40px 1fr 70px; }
-      .coach-row .cr-coach,.coach-row .cr-conf { display:none; }
+      .coach-row .cr-coach,.coach-row .cr-social { display:none; }
     }
     @media(max-width:600px) {
       .coaches-header,.coaches-body { padding:var(--space-lg) var(--space-md); }
@@ -208,7 +219,7 @@
       <div>Division</div>
       <div>Head Coach</div>
       <div>ST</div>
-      <div>Conference</div>
+      <div>Recruiting Coord / Social</div>
     </div>
     <div id="coachesList"><div style="padding:var(--space-xl);text-align:center;color:var(--text-muted)">Loading programs…</div></div>
     <div class="coaches-empty" id="coachesEmpty" style="display:none">No programs match your search. Try adjusting the filters.</div>
@@ -264,7 +275,10 @@
             <button class="em-btn gmail" onclick="openGmail()">Open in Gmail</button>
             <button class="em-btn regen" onclick="generateEmail()">&#x21BA; Regenerate</button>
           </div>
-          <p style="font-size:.72rem;color:var(--text-muted);margin-top:var(--space-md);line-height:1.5">Send from your own email — looks more authentic to coaches than a platform send.</p>
+          <p style="font-size:.72rem;color:var(--text-muted);margin-top:var(--space-md);line-height:1.5">
+          Send from your own email — looks more authentic to coaches than a platform send.
+          <span id="emContactHint" style="display:none;margin-top:4px;display:block"></span>
+        </p>
         </div>
       </div>
     </div>
@@ -277,6 +291,17 @@
 <script>
 var allCoaches=[], filtered=[], curCoach=null, genEmail='';
 var DC={FBS:'fbs',FCS:'fcs',D2:'d2',D3:'d3',JUCO:'juco',NAIA:'naia'};
+
+function xIcon(){ return '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.264 5.633L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>'; }
+function igIcon(){ return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>'; }
+
+function rcSocialHtml(c){
+  var html='';
+  if(c.rcTwitter) html+='<a href="https://x.com/'+c.rcTwitter+'" target="_blank" rel="noopener" class="social-pill x-pill" onclick="event.stopPropagation()">'+xIcon()+'@'+ex(c.rcTwitter)+'</a>';
+  if(c.rcInstagram) html+='<a href="https://instagram.com/'+c.rcInstagram+'" target="_blank" rel="noopener" class="social-pill ig-pill" onclick="event.stopPropagation()">'+igIcon()+'</a>';
+  if(!html) html='<span style="font-size:.72rem;color:var(--text-muted)">'+ex(c.conference||'')+'</span>';
+  return html;
+}
 
 function ex(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
 
@@ -341,7 +366,7 @@ function renderList(){
       '<div><span class="cr-div '+dc+'">'+ex(c.division)+'</span></div>'+
       '<div class="cr-coach">'+hc+'<span>'+ex(c.city||'')+'</span></div>'+
       '<div class="cr-state">'+ex(c.state||'')+'</div>'+
-      '<div class="cr-conf">'+ex(c.conference||'')+'</div>'+
+      '<div class="cr-social">'+rcSocialHtml(c)+'</div>'+
     '</div>';
   }).join('');
 }
@@ -365,23 +390,38 @@ function openCoachModal(idx){
     '<span class="cm-badge" style="background:rgba(255,255,255,.06);color:var(--text-muted);font-size:.75rem;padding:4px 12px;border-radius:100px">'+ex(curCoach.conference||'')+'</span>';
 
   // Staff grid
-  document.getElementById('cmStaff').innerHTML=[
-    ['Head Coach',curCoach.headCoach],
-    ['Offensive Coordinator',curCoach.oc],
-    ['Defensive Coordinator',curCoach.dc],
-    ['Recruiting Coordinator',curCoach.recruitingCoord]
-  ].map(function(row){
-    var tbd=!row[1]||row[1]==='TBD';
-    return '<div class="cm-staff-card">'+
-      '<div class="cm-staff-role">'+ex(row[0])+'</div>'+
-      '<div class="'+(tbd?'cm-staff-tbd':'cm-staff-name')+'">'+ex(tbd?'TBD':row[1])+'</div>'+
-    '</div>';
-  }).join('');
+  document.getElementById('cmStaff').innerHTML=(function(){
+    var rows=[
+      {role:'Head Coach', name:curCoach.headCoach, tw:curCoach.hcTwitter, ig:curCoach.hcInstagram},
+      {role:'Off. Coordinator', name:curCoach.oc, tw:'', ig:''},
+      {role:'Def. Coordinator', name:curCoach.dc, tw:'', ig:''},
+      {role:'Recruiting Coord', name:curCoach.recruitingCoord, tw:curCoach.rcTwitter, ig:curCoach.rcInstagram}
+    ];
+    return rows.map(function(row){
+      var tbd=!row.name||row.name==='TBD';
+      var socials='';
+      if(row.tw) socials+='<a href="https://x.com/'+ex(row.tw)+'" target="_blank" rel="noopener" class="social-link-full x" style="margin-top:6px">'+xIcon()+'@'+ex(row.tw)+'</a>';
+      if(row.ig) socials+='<a href="https://instagram.com/'+ex(row.ig)+'" target="_blank" rel="noopener" class="social-link-full ig" style="margin-top:6px">'+igIcon()+'@'+ex(row.ig)+'</a>';
+      return '<div class="cm-staff-card">'+
+        '<div class="cm-staff-role">'+ex(row.role)+'</div>'+
+        '<div class="'+(tbd?'cm-staff-tbd':'cm-staff-name')+'">'+ex(tbd?'TBD':row.name)+'</div>'+
+        (socials?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">'+socials+'</div>':'')+
+      '</div>';
+    }).join('');
+  })();
 
-  // Staff page link
-  document.getElementById('cmStaffLink').innerHTML=curCoach.staffPage
-    ?'<a href="'+ex(curCoach.staffPage)+'" target="_blank" rel="noopener" class="cm-staff-link">View Full Staff Page &#x2197;</a>'
-    :'';
+  // Contact info + staff link
+  var contactHtml = '';
+  if(curCoach.contactEmail||curCoach.contactPhone||curCoach.mailingAddress) {
+    contactHtml += '<div style="background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.15);border-radius:var(--radius-md);padding:var(--space-md);margin-bottom:var(--space-md)">';
+    contactHtml += '<div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Contact Information</div>';
+    if(curCoach.contactEmail) contactHtml += '<div style="font-size:.82rem;margin-bottom:5px"><span style="color:var(--text-muted);min-width:60px;display:inline-block">Email:</span> <a href="mailto:'+ex(curCoach.contactEmail)+'" style="color:var(--gold);text-decoration:none">'+ex(curCoach.contactEmail)+'</a></div>';
+    if(curCoach.contactPhone) contactHtml += '<div style="font-size:.82rem;margin-bottom:5px"><span style="color:var(--text-muted);min-width:60px;display:inline-block">Phone:</span> <span style="color:var(--text-primary)">'+ex(curCoach.contactPhone)+'</span></div>';
+    if(curCoach.mailingAddress) contactHtml += '<div style="font-size:.78rem;color:var(--text-muted);margin-top:4px">'+ex(curCoach.mailingAddress)+'</div>';
+    contactHtml += '</div>';
+  }
+  if(curCoach.staffPage) contactHtml += '<a href="'+ex(curCoach.staffPage)+'" target="_blank" rel="noopener" class="cm-staff-link">View Full Staff Page &#x2197;</a>';
+  document.getElementById('cmStaffLink').innerHTML = contactHtml;
 
   // Reset email section
   document.getElementById('cmEmailSection').classList.remove('open');
@@ -399,6 +439,12 @@ function openCoachModal(idx){
     if(p.height&&p.weight)document.getElementById('em_size').value=p.height+' / '+p.weight+' lbs';
   }
 
+  // Show contact email hint in email section
+  var hint = document.getElementById('emContactHint');
+  if(hint && curCoach.contactEmail) {
+    hint.innerHTML = 'Send to: <strong style="color:var(--gold)">'+ex(curCoach.contactEmail)+'</strong>';
+    hint.style.display = 'block';
+  } else if(hint) { hint.style.display = 'none'; }
   document.getElementById('coachModal').classList.add('open');
 }
 
