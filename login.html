@@ -355,6 +355,25 @@
       <div class="login-error" id="suError"></div>
       <div class="login-success" id="suSuccess"></div>
     </div>
+
+    <!-- Reset Password (shown when arriving from recovery email) -->
+    <div class="login-body" id="resetBody" style="display:none">
+      <div class="login-form-title">Set a new password</div>
+      <div class="login-form-sub">Choose a new password for your account. You'll stay signed in after.</div>
+
+      <div class="login-field">
+        <label class="login-label">New Password</label>
+        <input type="password" class="login-input" id="rp_pass" placeholder="Min 8 characters" autocomplete="new-password">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Confirm New Password</label>
+        <input type="password" class="login-input" id="rp_pass2" placeholder="Repeat password" autocomplete="new-password"
+          onkeydown="if(event.key==='Enter') doResetPassword()">
+      </div>
+      <button class="login-btn" id="rpBtn" onclick="doResetPassword()">Update Password</button>
+      <div class="login-error" id="rpError"></div>
+      <div class="login-success" id="rpSuccess"></div>
+    </div>
   </div>
 
   <div class="login-footer">
@@ -377,13 +396,57 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
+<script src="login-splash.js"></script>
 <script>
+// ---- Detect recovery flow early (before the "already logged in" redirect fires) ----
+var IS_RECOVERY = /[?#&]type=recovery(&|$)/.test(window.location.hash + window.location.search);
+
 // ---- Tab switching ----
 function setTab(tab, btn) {
   document.querySelectorAll('.login-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('signinBody').style.display = tab === 'signin' ? '' : 'none';
   document.getElementById('signupBody').style.display = tab === 'signup' ? '' : 'none';
+  document.getElementById('resetBody').style.display = 'none';
+}
+
+function showResetUI() {
+  document.getElementById('signinBody').style.display = 'none';
+  document.getElementById('signupBody').style.display = 'none';
+  document.getElementById('resetBody').style.display = '';
+  document.querySelectorAll('.login-tab').forEach(b => b.classList.remove('active'));
+}
+
+async function doResetPassword() {
+  var pass  = document.getElementById('rp_pass').value;
+  var pass2 = document.getElementById('rp_pass2').value;
+  var errEl = document.getElementById('rpError');
+  var sucEl = document.getElementById('rpSuccess');
+  var btn   = document.getElementById('rpBtn');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!pass || pass.length < 8) { showError(errEl, 'Password must be at least 8 characters.'); return; }
+  if (pass !== pass2) { showError(errEl, 'Passwords do not match.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Updating…';
+
+  try {
+    var sb = getSupabase();
+    if (!sb) throw new Error('Auth service not ready — refresh and try again.');
+    var { error } = await sb.auth.updateUser({ password: pass });
+    if (error) throw error;
+    sucEl.textContent = '✓ Password updated. Redirecting…';
+    sucEl.style.display = 'block';
+    // Strip recovery tokens from the URL so a refresh doesn't re-enter recovery mode.
+    history.replaceState(null, '', window.location.pathname);
+    setTimeout(function() { window.location.href = 'index.html'; }, 1200);
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Update Password';
+    showError(errEl, err.message || 'Could not update password.');
+  }
 }
 
 // ---- Sign In ----
@@ -394,18 +457,36 @@ async function doForgotPassword(e) {
     showError(document.getElementById('siError'), 'Enter your email address above first.');
     return;
   }
-  var btn = document.querySelector('[onclick="doForgotPassword(event)"]');
-  if (btn) btn.textContent = 'Sending…';
-  var { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/login.html'
-  });
+  var btn = e && e.currentTarget ? e.currentTarget : document.querySelector('[onclick="doForgotPassword(event)"]');
+  var originalText = btn ? btn.textContent : 'Forgot your password?';
+  if (btn) { btn.textContent = 'Sending…'; btn.style.pointerEvents = 'none'; }
   var msgEl = document.getElementById('resetMsg');
-  if (error) {
-    if (msgEl) { msgEl.style.display='block'; msgEl.textContent = 'Error: ' + error.message; msgEl.style.color='#c41e3a'; }
-  } else {
-    if (msgEl) { msgEl.style.display='block'; msgEl.textContent = 'Password reset email sent! Check your inbox.'; }
+  if (msgEl) { msgEl.style.display='block'; msgEl.textContent = 'Sending reset email…'; msgEl.style.color='var(--text-muted)'; }
+
+  try {
+    var sb = getSupabase();
+    if (!sb) throw new Error('Auth service not ready — refresh and try again.');
+
+    // Safety net: never leave the UI stuck if the network call hangs.
+    var result = await Promise.race([
+      sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/login.html' }),
+      new Promise(function(_, reject) { setTimeout(function(){ reject(new Error('Request timed out — check your connection.')); }, 15000); })
+    ]);
+    var error = result && result.error;
+    console.log('[forgotPassword] result:', result);
+
+    if (error) {
+      if (msgEl) { msgEl.textContent = 'Error: ' + error.message; msgEl.style.color='#c41e3a'; }
+    } else if (msgEl) {
+      msgEl.innerHTML = '✓ Reset email sent to <strong>' + email.replace(/[<>&]/g,'') + '</strong>.<br>Check your inbox and spam folder. If nothing arrives in a few minutes, email sending may be rate-limited.';
+      msgEl.style.color = '#50c878';
+    }
+  } catch (err) {
+    console.error('[forgotPassword] error:', err);
+    if (msgEl) { msgEl.textContent = 'Error: ' + (err.message || 'Unknown error'); msgEl.style.color='#c41e3a'; }
+  } finally {
+    if (btn) { btn.textContent = originalText; btn.style.pointerEvents = ''; }
   }
-  if (btn) btn.textContent = 'Forgot your password?';
 }
 
 async function doSignIn() {
@@ -431,9 +512,22 @@ async function doSignIn() {
     return;
   }
 
-  // Redirect to where they came from, or home
+  // Fetch minimal profile info for position-aware splash (fire-and-forget safe).
+  var splashOpts = { name: null, position: null };
+  try {
+    var sb = getSupabase();
+    if (sb && data && data.user) {
+      var pr = await sb.from('athletes').select('name, position').eq('user_id', data.user.id).maybeSingle();
+      if (pr && pr.data) { splashOpts.name = pr.data.name; splashOpts.position = pr.data.position; }
+    }
+  } catch (_) { /* splash is non-blocking */ }
+
+  // Show motivational splash before redirect.
   const redirect = sessionStorage.getItem('camp8_redirect') || 'index.html';
   sessionStorage.removeItem('camp8_redirect');
+  if (typeof showLoginSplash === 'function') {
+    try { await showLoginSplash(splashOpts); } catch (_) {}
+  }
   window.location.href = redirect;
 }
 
@@ -474,6 +568,22 @@ function showError(el, msg) {
 
 // ---- Handle URL params ----
 document.addEventListener('DOMContentLoaded', async function() {
+  // Password recovery — show the "set new password" form and stop here.
+  // Also listen for the SDK's PASSWORD_RECOVERY event in case the hash was already consumed.
+  var sb = getSupabase();
+  if (sb) {
+    sb.auth.onAuthStateChange(function(event) {
+      if (event === 'PASSWORD_RECOVERY') {
+        IS_RECOVERY = true;
+        showResetUI();
+      }
+    });
+  }
+  if (IS_RECOVERY) {
+    showResetUI();
+    return;
+  }
+
   // Auto-switch to signup tab if ?tab=signup
   const params = new URLSearchParams(window.location.search);
   if (params.get('tab') === 'signup') {

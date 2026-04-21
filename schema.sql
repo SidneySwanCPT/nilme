@@ -242,3 +242,40 @@ CREATE TABLE IF NOT EXISTS coaches_admin (
 
 ALTER TABLE coaches_admin ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Authenticated users can read coaches" ON coaches_admin FOR SELECT USING (auth.role() = 'authenticated');
+
+-- ---- ATHLETE ACTION PLAN (AI-recommended next steps) ----
+CREATE TABLE IF NOT EXISTS athlete_actions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  athlete_id UUID REFERENCES athletes(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  detail TEXT,
+  category TEXT DEFAULT 'general', -- recruiting | nil | training | camp | academic | profile | general
+  priority INTEGER DEFAULT 2,      -- 1 high, 2 normal, 3 low
+  due_date DATE,
+  related_camp_id UUID REFERENCES athlete_starred_camps(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'open',      -- open | snoozed | completed | dismissed
+  snoozed_until DATE,
+  completed_at TIMESTAMPTZ,
+  source TEXT DEFAULT 'ai',        -- ai | user | system
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_actions_athlete ON athlete_actions(athlete_id, status);
+CREATE INDEX IF NOT EXISTS idx_actions_due ON athlete_actions(athlete_id, due_date);
+ALTER TABLE athlete_actions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Athletes manage own actions" ON athlete_actions FOR ALL
+  USING (athlete_id IN (SELECT id FROM athletes WHERE user_id = auth.uid()));
+
+-- ---- RATING SNAPSHOTS (historical 8-factor radar data) ----
+CREATE TABLE IF NOT EXISTS athlete_rating_snapshots (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  athlete_id UUID REFERENCES athletes(id) ON DELETE CASCADE,
+  overall INTEGER,
+  grade TEXT,
+  factors JSONB, -- { combine, production, offers, stars, social, academics, position, engagement } all 0-10
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_snapshots_athlete ON athlete_rating_snapshots(athlete_id, created_at DESC);
+ALTER TABLE athlete_rating_snapshots ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Athletes manage own rating snapshots" ON athlete_rating_snapshots FOR ALL
+  USING (athlete_id IN (SELECT id FROM athletes WHERE user_id = auth.uid()));
