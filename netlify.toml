@@ -14,6 +14,11 @@
 [functions."pattern-detect"]
   schedule = "0 11 * * 1"
 
+# Daily event reminders — 13:00 UTC. Emits T-30 / T-7 / post-date
+# reminders as athlete_actions rows; dedupes via event_reminders.
+[functions."event-reminders"]
+  schedule = "0 13 * * *"
+
 # ---- Redirects ----
 [[redirects]]
   from = "/api/*"

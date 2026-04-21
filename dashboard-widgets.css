@@ -3,31 +3,40 @@
    Matches the dashboard's dark-with-gold aesthetic.
    ============================================ */
 
-/* Shared tier colors used by calendar events + side list + detail sheet */
+/* Shared tier colors (legacy — still referenced by a couple badges) */
 :root {
   --c8-tier-1: #FFD700;
   --c8-tier-2: #c41e3a;
   --c8-tier-3: #e8872b;
   --c8-tier-4: #4a90d9;
   --c8-tier-5: #7a7a9a;
+  /* Event-type colors drive the calendar. Each event row provides
+     --c8ev via inline style for per-item borders/dots. */
+  --c8-type-camp:     #d4a843;
+  --c8-type-visit:    #4a90d9;
+  --c8-type-combine:  #50c878;
+  --c8-type-goal:     #a050c8;
+  --c8-type-game:     #c41e3a;
+  --c8-type-practice: #5bc0be;
 }
 
 /* ===== CALENDAR ===== */
 .c8cal {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr 320px;
   gap: var(--space-lg);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   margin-bottom: var(--space-lg);
+  position: relative;
 }
 @media(max-width:900px){ .c8cal { grid-template-columns: 1fr; } }
 
 .c8cal-head {
   display: flex; align-items: center; gap: 10px;
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm); flex-wrap: wrap;
 }
 .c8cal-title {
   flex: 1;
@@ -35,8 +44,8 @@
   font-size: 1.4rem; color: var(--text-primary);
   letter-spacing: 0.02em;
 }
-.c8cal-nav, .c8cal-today {
-  width: 32px; height: 32px;
+.c8cal-nav, .c8cal-today, .c8cal-add-btn {
+  height: 32px;
   border-radius: 8px;
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border-color);
@@ -46,8 +55,24 @@
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
+.c8cal-nav { width: 32px; }
 .c8cal-nav:hover, .c8cal-today:hover { border-color: var(--gold); color: var(--gold); }
-.c8cal-today { width: auto; padding: 0 14px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.c8cal-today { padding: 0 14px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.c8cal-add-btn {
+  padding: 0 14px; font-size: 0.78rem; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  background: var(--gold); color: #0a0a12; border-color: var(--gold);
+}
+.c8cal-add-btn:hover { background: var(--gold-bright); }
+
+/* Legend — one row of color dots + labels */
+.c8cal-legend {
+  display: flex; flex-wrap: wrap; gap: 6px 14px;
+  margin-bottom: var(--space-sm);
+  font-size: 0.7rem; color: var(--text-muted);
+}
+.c8cal-legend-chip { display: inline-flex; align-items: center; gap: 5px; }
+.c8cal-legend-chip i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
 .c8cal-dow {
   display: grid; grid-template-columns: repeat(7, 1fr);
@@ -66,7 +91,7 @@
   border-radius: 8px;
 }
 .c8cal-cell {
-  min-height: 86px;
+  min-height: 92px;
   background: var(--bg-secondary);
   border-radius: 6px;
   padding: 6px;
@@ -82,80 +107,172 @@
 }
 .c8cal-cell.today .c8cal-cell-num { color: var(--gold); }
 
+/* Event pill on a calendar cell — color driven by inline --c8ev */
 .c8cal-event {
   display: flex; align-items: center; gap: 5px;
   padding: 3px 6px; border-radius: 4px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-left: 3px solid var(--c8-tier-3);
-  font-size: 0.7rem; color: var(--text-secondary);
+  background: color-mix(in srgb, var(--c8ev, #d4a843) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c8ev, #d4a843) 35%, transparent);
+  border-left: 3px solid var(--c8ev, #d4a843);
+  font-size: 0.7rem; color: var(--text-primary);
   cursor: pointer; font-family: var(--font-body);
   text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   transition: all 0.15s;
 }
-.c8cal-event:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); transform: translateX(1px); }
-.c8cal-event.tier-1 { border-left-color: var(--c8-tier-1); }
-.c8cal-event.tier-2 { border-left-color: var(--c8-tier-2); }
-.c8cal-event.tier-3 { border-left-color: var(--c8-tier-3); }
-.c8cal-event.tier-4 { border-left-color: var(--c8-tier-4); }
-.c8cal-event.tier-5 { border-left-color: var(--c8-tier-5); }
-.c8cal-event.registered { background: rgba(80,200,120,0.09); border-color: rgba(80,200,120,0.25); }
-.c8cal-ev-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; opacity: 0.6; }
+.c8cal-event:hover {
+  background: color-mix(in srgb, var(--c8ev, #d4a843) 22%, transparent);
+  transform: translateX(1px);
+}
+.c8cal-event.registered::after {
+  content: '●'; color: #50c878; margin-left: auto; font-size: 0.55rem;
+}
+.c8cal-ev-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--c8ev, currentColor); flex-shrink: 0; }
 .c8cal-more { font-size: 0.65rem; color: var(--text-muted); padding-left: 6px; }
 
-/* Side panel */
+/* Agenda view — hidden on desktop, replaces grid on mobile */
+.c8cal-agenda { display: none; }
+.c8cal-agenda-day {
+  border: 1px solid var(--border-color); border-radius: 8px;
+  background: var(--bg-secondary); padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.c8cal-agenda-day.today { border-color: var(--gold); background: rgba(212,168,67,0.04); }
+.c8cal-agenda-date {
+  font-size: 0.68rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-muted); margin-bottom: 8px;
+}
+.c8cal-agenda-day.today .c8cal-agenda-date { color: var(--gold); }
+.c8cal-agenda-items { display: flex; flex-direction: column; gap: 6px; }
+.c8cal-agenda-item {
+  display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--c8ev, var(--gold));
+  border-radius: 6px;
+  cursor: pointer; font-family: var(--font-body);
+  text-align: left; color: var(--text-primary);
+  transition: background 0.15s;
+}
+.c8cal-agenda-item:hover { background: rgba(255,255,255,0.06); }
+.c8cal-agenda-icon { font-size: 1rem; line-height: 1; }
+.c8cal-agenda-name { font-size: 0.88rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c8cal-agenda-loc  { font-size: 0.72rem; color: var(--text-muted); text-align: right; }
+
+/* ---- Side panel ---- */
+.c8cal-side-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
 .c8cal-side-title {
   font-size: 0.72rem; font-weight: 800;
   text-transform: uppercase; letter-spacing: 0.1em;
-  color: var(--text-muted); margin-bottom: var(--space-sm);
+  color: var(--text-muted);
 }
-.c8cal-side-list { display: flex; flex-direction: column; gap: 8px; }
+.c8cal-side-close {
+  width: 28px; height: 28px;
+  border-radius: 50%; display: none;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary); cursor: pointer;
+}
+.c8cal-side-list { display: flex; flex-direction: column; gap: 8px; max-height: 640px; overflow-y: auto; scrollbar-width: thin; }
 .c8cal-side-item {
-  width: 100%;
-  display: flex; gap: 12px;
-  padding: 10px 12px;
+  display: flex; align-items: stretch;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-left: 3px solid var(--c8-tier-3);
-  border-radius: 6px;
-  text-align: left;
-  cursor: pointer; font-family: var(--font-body);
+  border-left: 3px solid var(--c8ev, var(--gold));
+  border-radius: 6px; overflow: hidden;
   transition: all 0.15s;
 }
-.c8cal-side-item:hover { border-color: var(--gold); border-left-color: var(--gold); background: var(--gold-dim); }
-.c8cal-side-item.tier-1 { border-left-color: var(--c8-tier-1); }
-.c8cal-side-item.tier-2 { border-left-color: var(--c8-tier-2); }
-.c8cal-side-item.tier-3 { border-left-color: var(--c8-tier-3); }
-.c8cal-side-item.tier-4 { border-left-color: var(--c8-tier-4); }
+.c8cal-side-item:hover { border-color: var(--gold); }
+.c8cal-side-main {
+  flex: 1;
+  display: flex; gap: 12px;
+  padding: 10px 12px;
+  background: none; border: none;
+  text-align: left; cursor: pointer; font-family: var(--font-body);
+  color: var(--text-primary); min-width: 0;
+}
 .c8cal-side-date {
   font-family: var(--font-display);
-  font-size: 1rem; color: var(--gold);
-  line-height: 1.1; min-width: 46px;
-  text-align: center;
+  font-size: 1rem; color: var(--c8ev, var(--gold));
+  line-height: 1.1; min-width: 46px; text-align: center;
 }
 .c8cal-side-body { flex: 1; min-width: 0; }
-.c8cal-side-name {
-  font-size: 0.82rem; font-weight: 700; color: var(--text-primary);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.c8cal-side-name { font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c8cal-side-icon { font-size: 0.95rem; }
+.c8cal-side-loc  { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+.c8cal-side-loc em { color: var(--text-muted); opacity: 0.6; font-style: normal; }
+.c8cal-side-cd   { font-size: 0.7rem; color: var(--c8ev, var(--gold)); margin-top: 3px; font-weight: 700; }
+.c8cal-side-actions {
+  display: flex; flex-direction: column;
+  border-left: 1px solid var(--border-color);
 }
-.c8cal-side-loc { font-size: 0.72rem; color: var(--text-muted); margin-top: 1px; }
-.c8cal-side-cd  { font-size: 0.68rem; color: var(--gold); margin-top: 3px; font-weight: 600; }
+.c8cal-side-act {
+  width: 36px; flex: 1;
+  background: transparent; border: none; border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted); cursor: pointer; font-family: var(--font-body); font-size: 0.95rem;
+  transition: all 0.15s;
+}
+.c8cal-side-act:last-child { border-bottom: none; }
+.c8cal-side-act:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
 .c8cal-empty { padding: 20px 10px; text-align: center; color: var(--text-muted); font-size: 0.82rem; }
 .c8cal-empty a { color: var(--gold); }
 
-/* Detail popup */
-.c8cal-detail {
+.c8cal-side-toggle { display: none; }
+
+/* ---- Mobile: agenda view + bottom sheet ---- */
+@media(max-width:700px) {
+  .c8cal-legend { display: none; }
+  .c8cal-grid, .c8cal-dow { display: none; }
+  .c8cal-agenda { display: block; }
+
+  .c8cal-side {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    max-height: 72vh;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 18px 18px 0 0;
+    padding: 14px 16px;
+    z-index: 8800;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+    box-shadow: 0 -18px 46px rgba(0,0,0,0.55);
+  }
+  .c8cal-side.open { transform: translateY(0); }
+  .c8cal-side-close { display: flex; align-items: center; justify-content: center; }
+  .c8cal-side-toggle {
+    display: flex; align-items: center; gap: 6px;
+    position: fixed;
+    bottom: 90px; right: 24px;
+    z-index: 8700;
+    padding: 10px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--gold);
+    border-radius: 100px;
+    color: var(--gold); font-weight: 700; font-size: 0.78rem;
+    cursor: pointer; font-family: var(--font-body);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+  }
+}
+
+/* Detail popup + Add modal (shared styling) */
+.c8cal-detail, .c8cal-modal {
   position: fixed; inset: 0; z-index: 9500;
   background: rgba(8,8,16,0.86); backdrop-filter: blur(4px);
   display: none; align-items: center; justify-content: center;
   padding: var(--space-lg);
 }
-.c8cal-detail.open { display: flex; }
+.c8cal-detail.open, .c8cal-modal.open { display: flex; }
 .c8cal-sheet {
   width: 100%; max-width: 560px;
   max-height: 86vh; overflow-y: auto;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
+  border-top: 3px solid var(--c8ev, var(--gold));
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   position: relative;
@@ -173,27 +290,34 @@
 }
 .c8cal-close:hover { color: var(--text-primary); border-color: var(--gold); }
 
-.c8cal-sheet-tier {
+.c8cal-sheet-type {
   display: inline-block;
-  font-size: 0.65rem; font-weight: 800;
+  font-size: 0.68rem; font-weight: 800;
   letter-spacing: 0.12em; text-transform: uppercase;
-  padding: 3px 10px; border-radius: 100px;
-  background: rgba(212,168,67,0.12); color: var(--gold);
+  padding: 4px 12px; border-radius: 100px;
+  background: color-mix(in srgb, var(--c8ev, #d4a843) 15%, transparent);
+  color: var(--c8ev, var(--gold));
   margin-bottom: 10px;
 }
-.c8cal-sheet-tier.tier-1 { color: var(--c8-tier-1); background: rgba(255,215,0,0.12); }
-.c8cal-sheet-tier.tier-2 { color: var(--c8-tier-2); background: rgba(196,30,58,0.12); }
-.c8cal-sheet-tier.tier-4 { color: var(--c8-tier-4); background: rgba(74,144,217,0.12); }
 
 .c8cal-sheet-title {
   font-family: var(--font-display);
   font-size: 1.6rem; color: var(--text-primary);
-  margin: 0 0 8px 0; line-height: 1.15;
+  margin: 0 0 10px 0; line-height: 1.15;
 }
 .c8cal-sheet-meta {
   display: flex; flex-wrap: wrap; gap: 10px 16px;
   font-size: 0.82rem; color: var(--text-secondary);
   margin-bottom: 6px;
+}
+.c8cal-sheet-notes {
+  font-size: 0.85rem; color: var(--text-secondary);
+  line-height: 1.55;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border-left: 2px solid var(--c8ev, var(--gold));
+  border-radius: 4px;
+  margin: 10px 0;
 }
 .c8cal-status {
   padding: 2px 10px; border-radius: 100px;
@@ -201,52 +325,142 @@
   background: rgba(255,255,255,0.06);
 }
 .c8cal-status.registered { background: rgba(80,200,120,0.14); color: #50c878; }
-.c8cal-status.planning { background: rgba(232,135,43,0.14); color: #e8872b; }
+.c8cal-status.planning   { background: rgba(232,135,43,0.14); color: #e8872b; }
+.c8cal-status.attended   { background: rgba(74,144,217,0.14); color: #4a90d9; }
 .c8cal-countdown {
-  font-size: 0.78rem; color: var(--gold);
+  font-size: 0.78rem; color: var(--c8ev, var(--gold));
   margin-bottom: var(--space-lg); font-weight: 700;
 }
 
 .c8cal-sheet-section-title {
   font-size: 0.72rem; font-weight: 800;
   letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--gold);
+  color: var(--c8ev, var(--gold));
   margin: var(--space-md) 0 10px 0;
+  display: flex; align-items: center; justify-content: space-between;
 }
+.c8cal-prep-regen {
+  font-size: 0.65rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 100px;
+  background: transparent; border: 1px solid var(--border-color);
+  color: var(--text-muted); cursor: pointer; font-family: var(--font-body);
+  text-transform: none; letter-spacing: 0;
+}
+.c8cal-prep-regen:hover { color: var(--gold); border-color: var(--gold); }
 
-.c8cal-prep { display: flex; flex-direction: column; gap: 12px; margin-bottom: var(--space-lg); }
-.c8cal-prep-step {
-  display: flex; gap: 14px;
-  padding: 12px 14px;
+/* Interactive prep checklist (persisted in athlete_calendar.prep_checklist) */
+.c8cal-prep-list-wrap { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--space-md); }
+.c8cal-prep-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 6px;
+  font-size: 0.88rem; color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.c8cal-prep-item:hover { background: rgba(255,255,255,0.06); }
+.c8cal-prep-item input[type="checkbox"] {
+  margin-top: 2px;
+  accent-color: var(--c8ev, var(--gold));
+}
+.c8cal-prep-item.done {
   opacity: 0.55;
-  transition: all 0.2s;
+  text-decoration: line-through;
+  text-decoration-color: var(--text-muted);
 }
-.c8cal-prep-step.active {
-  opacity: 1;
-  border-color: var(--gold);
-  background: rgba(212,168,67,0.06);
+.c8cal-prep-empty {
+  padding: 14px; color: var(--text-muted); font-size: 0.85rem;
+  text-align: center;
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
 }
-.c8cal-prep-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  margin-top: 5px; flex-shrink: 0;
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.05);
-}
-.c8cal-prep-step.active .c8cal-prep-dot { background: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,67,0.15); }
-.c8cal-prep-title {
-  font-size: 0.8rem; font-weight: 800;
-  letter-spacing: 0.03em; color: var(--text-primary);
-  margin-bottom: 4px;
-}
-.c8cal-prep-list { margin: 0; padding-left: 16px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.55; }
-.c8cal-prep-list li { margin-bottom: 3px; }
-.c8cal-prep-empty { padding: var(--space-md); color: var(--text-muted); font-size: 0.85rem; }
 
-.c8cal-sheet-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* Results logger form */
+.c8cal-results-form {
+  padding: 14px;
+  background: rgba(80,200,120,0.04);
+  border: 1px solid rgba(80,200,120,0.2);
+  border-radius: 8px;
+  margin-bottom: var(--space-md);
+}
+.c8cal-results-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-bottom: 10px;
+}
+.c8cal-results-grid label {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.c8cal-results-notes { grid-column: 1 / -1; }
+.c8cal-results-grid input, .c8cal-results-grid textarea {
+  padding: 8px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  outline: none; resize: vertical;
+}
+.c8cal-results-grid input:focus, .c8cal-results-grid textarea:focus { border-color: #50c878; }
+.c8cal-results-summary {
+  padding: 10px 12px;
+  background: rgba(80,200,120,0.08);
+  border: 1px solid rgba(80,200,120,0.25);
+  border-radius: 6px;
+  font-size: 0.85rem; color: var(--text-primary);
+  line-height: 1.6;
+  margin-bottom: var(--space-md);
+}
+.c8cal-results-summary strong { color: #50c878; font-weight: 700; }
+
+/* Add Event form */
+.c8cal-add-form { display: flex; flex-direction: column; gap: 12px; }
+.c8cal-add-form label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted);
+}
+.c8cal-add-form input, .c8cal-add-form select, .c8cal-add-form textarea {
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary); font-family: var(--font-body); font-size: 0.88rem;
+  outline: none; text-transform: none; letter-spacing: 0; font-weight: 400;
+}
+.c8cal-add-form input:focus, .c8cal-add-form select:focus, .c8cal-add-form textarea:focus { border-color: var(--gold); }
+.c8cal-add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.c8cal-add-actions { display: flex; gap: 8px; margin-top: 6px; }
+.c8cal-camp-picker {
+  padding: 10px 12px;
+  background: rgba(212,168,67,0.05);
+  border: 1px solid rgba(212,168,67,0.2);
+  border-radius: 8px;
+}
+.c8cal-camp-results { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; max-height: 180px; overflow-y: auto; }
+.c8cal-camp-result {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  text-align: left; cursor: pointer; font-family: var(--font-body);
+  color: var(--text-primary);
+}
+.c8cal-camp-result:hover { border-color: var(--gold); }
+.c8cal-camp-result.empty, .c8cal-camp-result.picked {
+  cursor: default; background: transparent; border-color: transparent;
+  color: var(--text-muted); text-align: center; padding: 8px 10px;
+}
+.c8cal-camp-result.picked { color: #50c878; }
+.c8cal-camp-result-name { font-size: 0.85rem; font-weight: 700; }
+.c8cal-camp-result-loc { font-size: 0.72rem; color: var(--text-muted); }
+
+.c8cal-sheet-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: var(--space-md); }
 .c8cal-btn {
   padding: 10px 18px;
   background: transparent;
@@ -262,6 +476,8 @@
 .c8cal-btn.primary { background: var(--gold); color: #0a0a12; border-color: var(--gold); }
 .c8cal-btn.primary:hover { background: var(--gold-bright); color: #0a0a12; }
 .c8cal-btn.outline { border-color: rgba(212,168,67,0.3); color: var(--gold); }
+.c8cal-btn.danger  { border-color: rgba(196,30,58,0.35); color: #e05068; }
+.c8cal-btn.danger:hover { border-color: #c41e3a; color: #fff; background: rgba(196,30,58,0.15); }
 
 /* ===== NIL BAR CHART ===== */
 .c8bars-wrap {

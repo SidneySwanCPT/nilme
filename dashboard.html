@@ -691,6 +691,7 @@ async function loadDashboard() {
     loadRatingSnapshots(),
     loadActions(),
     loadLatestScore(),
+    loadCalendarEvents(),
   ]);
 
   updateStatCards();
@@ -1195,12 +1196,175 @@ function renderNilHistoryChart(targetId) {
   C8.nilBars.render(el, nilHistory);
 }
 
+// ---- Unified calendar events ----
+let calendarEvents = [];
+async function loadCalendarEvents() {
+  if (!athleteId) return;
+  const sb2 = getSupabase();
+  const { data, error } = await sb2.from('athlete_calendar')
+    .select('*').eq('athlete_id', athleteId).order('event_date', { ascending: true });
+  if (error) console.error('loadCalendarEvents', error);
+  calendarEvents = data || [];
+}
+
+// Deterministic fallback checklist by event type + days-out (used if AI unavailable).
+function buildFallbackChecklist(eventType, daysOut) {
+  const inDays = (daysOut == null || daysOut < 0) ? null : daysOut;
+  const itemsByType = {
+    camp: [
+      inDays != null && inDays > 14 ? 'Lock in a 3-week training block focused on position drills' : null,
+      inDays != null && inDays > 14 ? 'Update highlight reel with most recent film' : null,
+      'Email 3 coaches who will be watching to introduce yourself',
+      'Confirm registration + required paperwork',
+      inDays != null && inDays <= 7 ? 'Taper intensity — sleep 8h, hydrate, no new training stressors' : 'Book travel + lodging if needed',
+      inDays != null && inDays <= 7 ? 'Pack: cleats, mouthpiece, 2 jerseys, IDs, medical forms' : 'Pick outfit + jersey number',
+      'Arrive 45 minutes early, warm up with intent',
+      'Introduce yourself to every coach by name + position'
+    ],
+    visit: [
+      'Write down 5 questions you will ask the coaching staff',
+      'Review the roster, depth chart, offensive/defensive scheme',
+      'Bring updated transcript + test scores',
+      'Prepare a 60-second self intro (film highlights on phone)',
+      'Dress the part — clean, coachable, professional',
+      'Take notes during the tour — specifics matter for thank-you emails'
+    ],
+    combine: [
+      'Book a speed-training session focused on first 10 yards',
+      'Record a baseline forty earlier in the week',
+      'Hydrate + carb-load the day before',
+      'Warm-up routine: 10 min dynamic, 3× strides, plyos',
+      'Wear tested gear — no new cleats or gloves',
+      'Log every result in the Camp 8 dashboard after'
+    ],
+    practice: [
+      'Review film from last week and pick 1 thing to correct',
+      'Arrive 15 min early for pre-practice mobility',
+      'Compete on every rep — attitude is the technique multiplier'
+    ],
+    game: [
+      'Film study on the opponent — top 2 tendencies',
+      'Nutrition: pre-game meal 3–4 hours out',
+      'Mental rep of the first 3 scripted plays',
+      'Take 10 photos / clips for social content after'
+    ],
+    goal: [
+      'Break the goal into 3 weekly milestones',
+      'Write the target value in your dashboard goals',
+      'Pick a daily action that compounds toward it',
+      'Review progress every Sunday — adjust if off pace'
+    ]
+  };
+  return (itemsByType[eventType] || itemsByType.camp)
+    .filter(Boolean)
+    .map((item, i) => ({ id: 'p' + i, item: item, done: false, ai_generated: false }));
+}
+
+// Call Claude to generate a contextual checklist. Falls back on failure.
+async function generatePrepChecklist(ev) {
+  const start = ev.event_date ? new Date(ev.event_date + 'T00:00:00') : null;
+  const days = start ? Math.max(0, Math.round((start - new Date()) / 86400000)) : null;
+  if (typeof CAMP8_AI === 'undefined') return buildFallbackChecklist(ev.event_type, days);
+  try {
+    const ctx = buildAthleteContext();
+    const sys = 'You produce a JSON array of 6-8 prep checklist items tailored to a high school football athlete. Each item: { "item": "<specific, actionable sentence>" }. Return ONLY the JSON array, no prose.';
+    const user = 'Event: ' + ev.event_type + ' — "' + ev.event_name + '" on ' + ev.event_date
+      + (ev.location ? ' at ' + ev.location : '')
+      + (days != null ? ' (' + days + ' days out)' : '')
+      + (ev.notes ? '. Notes: ' + ev.notes : '')
+      + '\n\nAthlete context:\n' + ctx
+      + '\n\nGenerate the checklist.';
+    const reply = await CAMP8_AI.send({ messages: [{ role: 'user', content: user }], system: sys, max_tokens: 700 });
+    const match = reply.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('No JSON in AI response');
+    const arr = JSON.parse(match[0]);
+    return arr.slice(0, 10).map((x, i) => ({ id: 'p' + i, item: x.item || x.text || String(x), done: false, ai_generated: true }));
+  } catch (err) {
+    console.warn('Prep AI fallback:', err.message);
+    return buildFallbackChecklist(ev.event_type, days);
+  }
+}
+
 function renderCalendarIn(targetId) {
   const el = document.getElementById(targetId);
   if (!el || !window.C8) return;
-  C8.calendar.render(el, starredCamps, {
-    onPrep: function(camp) {
-      if (C8.dashChat) C8.dashChat.open('Build me a focused prep plan for ' + camp.camp_name + ' on ' + (camp.camp_dates || 'the scheduled date') + '. What should I prioritize starting today?');
+  C8.calendar.render(el, calendarEvents, {
+    onAdd: async (payload) => {
+      const sb2 = getSupabase();
+      // Generate prep checklist up-front for camps/visits/combines.
+      const shell = { ...payload, athlete_id: athleteId, status: 'planned' };
+      if (['camp','visit','combine','game'].includes(payload.event_type)) {
+        try { shell.prep_checklist = await generatePrepChecklist({ ...shell, event_date: shell.event_date }); } catch (_) {}
+      }
+      const { data, error } = await sb2.from('athlete_calendar').insert(shell).select().single();
+      if (error) throw error;
+      calendarEvents.push(data);
+      renderCalendarIn(targetId);
+      if (typeof showToast === 'function') showToast('Event added to calendar', 'success');
+    },
+    onRemove: async (ev) => {
+      const sb2 = getSupabase();
+      await sb2.from('athlete_calendar').delete().eq('id', ev.id);
+      calendarEvents = calendarEvents.filter(x => x.id !== ev.id);
+      renderCalendarIn(targetId);
+    },
+    onShare: (ev) => {
+      // navigator.share / clipboard handled inside widget; dashboard can log here later.
+    },
+    onLogResults: async (eventId, results) => {
+      const sb2 = getSupabase();
+      const { data: updated, error } = await sb2.from('athlete_calendar')
+        .update({ results_logged: results, results_logged_at: new Date().toISOString(), status: 'attended' })
+        .eq('id', eventId).select().single();
+      if (error) { alert('Could not save results: ' + error.message); return; }
+      // Update local cache
+      const idx = calendarEvents.findIndex(x => x.id === eventId);
+      if (idx >= 0) calendarEvents[idx] = updated;
+      // If the event had combine measurables, mirror them into athlete_combine_scores
+      // so the scoring engine picks them up on next calc.
+      if (updated.event_type === 'combine' || updated.event_type === 'camp') {
+        const maybe = {};
+        ['forty','vertical','shuttle','cone','bench','broad'].forEach(k => {
+          if (results[k]) maybe[k] = isNaN(Number(results[k])) ? results[k] : Number(results[k]);
+        });
+        if (Object.keys(maybe).length) {
+          await sb2.from('athlete_combine_scores').insert({
+            athlete_id: athleteId,
+            pos: athleteProfile && athleteProfile.position,
+            ...maybe,
+            notes: 'Logged from ' + updated.event_name
+          });
+          await loadCombineHistory();
+        }
+      }
+      renderCalendarIn(targetId);
+      // Trigger a fresh score calc since results changed scoring inputs
+      recalcScore();
+      if (typeof showToast === 'function') showToast('Results saved — score updating', 'success');
+    },
+    onTogglePrepItem: async (eventId, itemId) => {
+      const ev = calendarEvents.find(x => x.id === eventId);
+      if (!ev) return;
+      const prep = Array.isArray(ev.prep_checklist) ? ev.prep_checklist.slice() : [];
+      const idx = prep.findIndex(p => String(p.id) === String(itemId));
+      if (idx < 0) return;
+      prep[idx] = { ...prep[idx], done: !prep[idx].done };
+      const sb2 = getSupabase();
+      await sb2.from('athlete_calendar').update({ prep_checklist: prep }).eq('id', eventId);
+      ev.prep_checklist = prep;
+    },
+    onGeneratePrep: async (eventId) => {
+      const ev = calendarEvents.find(x => x.id === eventId);
+      if (!ev) return;
+      if (typeof showToast === 'function') showToast('Generating AI checklist…', 'info');
+      const prep = await generatePrepChecklist(ev);
+      const sb2 = getSupabase();
+      await sb2.from('athlete_calendar').update({ prep_checklist: prep }).eq('id', eventId);
+      ev.prep_checklist = prep;
+      renderCalendarIn(targetId);
+    },
+    onAskAI: (ev) => {
+      if (C8.dashChat) C8.dashChat.open('Build me a focused prep plan for ' + ev.event_name + ' on ' + (ev.event_date || 'the scheduled date') + '. What should I prioritize starting today?');
     }
   });
 }

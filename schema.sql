@@ -424,3 +424,67 @@ ALTER TABLE detected_patterns ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public read factors" ON scoring_factors FOR SELECT USING (TRUE);
 CREATE POLICY "Public read formula versions" ON scoring_formula_versions FOR SELECT USING (TRUE);
 -- Modifiers / trend_weights / detected_patterns have NO public policy — server-only.
+
+-- ============================================
+-- UNIFIED CALENDAR
+-- One row per calendar event (camp, visit, combine, practice, game, goal).
+-- Supersedes athlete_starred_camps for display; that table is still written
+-- by the camps browse page for backward compatibility.
+-- ============================================
+CREATE TABLE IF NOT EXISTS athlete_calendar (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  athlete_id UUID REFERENCES athletes(id) ON DELETE CASCADE NOT NULL,
+  event_type TEXT NOT NULL,              -- camp | visit | combine | practice | game | goal
+  event_name TEXT NOT NULL,
+  event_date DATE NOT NULL,
+  event_end_date DATE,                   -- multi-day events
+  location TEXT,
+  notes TEXT,
+  status TEXT DEFAULT 'planned',         -- planned | registered | attended | missed | completed
+  prep_checklist JSONB,                  -- [{ id, item, done, ai_generated }]
+  results_logged JSONB,                  -- free-form: forty, vertical, notes, etc.
+  results_logged_at TIMESTAMPTZ,
+  source TEXT DEFAULT 'manual',          -- manual | camp8_database | legacy_starred | import
+  source_ref TEXT,                       -- e.g. CAMPS_DATA.id when source=camp8_database
+  camp_tier INTEGER,
+  registration_url TEXT,
+  color_hint TEXT,                       -- optional override of event_type color
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_calendar_athlete_date ON athlete_calendar(athlete_id, event_date);
+CREATE INDEX IF NOT EXISTS idx_calendar_type ON athlete_calendar(athlete_id, event_type);
+CREATE INDEX IF NOT EXISTS idx_calendar_pending_results ON athlete_calendar(athlete_id, event_date)
+  WHERE results_logged IS NULL AND event_type IN ('camp','combine');
+
+ALTER TABLE athlete_calendar ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Athletes manage own calendar" ON athlete_calendar FOR ALL
+  USING (athlete_id IN (SELECT id FROM athletes WHERE user_id = auth.uid()));
+
+CREATE OR REPLACE FUNCTION touch_calendar_updated_at()
+RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = NOW(); RETURN NEW; END; $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_calendar_touch ON athlete_calendar;
+CREATE TRIGGER trg_calendar_touch BEFORE UPDATE ON athlete_calendar
+  FOR EACH ROW EXECUTE FUNCTION touch_calendar_updated_at();
+
+-- ============================================
+-- EVENT REMINDERS
+-- Driven by netlify/functions/event-reminders.js (daily cron).
+-- When a reminder fires it creates an athlete_actions row and links it via action_id.
+-- The (calendar_id, kind) unique constraint is the dedupe mechanism.
+-- ============================================
+CREATE TABLE IF NOT EXISTS event_reminders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  calendar_id UUID REFERENCES athlete_calendar(id) ON DELETE CASCADE NOT NULL,
+  athlete_id UUID REFERENCES athletes(id) ON DELETE CASCADE NOT NULL,
+  kind TEXT NOT NULL,                    -- t_minus_30 | t_minus_7 | post_date_results
+  due_at DATE NOT NULL,
+  sent_at TIMESTAMPTZ,
+  action_id UUID REFERENCES athlete_actions(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(calendar_id, kind)
+);
+CREATE INDEX IF NOT EXISTS idx_reminders_unsent ON event_reminders(due_at) WHERE sent_at IS NULL;
+ALTER TABLE event_reminders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Athletes read own reminders" ON event_reminders FOR SELECT
+  USING (athlete_id IN (SELECT id FROM athletes WHERE user_id = auth.uid()));

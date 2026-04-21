@@ -24,14 +24,30 @@
   function fmt(d, opts) { return d.toLocaleDateString('en-US', opts || { month:'short', day:'numeric', year:'numeric' }); }
 
   // ===========================================================
-  // 1) CAMPS CALENDAR
+  // 1) UNIFIED CALENDAR (camps + visits + combines + games + practices + goals)
+  //    Data source: athlete_calendar rows. Handlers come in via opts.
   // ===========================================================
-  var CAL_STATE = { monthOffset: 0, camps: [], onPrep: null };
+  var TYPE_STYLE = {
+    camp:     { color: '#d4a843', label: 'Camp',     icon: '🏕️' },
+    visit:    { color: '#4a90d9', label: 'Visit',    icon: '🏛️' },
+    combine:  { color: '#50c878', label: 'Combine',  icon: '⚡'  },
+    goal:     { color: '#a050c8', label: 'Goal',     icon: '🎯'  },
+    game:     { color: '#c41e3a', label: 'Game',     icon: '🏈'  },
+    practice: { color: '#5bc0be', label: 'Practice', icon: '💪'  }
+  };
+  var CAL_STATE = {
+    monthOffset: 0,
+    events: [],
+    handlers: {}, // { onAdd, onRemove, onShare, onLogResults, onTogglePrepItem, onAskAI, onOpenDetail }
+    agendaMode: false
+  };
 
-  function calendar_render(root, camps, opts) {
-    CAL_STATE.camps = Array.isArray(camps) ? camps.slice() : [];
-    CAL_STATE.onPrep = opts && opts.onPrep ? opts.onPrep : null;
+  function calendar_render(root, events, opts) {
+    CAL_STATE.events = Array.isArray(events) ? events.slice() : [];
+    CAL_STATE.handlers = opts || {};
+    CAL_STATE.monthOffset = 0;
     if (!root) return;
+
     root.innerHTML =
       '<div class="c8cal">' +
         '<div class="c8cal-main">' +
@@ -40,19 +56,55 @@
             '<div class="c8cal-title" id="c8calTitle"></div>' +
             '<button class="c8cal-nav" data-c8cal-nav="1" aria-label="Next month">›</button>' +
             '<button class="c8cal-today" data-c8cal-nav="today">Today</button>' +
+            '<button class="c8cal-add-btn" data-c8cal-action="open-add">+ Add Event</button>' +
+          '</div>' +
+          '<div class="c8cal-legend">' +
+            Object.entries(TYPE_STYLE).map(function(ent) {
+              return '<span class="c8cal-legend-chip"><i style="background:' + ent[1].color + '"></i>' + ent[1].label + '</span>';
+            }).join('') +
           '</div>' +
           '<div class="c8cal-dow">' + ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){ return '<div>'+d+'</div>'; }).join('') + '</div>' +
           '<div class="c8cal-grid" id="c8calGrid"></div>' +
+          '<div class="c8cal-agenda" id="c8calAgenda" aria-hidden="true"></div>' +
         '</div>' +
-        '<aside class="c8cal-side">' +
-          '<div class="c8cal-side-title">Upcoming camps</div>' +
+        '<aside class="c8cal-side" id="c8calSide">' +
+          '<div class="c8cal-side-head">' +
+            '<div class="c8cal-side-title">Next 30 days</div>' +
+            '<button class="c8cal-side-close" data-c8cal-action="close-side" aria-label="Close">✕</button>' +
+          '</div>' +
           '<div class="c8cal-side-list" id="c8calSideList"></div>' +
         '</aside>' +
+        '<button class="c8cal-side-toggle" data-c8cal-action="open-side" aria-label="Upcoming events">Upcoming ›</button>' +
       '</div>' +
-      '<div class="c8cal-detail" id="c8calDetail" aria-hidden="true"></div>';
-    // Attach click delegate once per root element.
-    if (!root._c8calBound) { root.addEventListener('click', calendar_clickDelegate); root._c8calBound = true; }
+      '<div class="c8cal-detail" id="c8calDetail" aria-hidden="true"></div>' +
+      '<div class="c8cal-modal" id="c8calModal" aria-hidden="true"></div>';
+
+    if (!root._c8calBound) {
+      root.addEventListener('click', calendar_clickDelegate);
+      calendar_attachSwipe(root);
+      root._c8calBound = true;
+    }
     calendar_paint();
+  }
+
+  function calendar_attachSwipe(root) {
+    var startX = 0, startY = 0, active = false;
+    root.addEventListener('touchstart', function(e) {
+      if (!e.touches || !e.touches.length) return;
+      // Only track swipes starting on the calendar itself, not a sheet/modal.
+      if (e.target.closest && (e.target.closest('.c8cal-detail.open') || e.target.closest('.c8cal-modal.open'))) return;
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY; active = true;
+    }, { passive: true });
+    root.addEventListener('touchend', function(e) {
+      if (!active) return;
+      active = false;
+      if (!e.changedTouches || !e.changedTouches.length) return;
+      var dx = e.changedTouches[0].clientX - startX;
+      var dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) < 55 || Math.abs(dy) > Math.abs(dx)) return; // not a horizontal swipe
+      CAL_STATE.monthOffset += (dx < 0 ? 1 : -1);
+      calendar_paint();
+    }, { passive: true });
   }
 
   function calendar_clickDelegate(e) {
@@ -64,18 +116,47 @@
       calendar_paint();
       return;
     }
+    var actionEl = e.target.closest && e.target.closest('[data-c8cal-action]');
+    if (actionEl) {
+      var a = actionEl.getAttribute('data-c8cal-action');
+      var id = actionEl.getAttribute('data-c8cal-id');
+      if (a === 'open-add')        return calendar_openAddModal();
+      if (a === 'close-modal')     return calendar_closeAddModal();
+      if (a === 'submit-add')      return calendar_submitAdd();
+      if (a === 'pick-camp')       return calendar_pickCamp(actionEl.getAttribute('data-camp-id'));
+      if (a === 'open-side')       { document.getElementById('c8calSide').classList.add('open'); return; }
+      if (a === 'close-side')      { document.getElementById('c8calSide').classList.remove('open'); return; }
+      if (a === 'remove' && id)    return calendar_remove(id);
+      if (a === 'share' && id)     return calendar_share(id);
+      if (a === 'log-results' && id) return calendar_openResults(id);
+      if (a === 'submit-results')  return calendar_submitResults();
+      if (a === 'toggle-prep')     return calendar_togglePrep(id, actionEl.getAttribute('data-item-id'));
+      if (a === 'generate-prep' && id) return calendar_regeneratePrep(id);
+      if (a === 'ask-ai' && id)    return calendar_askAI(id);
+    }
+    var closeBtn = e.target.closest && e.target.closest('[data-c8cal-close]');
+    if (closeBtn) { calendar_closeDetail(); return; }
     var eventEl = e.target.closest && e.target.closest('[data-c8cal-event]');
     if (eventEl) {
       calendar_openDetail(eventEl.getAttribute('data-c8cal-event'));
       return;
     }
-    var closeBtn = e.target.closest && e.target.closest('[data-c8cal-close]');
-    if (closeBtn) { calendar_closeDetail(); return; }
-    // Click on backdrop (the overlay itself, not the sheet) closes the detail.
-    if (e.target && e.target.id === 'c8calDetail' && e.target.classList.contains('open')) {
-      calendar_closeDetail();
-    }
+    // Backdrops close
+    if (e.target && e.target.id === 'c8calDetail' && e.target.classList.contains('open')) calendar_closeDetail();
+    if (e.target && e.target.id === 'c8calModal'  && e.target.classList.contains('open')) calendar_closeAddModal();
   }
+
+  function parseIsoDate(str) {
+    if (!str) return null;
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(str));
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+    var d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function eventStart(ev)  { return parseIsoDate(ev.event_date); }
+  function eventEnd(ev)    { return parseIsoDate(ev.event_end_date) || parseIsoDate(ev.event_date); }
+  function keyForDate(d)   { return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
+  function typeStyle(ev)   { return TYPE_STYLE[ev.event_type] || TYPE_STYLE.camp; }
 
   function calendar_paint() {
     var today = new Date(); today.setHours(0,0,0,0);
@@ -84,47 +165,41 @@
     if (titleEl) titleEl.textContent = view.toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
     var gridEl = document.getElementById('c8calGrid');
-    if (!gridEl) return;
+    var agendaEl = document.getElementById('c8calAgenda');
+    if (!gridEl || !agendaEl) return;
+
+    // Expand multi-day events to their full date range, index by key.
+    var byDate = {};
+    CAL_STATE.events.forEach(function(ev) {
+      var s = eventStart(ev); var e = eventEnd(ev);
+      if (!s) return;
+      var cur = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+      var last = new Date(e.getFullYear(), e.getMonth(), e.getDate());
+      while (cur <= last) {
+        (byDate[keyForDate(cur)] = byDate[keyForDate(cur)] || []).push(ev);
+        cur.setDate(cur.getDate() + 1);
+      }
+    });
+
+    // ---- Grid (desktop) ----
     var firstDow = view.getDay();
     var daysInMonth = new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
     var prevMonthDays = new Date(view.getFullYear(), view.getMonth(), 0).getDate();
-
-    // Index camps by yyyy-mm-dd
-    var byDate = {};
-    CAL_STATE.camps.forEach(function(c) {
-      var d = parseCampStart(c.camp_dates);
-      if (!d) return;
-      var key = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
-      (byDate[key] = byDate[key] || []).push(c);
-    });
-
     var html = '';
-    var cells = 42;
-    for (var i = 0; i < cells; i++) {
+    for (var i = 0; i < 42; i++) {
       var dayNum, cellDate, inMonth = true;
-      if (i < firstDow) {
-        dayNum = prevMonthDays - firstDow + i + 1;
-        cellDate = new Date(view.getFullYear(), view.getMonth()-1, dayNum);
-        inMonth = false;
-      } else if (i >= firstDow + daysInMonth) {
-        dayNum = i - firstDow - daysInMonth + 1;
-        cellDate = new Date(view.getFullYear(), view.getMonth()+1, dayNum);
-        inMonth = false;
-      } else {
-        dayNum = i - firstDow + 1;
-        cellDate = new Date(view.getFullYear(), view.getMonth(), dayNum);
-      }
-      var key = cellDate.getFullYear() + '-' + (cellDate.getMonth()+1) + '-' + cellDate.getDate();
-      var events = byDate[key] || [];
+      if (i < firstDow) { dayNum = prevMonthDays - firstDow + i + 1; cellDate = new Date(view.getFullYear(), view.getMonth()-1, dayNum); inMonth = false; }
+      else if (i >= firstDow + daysInMonth) { dayNum = i - firstDow - daysInMonth + 1; cellDate = new Date(view.getFullYear(), view.getMonth()+1, dayNum); inMonth = false; }
+      else { dayNum = i - firstDow + 1; cellDate = new Date(view.getFullYear(), view.getMonth(), dayNum); }
+      var events = byDate[keyForDate(cellDate)] || [];
       var isToday = sameDay(cellDate, today);
-
       html += '<div class="c8cal-cell' + (inMonth ? '' : ' out') + (isToday ? ' today' : '') + '">' +
         '<div class="c8cal-cell-num">' + dayNum + '</div>';
       events.slice(0, 3).forEach(function(ev) {
-        var cls = 'c8cal-event tier-' + (ev.camp_tier || 3);
-        if (ev.status === 'registered') cls += ' registered';
-        html += '<button class="' + cls + '" data-c8cal-event="' + esc(ev.id) + '" title="' + esc(ev.camp_name) + '">' +
-          '<span class="c8cal-ev-dot"></span>' + esc(ev.camp_name) +
+        var st = typeStyle(ev);
+        var cls = 'c8cal-event type-' + esc(ev.event_type) + (ev.status === 'registered' ? ' registered' : '');
+        html += '<button class="' + cls + '" style="--c8ev:' + st.color + '" data-c8cal-event="' + esc(ev.id) + '" title="' + esc(ev.event_name) + '">' +
+          '<span class="c8cal-ev-dot"></span>' + esc(ev.event_name) +
         '</button>';
       });
       if (events.length > 3) html += '<div class="c8cal-more">+' + (events.length - 3) + ' more</div>';
@@ -132,74 +207,159 @@
     }
     gridEl.innerHTML = html;
 
-    // Side list — next 6 upcoming
-    var upcoming = CAL_STATE.camps
-      .map(function(c) { var d = parseCampStart(c.camp_dates); return { c: c, d: d }; })
-      .filter(function(x) { return x.d && x.d >= today; })
-      .sort(function(a, b) { return a.d - b.d })
-      .slice(0, 6);
+    // ---- Agenda (mobile) — all events in this view month, grouped by day ----
+    var monthStart = new Date(view.getFullYear(), view.getMonth(), 1);
+    var monthEnd   = new Date(view.getFullYear(), view.getMonth()+1, 0);
+    var agendaGroups = {};
+    CAL_STATE.events.forEach(function(ev) {
+      var s = eventStart(ev); if (!s) return;
+      var e = eventEnd(ev);
+      if (e < monthStart || s > monthEnd) return;
+      var clamped = s < monthStart ? monthStart : s;
+      var key = keyForDate(clamped);
+      (agendaGroups[key] = agendaGroups[key] || { date: clamped, items: [] }).items.push(ev);
+    });
+    var agendaKeys = Object.keys(agendaGroups).sort();
+    var aHtml = '';
+    if (!agendaKeys.length) {
+      aHtml = '<div class="c8cal-empty">No events this month. <button class="c8cal-btn outline" data-c8cal-action="open-add">+ Add one</button></div>';
+    } else {
+      aHtml = agendaKeys.map(function(k) {
+        var g = agendaGroups[k];
+        var isToday = sameDay(g.date, today);
+        return '<div class="c8cal-agenda-day' + (isToday ? ' today' : '') + '">' +
+          '<div class="c8cal-agenda-date">' + fmt(g.date, { weekday:'short', month:'short', day:'numeric' }) + '</div>' +
+          '<div class="c8cal-agenda-items">' +
+            g.items.map(function(ev) {
+              var st = typeStyle(ev);
+              return '<button class="c8cal-agenda-item type-' + esc(ev.event_type) + '" style="--c8ev:' + st.color + '" data-c8cal-event="' + esc(ev.id) + '">' +
+                '<span class="c8cal-agenda-icon">' + st.icon + '</span>' +
+                '<span class="c8cal-agenda-name">' + esc(ev.event_name) + '</span>' +
+                (ev.location ? '<span class="c8cal-agenda-loc">' + esc(ev.location) + '</span>' : '') +
+              '</button>';
+            }).join('') +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+    agendaEl.innerHTML = aHtml;
+
+    // ---- Side list — strict next 30 days ----
+    var horizon = new Date(today.getTime() + 30 * 86400000);
+    var upcoming = CAL_STATE.events
+      .map(function(ev) { return { ev: ev, d: eventStart(ev) }; })
+      .filter(function(x) { return x.d && x.d >= today && x.d <= horizon; })
+      .sort(function(a, b) { return a.d - b.d });
     var sideEl = document.getElementById('c8calSideList');
     if (sideEl) {
       if (!upcoming.length) {
-        sideEl.innerHTML = '<div class="c8cal-empty">Nothing scheduled.<br><a href="camps.html">Browse camps →</a></div>';
+        sideEl.innerHTML = '<div class="c8cal-empty">Nothing in the next 30 days.<br><button class="c8cal-btn outline" data-c8cal-action="open-add">+ Add event</button></div>';
       } else {
         sideEl.innerHTML = upcoming.map(function(x) {
           var days = daysBetween(today, x.d);
           var countdown = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : ('in ' + days + ' days');
-          return '<button class="c8cal-side-item tier-' + (x.c.camp_tier || 3) + '" data-c8cal-event="' + esc(x.c.id) + '">' +
-            '<div class="c8cal-side-date">' + fmt(x.d, { month:'short', day:'numeric' }) + '</div>' +
-            '<div class="c8cal-side-body">' +
-              '<div class="c8cal-side-name">' + esc(x.c.camp_name) + '</div>' +
-              '<div class="c8cal-side-loc">' + esc(x.c.camp_city || '') + (x.c.camp_state ? ', ' + esc(x.c.camp_state) : '') + '</div>' +
-              '<div class="c8cal-side-cd">' + countdown + '</div>' +
+          var st = typeStyle(x.ev);
+          return '<div class="c8cal-side-item type-' + esc(x.ev.event_type) + '" style="--c8ev:' + st.color + '">' +
+            '<button class="c8cal-side-main" data-c8cal-event="' + esc(x.ev.id) + '">' +
+              '<div class="c8cal-side-date">' + fmt(x.d, { month:'short', day:'numeric' }) + '</div>' +
+              '<div class="c8cal-side-body">' +
+                '<div class="c8cal-side-name"><span class="c8cal-side-icon">' + st.icon + '</span>' + esc(x.ev.event_name) + '</div>' +
+                '<div class="c8cal-side-loc">' + (x.ev.location ? esc(x.ev.location) : '<em>No location</em>') + '</div>' +
+                '<div class="c8cal-side-cd">' + countdown + '</div>' +
+              '</div>' +
+            '</button>' +
+            '<div class="c8cal-side-actions">' +
+              '<button class="c8cal-side-act" data-c8cal-action="share"  data-c8cal-id="' + esc(x.ev.id) + '" title="Share">↗</button>' +
+              '<button class="c8cal-side-act" data-c8cal-action="remove" data-c8cal-id="' + esc(x.ev.id) + '" title="Remove">✕</button>' +
             '</div>' +
-          '</button>';
+          '</div>';
         }).join('');
       }
     }
   }
 
-  function calendar_openDetail(campId) {
-    var camp = CAL_STATE.camps.find(function(c) { return String(c.id) === String(campId); });
-    if (!camp) return;
+  // ---------- Detail sheet ----------
+  function calendar_openDetail(id) {
+    var ev = CAL_STATE.events.find(function(x) { return String(x.id) === String(id); });
+    if (!ev) return;
     var el = document.getElementById('c8calDetail');
     if (!el) return;
-    var d = parseCampStart(camp.camp_dates);
+    var start = eventStart(ev);
+    var end = eventEnd(ev);
     var today = new Date(); today.setHours(0,0,0,0);
-    var days = d ? daysBetween(today, d) : null;
-    var tierLabel = camp.camp_tier === 1 ? 'Elite' : camp.camp_tier === 2 ? 'Showcase' : 'Regional';
-    var register = camp.registration_url || (typeof CAMPS_DATA !== 'undefined' && (function() {
-      var match = CAMPS_DATA.find(function(cd) { return cd.id === camp.camp_id; });
-      return match ? match.registration_url : null;
-    })());
-
-    // Build AI prep timeline based on days-to-camp
-    var prepTimeline = buildPrepTimeline(days);
+    var days = start ? daysBetween(today, start) : null;
+    var isPast = start && start < today && !sameDay(start, today);
+    var st = typeStyle(ev);
+    var dateRange = start ? fmt(start) + (end && !sameDay(start, end) ? ' – ' + fmt(end) : '') : 'TBD';
+    var prep = Array.isArray(ev.prep_checklist) ? ev.prep_checklist : [];
 
     el.innerHTML =
-      '<div class="c8cal-sheet" role="dialog" aria-modal="true">' +
+      '<div class="c8cal-sheet" role="dialog" aria-modal="true" style="--c8ev:' + st.color + '">' +
         '<button class="c8cal-close" data-c8cal-close aria-label="Close">✕</button>' +
-        '<div class="c8cal-sheet-tier tier-' + (camp.camp_tier || 3) + '">' + esc(tierLabel) + ' Camp</div>' +
-        '<h3 class="c8cal-sheet-title">' + esc(camp.camp_name) + '</h3>' +
+        '<div class="c8cal-sheet-type">' + st.icon + ' ' + st.label + '</div>' +
+        '<h3 class="c8cal-sheet-title">' + esc(ev.event_name) + '</h3>' +
         '<div class="c8cal-sheet-meta">' +
-          '<span>📅 ' + esc(camp.camp_dates || 'TBD') + '</span>' +
-          '<span>📍 ' + esc(camp.camp_city || '') + (camp.camp_state ? ', ' + esc(camp.camp_state) : '') + '</span>' +
-          (camp.status ? '<span class="c8cal-status ' + esc(camp.status) + '">' + esc(camp.status) + '</span>' : '') +
+          '<span>📅 ' + esc(dateRange) + '</span>' +
+          (ev.location ? '<span>📍 ' + esc(ev.location) + '</span>' : '') +
+          (ev.status ? '<span class="c8cal-status ' + esc(ev.status) + '">' + esc(ev.status) + '</span>' : '') +
         '</div>' +
-        (days != null ? '<div class="c8cal-countdown">' + (days === 0 ? 'Happening today' : days < 0 ? 'Past event' : (days + ' days out')) + '</div>' : '') +
-        '<div class="c8cal-sheet-section-title">AI Prep Plan</div>' +
-        '<div class="c8cal-prep">' + prepTimeline + '</div>' +
+        (days != null ? '<div class="c8cal-countdown">' + (days === 0 ? 'Today' : days < 0 ? Math.abs(days) + ' days ago' : days + ' days out') + '</div>' : '') +
+        (ev.notes ? '<div class="c8cal-sheet-notes">' + esc(ev.notes) + '</div>' : '') +
+        renderPrepSection(ev, prep, isPast) +
+        renderResultsSection(ev, isPast) +
         '<div class="c8cal-sheet-actions">' +
-          (register ? '<a class="c8cal-btn primary" href="' + esc(register) + '" target="_blank" rel="noopener">Register / More Info</a>' : '') +
+          (ev.registration_url ? '<a class="c8cal-btn primary" href="' + esc(ev.registration_url) + '" target="_blank" rel="noopener">Register / More Info</a>' : '') +
+          (CAL_STATE.handlers.onAskAI ? '<button class="c8cal-btn outline" data-c8cal-action="ask-ai" data-c8cal-id="' + esc(ev.id) + '">💬 Ask Camp 8 AI</button>' : '') +
+          '<button class="c8cal-btn" data-c8cal-action="share"  data-c8cal-id="' + esc(ev.id) + '">↗ Share</button>' +
+          '<button class="c8cal-btn danger" data-c8cal-action="remove" data-c8cal-id="' + esc(ev.id) + '">Remove</button>' +
           '<button class="c8cal-btn" data-c8cal-close>Close</button>' +
-          (CAL_STATE.onPrep ? '<button class="c8cal-btn outline" id="c8calAskAi">Ask Camp 8 AI about this camp</button>' : '') +
         '</div>' +
       '</div>';
     el.setAttribute('aria-hidden', 'false');
     el.classList.add('open');
+  }
 
-    var askBtn = document.getElementById('c8calAskAi');
-    if (askBtn && CAL_STATE.onPrep) askBtn.addEventListener('click', function() { CAL_STATE.onPrep(camp); calendar_closeDetail(); });
+  function renderPrepSection(ev, prep, isPast) {
+    if (!prep.length) {
+      return '<div class="c8cal-sheet-section-title">Prep checklist</div>' +
+        '<div class="c8cal-prep-empty">No checklist yet.' +
+          (CAL_STATE.handlers.onGeneratePrep ? ' <button class="c8cal-btn outline" data-c8cal-action="generate-prep" data-c8cal-id="' + esc(ev.id) + '">Generate with AI</button>' : '') +
+        '</div>';
+    }
+    return '<div class="c8cal-sheet-section-title">Prep checklist' + (CAL_STATE.handlers.onGeneratePrep ? ' <button class="c8cal-prep-regen" data-c8cal-action="generate-prep" data-c8cal-id="' + esc(ev.id) + '">↻ Regenerate</button>' : '') + '</div>' +
+      '<div class="c8cal-prep-list-wrap">' +
+        prep.map(function(item, i) {
+          var itemId = item.id || String(i);
+          var done = !!item.done;
+          return '<label class="c8cal-prep-item' + (done ? ' done' : '') + '">' +
+            '<input type="checkbox" ' + (done ? 'checked' : '') + ' data-c8cal-action="toggle-prep" data-c8cal-id="' + esc(ev.id) + '" data-item-id="' + esc(itemId) + '"/>' +
+            '<span>' + esc(item.item || item.text || '') + '</span>' +
+          '</label>';
+        }).join('') +
+      '</div>';
+  }
+
+  function renderResultsSection(ev, isPast) {
+    if (!isPast) return '';
+    if (ev.results_logged) {
+      var r = ev.results_logged;
+      var summary = Object.keys(r).map(function(k) { return '<strong>' + esc(k) + ':</strong> ' + esc(r[k]); }).join(' · ');
+      return '<div class="c8cal-sheet-section-title">Results</div>' +
+        '<div class="c8cal-results-summary">' + summary + '</div>';
+    }
+    return '<div class="c8cal-sheet-section-title">Log your results</div>' +
+      '<form class="c8cal-results-form" id="c8calResultsForm" data-event-id="' + esc(ev.id) + '">' +
+        '<div class="c8cal-results-grid">' +
+          (ev.event_type === 'combine' || ev.event_type === 'camp'
+            ? '<label>40-yard <input name="forty" type="text" placeholder="4.58"></label>' +
+              '<label>Vertical <input name="vertical" type="text" placeholder="34"></label>' +
+              '<label>Shuttle <input name="shuttle" type="text" placeholder="4.21"></label>' +
+              '<label>Bench reps <input name="bench" type="text" placeholder="12"></label>'
+            : '') +
+          '<label class="c8cal-results-notes">Notes <textarea name="notes" rows="3" placeholder="Key takeaways, coach feedback, next steps…"></textarea></label>' +
+        '</div>' +
+        '<button type="button" class="c8cal-btn primary" data-c8cal-action="submit-results">Save results</button>' +
+      '</form>';
   }
 
   function calendar_closeDetail() {
@@ -210,36 +370,174 @@
     setTimeout(function() { el.innerHTML = ''; }, 180);
   }
 
-  function buildPrepTimeline(days) {
-    if (days == null) return '<div class="c8cal-prep-empty">Add a date to generate an AI prep plan.</div>';
-    var milestones = [
-      { cut: 45, title: '6+ weeks out', items: ['Start a camp-specific training block (position drills, 3x/week).','Book any travel/lodging and check medical paperwork.','Reach out to 2–3 coaches who will attend.'] },
-      { cut: 21, title: '2–3 weeks out', items: ['Dial in your 40-yard-dash start.','Record new highlight reel for recruiters you want to see you.','Update your profile with latest stats.'] },
-      { cut: 7,  title: 'Week of camp', items: ['Taper intensity — prioritize sleep + hydration.','Walk through the schedule with a parent/coach.','Prep gear bag: cleats, mouthpiece, two jerseys, ID.'] },
-      { cut: 2,  title: '48 hours out', items: ['Light shakeout session only.','Pack camp day snacks + fluids.','Print roster confirmation and medical forms.'] },
-      { cut: 0,  title: 'Camp day', items: ['Arrive 45 min early. Warm up sharp.','Introduce yourself to every coach by name + position.','Compete every rep. Film if allowed.'] },
-      { cut: -9999, title: 'After the camp', items: ['Send personalized thank-you email within 24 hours.','Post 1 clip to IG/TikTok with @tags to the coaches.','Save your combine numbers to your dashboard.'] }
-    ];
-    var html = '';
-    milestones.forEach(function(m, idx) {
-      var active;
-      if (days >= m.cut) {
-        // find the next milestone cut (smaller number) to pick the right bucket
-        var nextCut = idx < milestones.length - 1 ? milestones[idx+1].cut : -9999;
-        active = days > nextCut;
-      }
-      if (days < 0 && m.cut === -9999) active = true;
-      html +=
-        '<div class="c8cal-prep-step' + (active ? ' active' : '') + '">' +
-          '<div class="c8cal-prep-dot"></div>' +
-          '<div class="c8cal-prep-body">' +
-            '<div class="c8cal-prep-title">' + esc(m.title) + '</div>' +
-            '<ul class="c8cal-prep-list">' + m.items.map(function(i){ return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>' +
+  // ---------- Add Event modal ----------
+  function calendar_openAddModal() {
+    var el = document.getElementById('c8calModal'); if (!el) return;
+    el.innerHTML =
+      '<div class="c8cal-sheet" role="dialog" aria-modal="true">' +
+        '<button class="c8cal-close" data-c8cal-action="close-modal" aria-label="Close">✕</button>' +
+        '<h3 class="c8cal-sheet-title">Add Event</h3>' +
+        '<form id="c8calAddForm" class="c8cal-add-form">' +
+          '<label>Event type' +
+            '<select name="event_type" id="c8calAddType" required>' +
+              Object.entries(TYPE_STYLE).map(function(ent) { return '<option value="' + ent[0] + '">' + ent[1].icon + ' ' + ent[1].label + '</option>'; }).join('') +
+            '</select>' +
+          '</label>' +
+          '<div id="c8calCampPicker" class="c8cal-camp-picker">' +
+            '<label>Search Camp 8 database (autofills name, location, date)' +
+              '<input type="search" id="c8calCampSearch" placeholder="Type to search 755 camps…" autocomplete="off">' +
+              '<div id="c8calCampResults" class="c8cal-camp-results"></div>' +
+            '</label>' +
           '</div>' +
-        '</div>';
-    });
-    return html;
+          '<label>Name<input name="event_name" id="c8calAddName" required></label>' +
+          '<div class="c8cal-add-row">' +
+            '<label>Date<input name="event_date" id="c8calAddDate" type="date" required></label>' +
+            '<label>End date (optional)<input name="event_end_date" id="c8calAddEnd" type="date"></label>' +
+          '</div>' +
+          '<label>Location<input name="location" id="c8calAddLocation" placeholder="City, State"></label>' +
+          '<label>Notes<textarea name="notes" id="c8calAddNotes" rows="3" placeholder="What matters about this event?"></textarea></label>' +
+          '<input type="hidden" id="c8calAddSourceRef" value="">' +
+          '<input type="hidden" id="c8calAddRegUrl" value="">' +
+          '<input type="hidden" id="c8calAddTier" value="">' +
+          '<div class="c8cal-add-actions">' +
+            '<button type="button" class="c8cal-btn primary" data-c8cal-action="submit-add">Save event</button>' +
+            '<button type="button" class="c8cal-btn" data-c8cal-action="close-modal">Cancel</button>' +
+          '</div>' +
+        '</form>' +
+      '</div>';
+    el.setAttribute('aria-hidden', 'false'); el.classList.add('open');
+
+    var typeSel = document.getElementById('c8calAddType');
+    var picker = document.getElementById('c8calCampPicker');
+    function syncPicker() { picker.style.display = typeSel.value === 'camp' ? '' : 'none'; }
+    typeSel.addEventListener('change', syncPicker); syncPicker();
+
+    var search = document.getElementById('c8calCampSearch');
+    search.addEventListener('input', debounceFn(function() { calendar_renderCampSearch(search.value); }, 140));
   }
+  function calendar_closeAddModal() {
+    var el = document.getElementById('c8calModal'); if (!el) return;
+    el.classList.remove('open'); el.setAttribute('aria-hidden', 'true');
+    setTimeout(function() { el.innerHTML = ''; }, 160);
+  }
+
+  function calendar_renderCampSearch(q) {
+    var out = document.getElementById('c8calCampResults'); if (!out) return;
+    q = (q || '').trim().toLowerCase();
+    if (!q || q.length < 2 || typeof CAMPS_DATA === 'undefined') { out.innerHTML = ''; return; }
+    var matches = CAMPS_DATA.filter(function(c) {
+      return (c.name && c.name.toLowerCase().indexOf(q) !== -1)
+        || (c.host && c.host.toLowerCase().indexOf(q) !== -1)
+        || (c.city && c.city.toLowerCase().indexOf(q) !== -1);
+    }).slice(0, 8);
+    if (!matches.length) { out.innerHTML = '<div class="c8cal-camp-result empty">No matches — add manually.</div>'; return; }
+    out.innerHTML = matches.map(function(c) {
+      return '<button type="button" class="c8cal-camp-result" data-c8cal-action="pick-camp" data-camp-id="' + esc(c.id) + '">' +
+        '<span class="c8cal-camp-result-name">' + esc(c.name) + '</span>' +
+        '<span class="c8cal-camp-result-loc">' + esc(c.city || '') + (c.state_abbrev ? ', ' + esc(c.state_abbrev) : '') + ' · ' + esc(c.dates || 'TBD') + '</span>' +
+      '</button>';
+    }).join('');
+  }
+  function calendar_pickCamp(campId) {
+    if (typeof CAMPS_DATA === 'undefined') return;
+    var c = CAMPS_DATA.find(function(cd) { return cd.id === campId; });
+    if (!c) return;
+    var nameEl = document.getElementById('c8calAddName'); if (nameEl) nameEl.value = c.name || '';
+    var locEl = document.getElementById('c8calAddLocation'); if (locEl) locEl.value = (c.city || '') + (c.state_abbrev ? ', ' + c.state_abbrev : '');
+    // Parse ISO date or "Mon DD, YYYY" — best-effort
+    var dEl = document.getElementById('c8calAddDate');
+    if (dEl && c.dates) {
+      var firstPart = String(c.dates).split(/[–\-]/)[0].trim();
+      var parsed = new Date(firstPart);
+      if (!isNaN(parsed)) dEl.value = parsed.toISOString().slice(0, 10);
+    }
+    var srcEl = document.getElementById('c8calAddSourceRef'); if (srcEl) srcEl.value = c.id || '';
+    var regEl = document.getElementById('c8calAddRegUrl'); if (regEl) regEl.value = c.registration_url || '';
+    var tierEl = document.getElementById('c8calAddTier'); if (tierEl) tierEl.value = c.tier || '';
+    var search = document.getElementById('c8calCampSearch'); if (search) search.value = c.name;
+    document.getElementById('c8calCampResults').innerHTML = '<div class="c8cal-camp-result picked">Autofilled from Camp 8 database ✓</div>';
+  }
+
+  async function calendar_submitAdd() {
+    var form = document.getElementById('c8calAddForm'); if (!form) return;
+    var payload = {
+      event_type: form.event_type.value,
+      event_name: form.event_name.value.trim(),
+      event_date: form.event_date.value,
+      event_end_date: form.event_end_date.value || null,
+      location:   form.location.value.trim() || null,
+      notes:      form.notes.value.trim() || null,
+      source:     document.getElementById('c8calAddSourceRef').value ? 'camp8_database' : 'manual',
+      source_ref: document.getElementById('c8calAddSourceRef').value || null,
+      registration_url: document.getElementById('c8calAddRegUrl').value || null,
+      camp_tier:  parseInt(document.getElementById('c8calAddTier').value, 10) || null
+    };
+    if (!payload.event_name || !payload.event_date) {
+      alert('Name and date are required.'); return;
+    }
+    if (!CAL_STATE.handlers.onAdd) { alert('Add handler not wired.'); return; }
+    var submitBtn = form.querySelector('[data-c8cal-action="submit-add"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving…'; }
+    try {
+      await CAL_STATE.handlers.onAdd(payload);
+      calendar_closeAddModal();
+    } catch (err) {
+      alert('Could not save: ' + (err && err.message || 'unknown error'));
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Save event'; }
+    }
+  }
+
+  // ---------- Per-event actions ----------
+  async function calendar_remove(id) {
+    if (!CAL_STATE.handlers.onRemove) return;
+    if (!confirm('Remove this event from your calendar?')) return;
+    var ev = CAL_STATE.events.find(function(x) { return String(x.id) === String(id); });
+    await CAL_STATE.handlers.onRemove(ev);
+    calendar_closeDetail();
+  }
+  function calendar_share(id) {
+    var ev = CAL_STATE.events.find(function(x) { return String(x.id) === String(id); });
+    if (!ev) return;
+    var s = eventStart(ev);
+    var text = ev.event_name + (s ? ' — ' + fmt(s) : '') + (ev.location ? ' — ' + ev.location : '') + ' · via Camp 8';
+    if (navigator.share) {
+      navigator.share({ title: ev.event_name, text: text }).catch(function() {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function() {
+        if (typeof showToast === 'function') showToast('Copied to clipboard', 'success');
+      });
+    }
+    if (CAL_STATE.handlers.onShare) CAL_STATE.handlers.onShare(ev);
+  }
+  function calendar_openResults(id) { calendar_openDetail(id); }
+  async function calendar_submitResults() {
+    var form = document.getElementById('c8calResultsForm'); if (!form) return;
+    var id = form.getAttribute('data-event-id');
+    var fd = new FormData(form);
+    var results = {};
+    fd.forEach(function(v, k) { if (v) results[k] = v; });
+    if (!Object.keys(results).length) { alert('Add at least one result.'); return; }
+    if (!CAL_STATE.handlers.onLogResults) return;
+    await CAL_STATE.handlers.onLogResults(id, results);
+    calendar_closeDetail();
+  }
+  async function calendar_togglePrep(eventId, itemId) {
+    if (!CAL_STATE.handlers.onTogglePrepItem) return;
+    await CAL_STATE.handlers.onTogglePrepItem(eventId, itemId);
+  }
+  async function calendar_regeneratePrep(eventId) {
+    if (!CAL_STATE.handlers.onGeneratePrep) return;
+    await CAL_STATE.handlers.onGeneratePrep(eventId);
+    calendar_openDetail(eventId); // re-render
+  }
+  function calendar_askAI(id) {
+    var ev = CAL_STATE.events.find(function(x) { return String(x.id) === String(id); });
+    if (!ev || !CAL_STATE.handlers.onAskAI) return;
+    CAL_STATE.handlers.onAskAI(ev);
+    calendar_closeDetail();
+  }
+
+  function debounceFn(fn, ms) { var t; return function() { clearTimeout(t); var args = arguments; t = setTimeout(function() { fn.apply(null, args); }, ms); }; }
 
   // ===========================================================
   // 2) NIL RATING BAR GRAPH + PROJECTION
@@ -707,7 +1005,13 @@
   // Public API
   // ===========================================================
   global.C8 = {
-    calendar: { render: calendar_render, refresh: calendar_paint, close: calendar_closeDetail },
+    calendar: {
+      render: calendar_render,
+      refresh: calendar_paint,
+      close: calendar_closeDetail,
+      openAdd: calendar_openAddModal,
+      TYPE_STYLE: TYPE_STYLE
+    },
     nilBars:  { render: nilBars_render },
     radar:    { render: radar_render, deriveFactors: radar_deriveFactors, FACTORS: RADAR_FACTORS },
     actionPlan: { render: actions_render },
