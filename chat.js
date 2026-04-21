@@ -7,10 +7,30 @@
 // Netlify environment variables
 // ============================================
 
+// Simple in-memory rate limiter (resets on cold start, good enough for serverless)
+const rateLimitMap = {};
+const RATE_LIMIT = 30;      // max requests
+const RATE_WINDOW = 60000;  // per 60 seconds
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  if (!rateLimitMap[ip]) rateLimitMap[ip] = { count: 0, start: now };
+  const rec = rateLimitMap[ip];
+  if (now - rec.start > RATE_WINDOW) { rec.count = 0; rec.start = now; }
+  rec.count++;
+  return rec.count <= RATE_LIMIT;
+}
+
 exports.handler = async function(event, context) {
   // Only allow POST
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
+  }
+
+  // Rate limiting
+  const ip = event.headers['x-forwarded-for'] || event.headers['client-ip'] || 'unknown';
+  if (!checkRateLimit(ip)) {
+    return { statusCode: 429, body: JSON.stringify({ error: 'Too many requests. Please wait a moment.' }) };
   }
 
   // CORS headers

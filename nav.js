@@ -20,6 +20,9 @@
     'transfer-portal.html':{ label: 'Transfer Portal',     parent: 'recruiting', parentLabel: 'Recruiting' },
     'ncaa-rules.html':     { label: 'NCAA Recruiting Rules', parent: 'recruiting', parentLabel: 'Recruiting' },
     'coaches.html':        { label: 'Coaches Directory',  parent: 'recruiting', parentLabel: 'Recruiting' },
+    'health.html':         { label: 'Health & Wellness',   parent: null,        parentLabel: null },
+    'privacy.html':        { label: 'Privacy Policy',      parent: null,        parentLabel: null },
+    'terms.html':          { label: 'Terms of Service',    parent: null,        parentLabel: null },
     'dashboard.html':      { label: 'My Dashboard',         parent: null,        parentLabel: null },
     'admin.html':          { label: 'Admin',                 parent: null,        parentLabel: null },
     'by-school.html':      { label: 'By School',           parent: 'recruiting', parentLabel: 'Recruiting' },
@@ -90,6 +93,9 @@
         </a></li>
         <li><a href="ncaa-rules.html" data-page="ncaa-rules.html">
           <span class="ddm-icon">📋</span>NCAA Recruiting Rules
+        </a></li>
+        <li><a href="health.html" data-page="health.html">
+          <span class="ddm-icon">💪</span>Health &amp; Wellness
         </a></li>
         <li class="ddm-divider"></li>
         <li><a href="dashboard.html" data-page="dashboard.html">

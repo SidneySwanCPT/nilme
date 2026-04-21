@@ -320,6 +320,8 @@
       </div>
       <button class="login-btn" id="siBtn" onclick="doSignIn()">Sign In</button>
       <div class="login-error" id="siError"></div>
+      <div style="text-align:center;margin-top:10px"><a href="#" onclick="doForgotPassword(event)" style="font-size:.78rem;color:var(--text-muted);text-decoration:none;transition:color .15s" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-muted)'">Forgot your password?</a></div>
+      <div id="resetMsg" style="display:none;margin-top:8px;padding:10px 14px;background:rgba(80,200,120,.08);border:1px solid rgba(80,200,120,.2);border-radius:6px;font-size:.78rem;color:#50c878;text-align:center"></div>
 
       <div class="login-features">
         <div class="login-feature"><span class="lf-icon">🗺️</span>Recruit Map</div>
@@ -356,8 +358,7 @@
   </div>
 
   <div class="login-footer">
-    By signing in you agree to Camp 8's terms of use.<br>
-    Your data is private and never shared.
+    By signing in you agree to Camp 8's <a href="terms.html" style="color:var(--gold)">Terms of Service</a> and <a href="privacy.html" style="color:var(--gold)">Privacy Policy</a>.<br>Your data is private and never shared.
   </div>
 
   <!-- Motivational Quote -->
@@ -386,6 +387,27 @@ function setTab(tab, btn) {
 }
 
 // ---- Sign In ----
+async function doForgotPassword(e) {
+  e.preventDefault();
+  var email = document.getElementById('si_email').value.trim();
+  if (!email) {
+    showError(document.getElementById('siError'), 'Enter your email address above first.');
+    return;
+  }
+  var btn = document.querySelector('[onclick="doForgotPassword(event)"]');
+  if (btn) btn.textContent = 'Sending…';
+  var { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/login.html'
+  });
+  var msgEl = document.getElementById('resetMsg');
+  if (error) {
+    if (msgEl) { msgEl.style.display='block'; msgEl.textContent = 'Error: ' + error.message; msgEl.style.color='#c41e3a'; }
+  } else {
+    if (msgEl) { msgEl.style.display='block'; msgEl.textContent = 'Password reset email sent! Check your inbox.'; }
+  }
+  if (btn) btn.textContent = 'Forgot your password?';
+}
+
 async function doSignIn() {
   const email = document.getElementById('si_email').value.trim();
   const pass  = document.getElementById('si_pass').value;

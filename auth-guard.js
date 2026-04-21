@@ -10,7 +10,7 @@
   'use strict';
 
   // Pages that are always public (no redirect)
-  const PUBLIC_PAGES = ['login.html'];
+  const PUBLIC_PAGES = ['login.html', 'onboarding.html', 'index.html', 'nil-central.html', 'ncaa-rules.html', 'powerhouse.html', 'recruits.html', 'commitments.html', 'transfer-portal.html', 'camps.html'];
 
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 

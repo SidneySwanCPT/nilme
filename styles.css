@@ -700,6 +700,22 @@ body.has-breadcrumb .page-header {
 }
 
 /* ============================================
+   Global Mobile Fixes
+   ============================================ */
+html, body {
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+* { box-sizing: border-box; }
+
+/* Minimum tap target size */
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* ============================================
    Mobile Sidebar Collapse
    ============================================ */
 @media (max-width: 768px) {
@@ -833,3 +849,68 @@ body.has-breadcrumb .page-header {
   white-space: nowrap;
 }
 .nav-login-btn:hover { background: var(--gold-bright); border-color: var(--gold-bright); }
+
+
+/* ============================================
+   480px — Small Phones
+   ============================================ */
+@media (max-width: 480px) {
+  :root {
+    --space-xl: 1.25rem;
+    --space-lg: 1rem;
+    --nav-height: 56px;
+  }
+
+  .section-title,
+  .page-title { font-size: clamp(1.6rem, 7vw, 2.2rem); }
+
+  /* Stack stat rows */
+  .dash-stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* Full-width buttons on small screens */
+  .btn-full-mobile { width: 100%; justify-content: center; }
+
+  /* Reduce card padding */
+  .dash-stat-card { padding: var(--space-md); }
+
+  /* Modals full screen on small phones */
+  .coach-modal-box,
+  .email-modal-box { max-height: 100vh; border-radius: 0; }
+}
+
+/* ============================================
+   375px — iPhone SE / Small Android
+   ============================================ */
+@media (max-width: 375px) {
+  :root { --space-xl: 1rem; --space-lg: .75rem; }
+
+  .nav-brand-text { font-size: 1.2rem; }
+
+  .dash-stats-row { grid-template-columns: 1fr; }
+
+  .ob-steps { gap: 1px; }
+  .ob-step-dot { width: 20px; height: 20px; font-size: .58rem; }
+}
+
+/* ============================================
+   Touch / Pointer improvements
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* Bigger tap targets on touch screens */
+  .nav-links > li > a,
+  .nav-dropdown-trigger { min-height: 44px; }
+
+  .btn, button { min-height: 44px; }
+
+  /* Remove hover effects that look odd on touch */
+  .coach-card:hover { transform: none; }
+  .dash-stat-card:hover { transform: none; }
+}
+
+/* ============================================
+   Landscape mobile
+   ============================================ */
+@media (max-width: 768px) and (orientation: landscape) {
+  .ob-wrap { padding: var(--space-md); }
+  .login-card { max-height: 95vh; overflow-y: auto; }
+}
