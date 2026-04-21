@@ -577,13 +577,13 @@
         '<div class="c8bars-chart" id="c8barsChart">' +
           data.map(function(d, i) {
             var h = Math.max(6, Math.round((d.score / max) * 100));
-            return '<button class="c8bars-bar actual" style="height:' + h + '%" data-c8bars-idx="' + i + '" aria-label="Score ' + d.score + ' on ' + fmt(new Date(d.created_at)) + '">' +
+            return '<button class="c8bars-bar actual" style="height:0%" data-c8bars-idx="' + i + '" data-c8bars-target="' + h + '" aria-label="Score ' + d.score + ' on ' + fmt(new Date(d.created_at)) + '">' +
               '<span class="c8bars-bar-val">' + d.score + '</span>' +
             '</button>';
           }).join('') +
           projected.map(function(v, i) {
             var h = Math.max(6, Math.round((v / max) * 100));
-            return '<div class="c8bars-bar projected" style="height:' + h + '%" title="Projected ' + v + '">' +
+            return '<div class="c8bars-bar projected" style="height:0%" data-c8bars-target="' + h + '" title="Projected ' + v + '">' +
               '<span class="c8bars-bar-val">~' + v + '</span>' +
             '</div>';
           }).join('') +
@@ -605,13 +605,22 @@
       '</div>';
 
     var chart = document.getElementById('c8barsChart');
-    if (chart) chart.addEventListener('click', function(e) {
-      var b = e.target.closest && e.target.closest('.c8bars-bar.actual');
-      if (!b) return;
-      var idx = parseInt(b.getAttribute('data-c8bars-idx'), 10);
-      var cur = data[idx], prev = idx > 0 ? data[idx-1] : null;
-      document.getElementById('c8barsDetail').innerHTML = renderDeltaDetail(cur, prev);
-    });
+    if (chart) {
+      // Rise-from-zero animation — CSS transitions handle the tween.
+      requestAnimationFrame(function() {
+        chart.querySelectorAll('.c8bars-bar').forEach(function(bar, i) {
+          var target = bar.getAttribute('data-c8bars-target');
+          setTimeout(function() { bar.style.height = target + '%'; }, i * 45);
+        });
+      });
+      chart.addEventListener('click', function(e) {
+        var b = e.target.closest && e.target.closest('.c8bars-bar.actual');
+        if (!b) return;
+        var idx = parseInt(b.getAttribute('data-c8bars-idx'), 10);
+        var cur = data[idx], prev = idx > 0 ? data[idx-1] : null;
+        document.getElementById('c8barsDetail').innerHTML = renderDeltaDetail(cur, prev);
+      });
+    }
   }
 
   function projectSeries(values, n) {
@@ -654,35 +663,119 @@
   }
 
   // ===========================================================
-  // 3) CAMP 8 GRADE RADAR (SPIDER)
+  // 3) CAMP 8 GRADE RADAR (SPIDER) — 8 display factors
+  //    Display factors are numbered 01–08 per the brief. Each has a
+  //    derive() that converts the scoring engine's factor_breakdown +
+  //    profile into a 0–10 value for the radar.
   // ===========================================================
   var RADAR_FACTORS = [
-    { key: 'combine',    label: 'Combine',    desc: 'Speed, explosiveness, strength benchmarks.' },
-    { key: 'production', label: 'Production', desc: 'On-field stats and game film.' },
-    { key: 'offers',     label: 'Offers',     desc: 'Volume and level of college offers.' },
-    { key: 'stars',      label: 'Stars',      desc: 'National ranking / star rating.' },
-    { key: 'social',     label: 'Social',     desc: 'Audience size across platforms.' },
-    { key: 'academics',  label: 'Academics',  desc: 'GPA, test scores, NCAA eligibility.' },
-    { key: 'position',   label: 'Position',   desc: 'Positional market value and scarcity.' },
-    { key: 'engagement', label: 'Engagement', desc: 'Post frequency and brand fit.' }
+    { key: '01_recruiting_profile', n: '01', label: 'Recruiting Profile',
+      desc: 'Volume + level of offers and your national ranking/stars.',
+      improve: 'Convert interested coaches into written offers. Send updated film to any FBS school showing interest.',
+      derive: function(ctx) { return blend([mapBreakdown(ctx, 'offers'), scale0to10(ctx.stars, 5)]); } },
+    { key: '02_combine_performance', n: '02', label: 'Combine Performance',
+      desc: 'Speed, explosiveness, strength, and agility benchmarks for your position.',
+      improve: 'Get a verified combine result and push measurables above the 90th percentile for your position.',
+      derive: function(ctx) { return mapBreakdown(ctx, 'measurables'); } },
+    { key: '03_nil_market_value', n: '03', label: 'NIL Market Value',
+      desc: 'Audience size + engagement across IG, Twitter/X, and TikTok.',
+      improve: 'Weekly training + highlight content. Cross 25k total followers to trigger the High Social modifier.',
+      derive: function(ctx) { return mapBreakdown(ctx, 'social'); } },
+    { key: '04_academic_standing', n: '04', label: 'Academic Standing',
+      desc: 'GPA, SAT/ACT, core courses, and NCAA eligibility status.',
+      improve: 'Raise GPA toward 3.8+. A verified NCAA "qualifier" status adds a full point of academic ceiling.',
+      derive: function(ctx) { return mapBreakdown(ctx, 'academics'); } },
+    { key: '05_film_exposure', n: '05', label: 'Film & Exposure',
+      desc: 'On-field production + camps attended and verified film.',
+      improve: 'Claim + verify your MaxPreps stats. Attend one Elite or Showcase camp this cycle.',
+      derive: function(ctx) { return blend([mapBreakdown(ctx, 'production'), mapBreakdown(ctx, 'camps')]); } },
+    { key: '06_position_value', n: '06', label: 'Position Value',
+      desc: 'How scarce and marketable your position is in the current recruiting cycle.',
+      improve: 'Positional value is structural — play within your highest-value role (QB/WR/CB trending up).',
+      derive: function(ctx) { return ctx.positionWeight; } },
+    { key: '07_health_wellness', n: '07', label: 'Health & Wellness',
+      desc: 'NCAA eligibility, recent training/combine activity, and academic stability as proxies.',
+      improve: 'Stay injury-free, log a recent combine, and keep GPA ≥3.5 to support the wellness signal.',
+      derive: function(ctx) { return deriveHealth(ctx); } },
+    { key: '08_character_leadership', n: '08', label: 'Character & Leadership',
+      desc: 'Academic excellence, active goal-tracking, and team leadership signals.',
+      improve: 'Add captain/leadership notes in your profile. Set and complete 3+ active goals.',
+      derive: function(ctx) { return deriveCharacter(ctx); } }
   ];
+
+  // ---- Display-factor derivation helpers ----
+  function scale0to10(v, max) { return Math.max(0, Math.min(10, (Number(v) || 0) / max * 10)); }
+  function blend(arr) { var v = arr.filter(function(x) { return typeof x === 'number' && !isNaN(x); }); if (!v.length) return 0; return v.reduce(function(s, n) { return s + n; }, 0) / v.length; }
+  // Pull a factor from score_calculations.factor_breakdown (0..10 scale).
+  function mapBreakdown(ctx, engineKey) {
+    if (ctx.breakdown && ctx.breakdown[engineKey]) {
+      var f = ctx.breakdown[engineKey];
+      if (f.contribution != null && f.max) return (f.contribution / f.max) * 10;
+    }
+    // Fallback — unscored athlete: use profile-derived factors.
+    if (ctx.derived && ctx.derived[engineKey] != null) return ctx.derived[engineKey];
+    return 0;
+  }
+  function deriveHealth(ctx) {
+    var v = 7; // baseline
+    if (ctx.profile && ctx.profile.ncaa_eligibility === 'qualifier') v += 1;
+    if (ctx.recentCombineDays != null && ctx.recentCombineDays <= 60) v += 1;
+    if (ctx.profile && Number(ctx.profile.gpa) >= 3.5) v += 1;
+    return Math.min(10, v);
+  }
+  function deriveCharacter(ctx) {
+    var v = 6.5;
+    if (ctx.profile && Number(ctx.profile.gpa) >= 3.8) v += 1.5;
+    if ((ctx.activeGoalsCount || 0) >= 3) v += 1;
+    if (ctx.completedGoalsCount && ctx.completedGoalsCount >= 3) v += 1;
+    if (ctx.profile && /captain|leader/i.test(String(ctx.profile.goal_position_goal || ''))) v += 1;
+    return Math.min(10, v);
+  }
+
+  // Color thresholds per brief: ≥70% gold, 40-70% blue, <40% red/orange.
+  function radarColor(pct) {
+    if (pct >= 70) return '#d4a843'; // gold
+    if (pct >= 40) return '#4a90d9'; // blue
+    return '#e8872b';                // red/orange opportunity zone
+  }
+  function radarZoneClass(pct) {
+    if (pct >= 70) return 'zone-gold';
+    if (pct >= 40) return 'zone-blue';
+    return 'zone-red';
+  }
 
   function radar_render(root, snapshot, opts) {
     if (!root) return;
     opts = opts || {};
-    var factors = (snapshot && snapshot.factors) || {};
-    var overall = snapshot ? snapshot.overall : null;
-    var grade = snapshot ? snapshot.grade : '';
+
+    // Build derivation context from the score_calculations row (if available)
+    // or fall back to profile-derived factors passed via snapshot.factors.
+    var ctx = buildRadarContext(snapshot, opts);
+
+    // Score is 300-850 (from engine). If we only have a 0-100 grade fallback, map it up.
+    var score = snapshot && snapshot.score != null ? snapshot.score
+             : snapshot && snapshot.overall != null ? 300 + Math.round((snapshot.overall / 100) * 550)
+             : null;
+    var grade = snapshot && snapshot.grade ? snapshot.grade : '';
+
+    var factorValues = RADAR_FACTORS.map(function(f) {
+      var v = f.derive(ctx);
+      v = Math.max(0, Math.min(10, Number(v) || 0));
+      return { factor: f, value: v };
+    });
 
     var size = 360, cx = size/2, cy = size/2, r = size/2 - 40;
     var n = RADAR_FACTORS.length;
     var rings = [2, 4, 6, 8, 10];
-    var points = RADAR_FACTORS.map(function(f, i) {
-      var v = Math.max(0, Math.min(10, Number(factors[f.key]) || 0));
+    var points = factorValues.map(function(fv, i) {
+      var v = fv.value;
       var angle = (Math.PI * 2 * i) / n - Math.PI/2;
       var rr = (v / 10) * r;
+      var pct = Math.round(v * 10);
       return {
-        label: f.label, key: f.key, desc: f.desc, value: v,
+        label: fv.factor.label, n: fv.factor.n, key: fv.factor.key,
+        desc: fv.factor.desc, improve: fv.factor.improve,
+        value: v, pct: pct, color: radarColor(pct),
         angle: angle,
         x: cx + Math.cos(angle) * rr,
         y: cy + Math.sin(angle) * rr,
@@ -704,20 +797,25 @@
 
     var polyPoints = points.map(function(p) { return p.x + ',' + p.y; }).join(' ');
 
-    var dotsHtml = points.map(function(p) {
-      var strong = p.value >= 7.5;
-      var weak = p.value < 5;
-      return '<circle cx="' + p.x + '" cy="' + p.y + '" r="5" fill="' + (strong ? '#FFD700' : weak ? '#e8872b' : '#d4a843') + '" stroke="#0a0a14" stroke-width="2" class="' + (strong ? 'glow' : '') + '"/>';
+    // Dots are hit targets for the tooltip — they need a large transparent
+    // hit ring for comfortable hovering on touch + mouse.
+    var dotsHtml = points.map(function(p, i) {
+      var glow = p.pct >= 70 ? 'glow' : '';
+      return '<g class="c8radar-spoke" data-c8radar-idx="' + i + '">' +
+        '<circle cx="' + p.x + '" cy="' + p.y + '" r="14" fill="transparent" class="c8radar-hit"/>' +
+        '<circle cx="' + p.x + '" cy="' + p.y + '" r="5" fill="' + p.color + '" stroke="#0a0a14" stroke-width="2" class="' + glow + '"/>' +
+      '</g>';
     }).join('');
 
-    var labelsHtml = points.map(function(p, i) {
+    var labelsHtml = points.map(function(p) {
       var anchor = 'middle';
       if (p.lx < cx - 10) anchor = 'end';
       else if (p.lx > cx + 10) anchor = 'start';
-      var strong = p.value >= 7.5;
-      return '<g class="c8radar-label ' + (strong ? 'strong' : p.value < 5 ? 'weak' : '') + '">' +
-        '<text x="' + p.lx + '" y="' + p.ly + '" text-anchor="' + anchor + '" dy="0.35em">' + esc(p.label) + '</text>' +
-        '<text x="' + p.lx + '" y="' + (p.ly + 14) + '" text-anchor="' + anchor + '" dy="0.35em" class="c8radar-val">' + p.value.toFixed(1) + '</text>' +
+      var zone = radarZoneClass(p.pct);
+      return '<g class="c8radar-label ' + zone + '">' +
+        '<text x="' + p.lx + '" y="' + (p.ly - 6) + '" text-anchor="' + anchor + '" dy="0.35em" class="c8radar-num">' + p.n + '</text>' +
+        '<text x="' + p.lx + '" y="' + (p.ly + 7) + '" text-anchor="' + anchor + '" dy="0.35em">' + esc(p.label) + '</text>' +
+        '<text x="' + p.lx + '" y="' + (p.ly + 21) + '" text-anchor="' + anchor + '" dy="0.35em" class="c8radar-val">' + p.pct + '%</text>' +
       '</g>';
     }).join('');
 
@@ -738,50 +836,190 @@
             ringsHtml + spokesHtml +
             '<polygon points="' + polyPoints + '" fill="url(#c8radarFill)" stroke="#d4a843" stroke-width="2" filter="url(#c8radarGlow)"/>' +
             dotsHtml +
-            '<g class="c8radar-center"><text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" class="c8radar-overall">' + (overall != null ? overall : '—') + '</text>' +
-            '<text x="' + cx + '" y="' + (cy + 22) + '" text-anchor="middle" class="c8radar-gradelbl">' + esc(grade) + '</text></g>' +
+            '<g class="c8radar-center">' +
+              '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" class="c8radar-overall">' + (score != null ? score : '—') + '</text>' +
+              '<text x="' + cx + '" y="' + (cy + 22) + '" text-anchor="middle" class="c8radar-gradelbl">' + esc(grade) + '</text>' +
+            '</g>' +
             labelsHtml +
           '</svg>' +
+          '<div class="c8radar-tooltip" id="c8radarTooltip" aria-hidden="true"></div>' +
         '</div>' +
         '<div class="c8radar-legend">' +
-          RADAR_FACTORS.map(function(f) {
-            var v = Math.max(0, Math.min(10, Number(factors[f.key]) || 0));
-            var pct = Math.round(v * 10);
-            var cls = v >= 7.5 ? 'strong' : v < 5 ? 'weak' : 'mid';
+          points.map(function(p) {
+            var cls = radarZoneClass(p.pct);
             return '<div class="c8radar-leg ' + cls + '">' +
-              '<div class="c8radar-leg-head"><span class="c8radar-leg-label">' + esc(f.label) + '</span><span class="c8radar-leg-val">' + v.toFixed(1) + '</span></div>' +
-              '<div class="c8radar-leg-bar"><div class="c8radar-leg-fill" style="width:' + pct + '%"></div></div>' +
-              '<div class="c8radar-leg-desc">' + esc(f.desc) + '</div>' +
+              '<div class="c8radar-leg-head"><span class="c8radar-leg-label"><span class="c8radar-leg-num">' + p.n + '</span> ' + esc(p.label) + '</span><span class="c8radar-leg-val">' + p.pct + '%</span></div>' +
+              '<div class="c8radar-leg-bar"><div class="c8radar-leg-fill" style="width:' + p.pct + '%"></div></div>' +
+              '<div class="c8radar-leg-desc">' + esc(p.desc) + '</div>' +
             '</div>';
           }).join('') +
         '</div>' +
       '</div>';
+
+    // Wire tooltip (hover for mouse, tap for touch)
+    attachRadarTooltip(root, points);
   }
 
-  // Derive factors from athleteProfile + history when no snapshot exists (fallback)
+  function buildRadarContext(snapshot, opts) {
+    var breakdown = (snapshot && snapshot.factor_breakdown) || null;
+    var derived = (snapshot && snapshot.factors) || null;
+    var profile = opts.profile || {};
+    var positionWeight = positionWeightFor(profile.position);
+    var recentCombineDays = opts.lastCombineAt ? Math.round((Date.now() - new Date(opts.lastCombineAt).getTime()) / 86400000) : null;
+    return {
+      breakdown: breakdown,
+      derived: derived,
+      profile: profile,
+      stars: Number(profile.stars || profile.star_rating) || 0,
+      positionWeight: positionWeight,
+      recentCombineDays: recentCombineDays,
+      activeGoalsCount: opts.activeGoalsCount || 0,
+      completedGoalsCount: opts.completedGoalsCount || 0
+    };
+  }
+
+  function attachRadarTooltip(root, points) {
+    var tip = root.querySelector('#c8radarTooltip');
+    if (!tip) return;
+    var active = null;
+    function showFor(idx, ev) {
+      var p = points[idx]; if (!p) return;
+      active = idx;
+      tip.innerHTML =
+        '<div class="c8radar-tt-head"><span class="c8radar-tt-num">' + p.n + '</span> ' + esc(p.label) + '</div>' +
+        '<div class="c8radar-tt-val">' + p.pct + '% · ' + Math.round(p.value * 10) + ' / 100 pts</div>' +
+        '<div class="c8radar-tt-desc">' + esc(p.desc) + '</div>' +
+        (p.improve ? '<div class="c8radar-tt-improve"><strong>To improve:</strong> ' + esc(p.improve) + '</div>' : '');
+      var wrap = root.querySelector('.c8radar-svg-wrap');
+      var rect = wrap.getBoundingClientRect();
+      var x, y;
+      if (ev && (ev.clientX || (ev.touches && ev.touches.length))) {
+        var cx = ev.clientX || (ev.touches && ev.touches[0].clientX);
+        var cy = ev.clientY || (ev.touches && ev.touches[0].clientY);
+        x = cx - rect.left + 14; y = cy - rect.top + 14;
+      } else {
+        // fall back to dot position via viewBox mapping
+        var svg = wrap.querySelector('svg');
+        var vb = svg.viewBox.baseVal;
+        x = (p.x / vb.width) * rect.width + 14;
+        y = (p.y / vb.height) * rect.height + 14;
+      }
+      tip.style.left = Math.max(8, Math.min(rect.width - 260, x)) + 'px';
+      tip.style.top = Math.max(8, Math.min(rect.height - 120, y)) + 'px';
+      tip.classList.add('open');
+      tip.setAttribute('aria-hidden', 'false');
+    }
+    function hide() { active = null; tip.classList.remove('open'); tip.setAttribute('aria-hidden', 'true'); }
+    var svg = root.querySelector('svg.c8radar-svg');
+    if (!svg) return;
+    svg.addEventListener('mousemove', function(e) {
+      var g = e.target.closest && e.target.closest('.c8radar-spoke');
+      if (g) showFor(parseInt(g.getAttribute('data-c8radar-idx'), 10), e);
+      else if (active != null) hide();
+    });
+    svg.addEventListener('mouseleave', hide);
+    svg.addEventListener('click', function(e) {
+      var g = e.target.closest && e.target.closest('.c8radar-spoke');
+      if (g) showFor(parseInt(g.getAttribute('data-c8radar-idx'), 10), e);
+      else hide();
+    });
+    // Legend row clicks also show tooltip for that factor
+    root.querySelectorAll('.c8radar-leg').forEach(function(leg, i) {
+      leg.addEventListener('click', function(e) { showFor(i, e); });
+    });
+  }
+
+  // Derive engine-level factors from profile + history when no score_calculations row exists.
+  // Returns a snapshot-shaped object the radar + other widgets can consume.
   function radar_deriveFactors(profile, combineLatest, nilLatest, offers) {
     function clamp(v) { return Math.max(0, Math.min(10, v)); }
     function scale(v, max) { return clamp((v || 0) / max * 10); }
-    var factors = {
-      combine: combineLatest && combineLatest.overall_grade ? scale(gradeToNum(combineLatest.overall_grade), 4) : 0,
+    var derived = {
+      // engine factor keys — used by mapBreakdown() fallback
+      measurables: combineLatest && combineLatest.overall_grade ? scale(gradeToNum(combineLatest.overall_grade), 4) : 0,
       production: profile && profile.maxpreps_data ? 7 : 4,
       offers: scale(offers ? offers.length : 0, 10),
-      stars: scale(profile && profile.stars, 5),
       social: scale((profile && ((profile.instagram_followers||0) + (profile.twitter_followers||0) + (profile.tiktok_followers||0))/10000) || 0, 10),
       academics: scale(profile && profile.gpa, 4),
-      position: positionWeight(profile && profile.position),
-      engagement: nilLatest && nilLatest.breakdown && nilLatest.breakdown.engagement ? scale(nilLatest.breakdown.engagement, 100) : 5
+      camps: 5,
+      trajectory: 5,
+      competition: 5
     };
-    var overall = Math.round((factors.combine + factors.production + factors.offers + factors.stars + factors.social + factors.academics + factors.position + factors.engagement) * 1.25); // 10-point avg → 100
+    var overall10 = (derived.measurables + derived.production + derived.offers + derived.social + derived.academics + derived.camps) / 6;
+    var overall = Math.round(overall10 * 10); // 0-100 preview
     var grade = overall >= 90 ? 'A+' : overall >= 83 ? 'A' : overall >= 78 ? 'A-' : overall >= 73 ? 'B+' : overall >= 68 ? 'B' : overall >= 60 ? 'B-' : overall >= 50 ? 'C' : 'D';
-    return { overall: overall, grade: grade, factors: factors };
+    return { overall: overall, grade: grade, factors: derived };
   }
   function gradeToNum(g) { if (!g) return 0; var m = { 'A+':4,'A':4,'A-':3.7,'B+':3.3,'B':3,'B-':2.7,'C+':2.3,'C':2,'C-':1.7,'D':1,'F':0 }; return m[g] || 0; }
-  function positionWeight(pos) {
+  function positionWeightFor(pos) {
     if (!pos) return 5;
     var p = String(pos).toUpperCase();
     var top = { QB: 10, WR: 9, CB: 9, EDGE: 9, DE: 9, OT: 8.5, RB: 8, S: 8, LB: 7.5, TE: 7.5, DT: 7, OG: 7, OL: 7, DL: 7, K: 5, P: 5 };
     return top[p] || 6;
+  }
+
+  // ===========================================================
+  // 3b) SCORE BANDS — Developing / Rising / Prospect / Scholarship / Elite
+  // ===========================================================
+  var SCORE_BANDS = [
+    { min: 300, max: 499, name: 'Developing',  color: '#7a7a9a', blurb: 'Build the foundation — claim your profile, log verified combine numbers, and post your first film.' },
+    { min: 500, max: 619, name: 'Rising',      color: '#4a90d9', blurb: 'Real interest from D2/D3 and walk-on paths at FCS. Camp invites start flowing.' },
+    { min: 620, max: 719, name: 'Prospect',    color: '#d4a843', blurb: 'Active recruit — expect FCS offers, D2 scholarships, and camp invites from FBS staff.' },
+    { min: 720, max: 779, name: 'Scholarship', color: '#e8c547', blurb: 'FBS-caliber profile — multiple scholarship offers likely. Campus visits accelerate.' },
+    { min: 780, max: 850, name: 'Elite',       color: '#50c878', blurb: 'Top 1% — SEC / Big Ten / ACC offers and national rankings territory.' }
+  ];
+
+  function bandForScore(score) {
+    if (score == null) return null;
+    for (var i = 0; i < SCORE_BANDS.length; i++) {
+      if (score <= SCORE_BANDS[i].max) return { band: SCORE_BANDS[i], index: i };
+    }
+    return { band: SCORE_BANDS[SCORE_BANDS.length - 1], index: SCORE_BANDS.length - 1 };
+  }
+
+  function scoreBand_render(root, score) {
+    if (!root) return;
+    if (score == null) {
+      root.innerHTML = '<div class="c8band empty">Your band appears once you generate your first Camp 8 score.</div>';
+      return;
+    }
+    var info = bandForScore(score);
+    var band = info.band;
+    var nextBand = info.index < SCORE_BANDS.length - 1 ? SCORE_BANDS[info.index + 1] : null;
+    var toNext = nextBand ? (nextBand.min - score) : 0;
+    var progress = nextBand
+      ? Math.round(((score - band.min) / (nextBand.min - band.min)) * 100)
+      : 100;
+
+    root.innerHTML =
+      '<div class="c8band" style="--c8band:' + band.color + '">' +
+        '<div class="c8band-top">' +
+          '<div class="c8band-name-wrap">' +
+            '<div class="c8band-label">Band</div>' +
+            '<div class="c8band-name">' + esc(band.name) + '</div>' +
+          '</div>' +
+          '<div class="c8band-score">' +
+            '<div class="c8band-score-num">' + score + '</div>' +
+            '<div class="c8band-score-scale">/ 850</div>' +
+          '</div>' +
+          (nextBand
+            ? '<div class="c8band-next">' +
+                '<div class="c8band-next-label">Next band</div>' +
+                '<div class="c8band-next-name">' + esc(nextBand.name) + '</div>' +
+                '<div class="c8band-next-to">' + toNext + ' pts to go</div>' +
+              '</div>'
+            : '<div class="c8band-next maxed"><div class="c8band-next-name">Top band</div><div class="c8band-next-to">You\'ve hit Elite 🏆</div></div>'
+          ) +
+        '</div>' +
+        '<div class="c8band-track">' +
+          '<div class="c8band-track-fill" style="width:' + progress + '%"></div>' +
+          SCORE_BANDS.map(function(b, i) {
+            var pos = ((b.min - 300) / 550) * 100;
+            return '<span class="c8band-tick' + (i === info.index ? ' active' : '') + '" style="left:' + pos + '%; --tick:' + b.color + '"></span>';
+          }).join('') +
+        '</div>' +
+        '<div class="c8band-blurb">' + esc(band.blurb) + '</div>' +
+      '</div>';
   }
 
   // ===========================================================
@@ -882,8 +1120,14 @@
     var fab = document.createElement('button');
     fab.id = 'c8dashchat-fab';
     fab.setAttribute('aria-label', 'Open Camp 8 AI');
+    // Football icon — SVG. Gentle pulse ring behind it drives the subtle attention signal.
     fab.innerHTML =
-      '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' +
+      '<span class="c8dashchat-fab-pulse" aria-hidden="true"></span>' +
+      '<svg class="c8dashchat-fab-icon" viewBox="0 0 32 32" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<ellipse cx="16" cy="16" rx="11" ry="7.5" fill="currentColor" opacity="0.12"/>' +
+        '<ellipse cx="16" cy="16" rx="11" ry="7.5" stroke="currentColor" stroke-width="2" fill="none"/>' +
+        '<path d="M16 9v14M10 12.5c2-1.5 4-2 6-2s4 .5 6 2M10 19.5c2 1.5 4 2 6 2s4-.5 6-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>' +
+      '</svg>' +
       '<span class="c8dashchat-fab-lbl">' + esc(DASHCHAT.opener) + '</span>';
     fab.addEventListener('click', dashChat_toggle);
     document.body.appendChild(fab);
@@ -1014,6 +1258,7 @@
     },
     nilBars:  { render: nilBars_render },
     radar:    { render: radar_render, deriveFactors: radar_deriveFactors, FACTORS: RADAR_FACTORS },
+    scoreBand:{ render: scoreBand_render, BANDS: SCORE_BANDS, bandFor: bandForScore },
     actionPlan: { render: actions_render },
     dashChat: { init: dashChat_init, open: dashChat_open, updateContext: dashChat_updateContext }
   };

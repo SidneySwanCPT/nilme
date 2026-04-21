@@ -410,7 +410,7 @@
       </div>
     </div>
 
-    <!-- RATING (score hero + radar + history bars) -->
+    <!-- RATING (band + radar + history bars + explanation) -->
     <div class="dash-panel" id="panel-rating">
       <div class="panel-header">
         <div class="panel-title">Camp 8 <span>Rating</span></div>
@@ -419,9 +419,10 @@
           <a href="nil-rating.html" class="panel-add-btn">+ New Evaluation</a>
         </div>
       </div>
-      <div id="scoreHero"></div>
+      <div id="ratingBand"></div>
       <div id="ratingRadar"></div>
       <div id="ratingHistory"></div>
+      <div id="scoreHero"></div>
     </div>
 
     <!-- CALENDAR -->
@@ -1099,7 +1100,7 @@ function renderScoreHero() {
   const el = document.getElementById('scoreHero');
   if (!el) return;
   if (!latestScoreCalc) {
-    el.innerHTML = '<div class="c8score-hero empty">No score calculated yet — click <strong>Recalculate Score</strong> above to generate one.</div>';
+    el.innerHTML = '<div class="c8score-hero empty">No score calculated yet — finish your profile, then click <strong>Recalculate Score</strong> above to generate your first Camp 8 rating.</div>';
     return;
   }
   const s = latestScoreCalc;
@@ -1115,22 +1116,75 @@ function renderScoreHero() {
       </div>
       <div class="c8score-body">
         <div class="c8score-expl">${formatExplanation(s.explanation)}</div>
-        <div class="c8score-cols">
-          <div>
-            <div class="c8score-col-head">Driving this score</div>
-            ${drivers.length ? drivers.map(d => `<div class="c8score-chip up">${esc(d.label)} · ${d.pct_of_max}%</div>`).join('') : '<div class="c8score-empty-col">—</div>'}
+        <div class="c8score-cols three">
+          <div class="c8score-col up">
+            <div class="c8score-col-head"><span class="c8score-col-icon">↑</span> Driving your score up</div>
+            ${drivers.length ? drivers.map(d => `<div class="c8score-col-row"><span class="c8score-col-label">${esc(d.label)}</span><span class="c8score-col-val">${d.pct_of_max}%</span></div>`).join('') : '<div class="c8score-empty-col">—</div>'}
           </div>
-          <div>
-            <div class="c8score-col-head">Holding you back</div>
-            ${holdbacks.length ? holdbacks.map(d => `<div class="c8score-chip down">${esc(d.label)} · ${d.pct_of_max}%</div>`).join('') : '<div class="c8score-empty-col">—</div>'}
+          <div class="c8score-col opp">
+            <div class="c8score-col-head"><span class="c8score-col-icon">⬈</span> Biggest opportunities</div>
+            ${holdbacks.length ? holdbacks.map(d => `<div class="c8score-col-row"><span class="c8score-col-label">${esc(d.label)}</span><span class="c8score-col-val">${d.pct_of_max}%</span></div>`).join('') : '<div class="c8score-empty-col">—</div>'}
           </div>
-        </div>
-        <div class="c8score-actions">
-          <div class="c8score-col-head">Top 3 recommended actions</div>
-          ${actions.length ? actions.map((a,i) => `<div class="c8score-action"><div class="c8score-action-num">${i+1}</div><div><div class="c8score-action-title">${esc(a.title)}</div><div class="c8score-action-rat">${esc(a.rationale)}</div>${a.projected_uplift_points ? `<div class="c8score-action-lift">+${a.projected_uplift_points} pts projected</div>` : ''}</div></div>`).join('') : '<div class="c8score-empty-col">—</div>'}
+          <div class="c8score-col act">
+            <div class="c8score-col-head"><span class="c8score-col-icon">→</span> Next actions</div>
+            ${actions.length ? actions.map((a,i) => renderScoreAction(a, i)).join('') : '<div class="c8score-empty-col">—</div>'}
+          </div>
         </div>
       </div>
     </div>`;
+  // Wire checkbox + chat bubble handlers
+  el.querySelectorAll('[data-score-action-done]').forEach(cb => {
+    cb.addEventListener('change', async () => {
+      const idx = parseInt(cb.getAttribute('data-score-action-done'), 10);
+      const action = actions[idx];
+      if (!action) return;
+      cb.disabled = true;
+      try {
+        // Persist as a completed athlete_action so it appears in the action plan history
+        const sb2 = getSupabase();
+        await sb2.from('athlete_actions').insert({
+          athlete_id: athleteId,
+          title: action.title,
+          detail: action.rationale,
+          category: action.factor || 'general',
+          priority: 2,
+          source: 'score',
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        });
+        if (typeof showToast === 'function') showToast('Marked done — recalculating score…', 'info');
+        await recalcScore();
+      } catch (err) {
+        cb.checked = false; cb.disabled = false;
+        if (typeof showToast === 'function') showToast('Could not save: ' + err.message, 'error');
+      }
+    });
+  });
+  el.querySelectorAll('[data-score-action-ask]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.getAttribute('data-score-action-ask'), 10);
+      const action = actions[idx];
+      if (!action || !window.C8 || !C8.dashChat) return;
+      C8.dashChat.open('Help me with this action: "' + action.title + '". ' + (action.rationale || '') + ' Give me a specific step-by-step for the next 48 hours.');
+    });
+  });
+}
+
+function renderScoreAction(a, i) {
+  return `<div class="c8score-action">
+    <label class="c8score-action-check">
+      <input type="checkbox" data-score-action-done="${i}">
+      <span></span>
+    </label>
+    <div class="c8score-action-body">
+      <div class="c8score-action-title">${esc(a.title)}</div>
+      <div class="c8score-action-rat">${esc(a.rationale)}</div>
+      ${a.projected_uplift_points ? `<div class="c8score-action-lift">+${a.projected_uplift_points} pts projected</div>` : ''}
+    </div>
+    <button class="c8score-action-chat" data-score-action-ask="${i}" title="Ask Camp 8 AI about this action" aria-label="Ask AI">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    </button>
+  </div>`;
 }
 
 function formatExplanation(txt) {
@@ -1180,14 +1234,47 @@ async function loadRatingSnapshots() {
 }
 
 function latestSnapshot() {
+  // Prefer the most recent score_calculations row — it has the engine's full
+  // factor_breakdown. Fall back to legacy rating_snapshots, then to
+  // profile-derived factors when the athlete hasn't scored yet.
+  if (latestScoreCalc) {
+    return {
+      score: latestScoreCalc.score,
+      grade: gradeForScore(latestScoreCalc.score),
+      factor_breakdown: latestScoreCalc.factor_breakdown || null,
+      factors: null
+    };
+  }
   if (ratingSnapshots.length) return ratingSnapshots[0];
   return C8.radar.deriveFactors(athleteProfile, combineHistory[0], nilHistory[0], offersList);
+}
+
+function gradeForScore(s) {
+  if (s == null) return '';
+  if (s >= 800) return 'A+'; if (s >= 760) return 'A'; if (s >= 720) return 'A-';
+  if (s >= 680) return 'B+'; if (s >= 640) return 'B'; if (s >= 600) return 'B-';
+  if (s >= 560) return 'C+'; if (s >= 520) return 'C'; if (s >= 460) return 'D+';
+  return 'D';
 }
 
 function renderRadarIn(targetId) {
   const el = document.getElementById(targetId);
   if (!el || !window.C8) return;
-  C8.radar.render(el, latestSnapshot());
+  const snap = latestSnapshot();
+  const opts = {
+    profile: athleteProfile || {},
+    lastCombineAt: combineHistory[0] && combineHistory[0].created_at,
+    activeGoalsCount: goalsList.filter(g => !g.completed).length,
+    completedGoalsCount: goalsList.filter(g => g.completed).length
+  };
+  C8.radar.render(el, snap, opts);
+}
+
+function renderScoreBandIn(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el || !window.C8) return;
+  const score = latestScoreCalc ? latestScoreCalc.score : null;
+  C8.scoreBand.render(el, score);
 }
 
 function renderNilHistoryChart(targetId) {
@@ -1458,7 +1545,11 @@ function buildAthleteContext() {
   parts.push('Social: IG=' + (p.instagram_followers || 0) + ', TW=' + (p.twitter_followers || 0) + ', TT=' + (p.tiktok_followers || 0));
   parts.push('Offers (' + offersList.length + '): ' + offersList.slice(0, 8).map(o => o.college + ' (' + (o.division || '') + ')').join(', '));
   parts.push('Starred camps: ' + starredCamps.slice(0, 6).map(c => c.camp_name + ' — ' + (c.camp_dates || '') + ' [' + c.status + ']').join('; '));
-  if (snap) parts.push('Camp 8 overall: ' + snap.overall + ' (' + (snap.grade || '') + '). Factors: ' + JSON.stringify(snap.factors));
+  if (snap) {
+    var snapScore = snap.score != null ? snap.score : snap.overall;
+    var snapFactors = snap.factor_breakdown || snap.factors || null;
+    parts.push('Camp 8 rating: ' + (snapScore != null ? snapScore : '—') + ' (' + (snap.grade || '') + '). Factors: ' + JSON.stringify(snapFactors));
+  }
   if (nilHistory[0]) parts.push('Latest NIL score: ' + nilHistory[0].score + '/100 (' + (nilHistory[0].grade || '') + ')');
   if (combineHistory[0]) parts.push('Latest combine grade: ' + combineHistory[0].overall_grade);
   const openGoals = goalsList.filter(g => !g.completed);
@@ -1485,7 +1576,12 @@ const _origShowTab = showTab;
 showTab = function(tab, btn) {
   _origShowTab(tab, btn);
   if (tab === 'calendar') renderCalendarIn('campsCalendar');
-  if (tab === 'rating')   { renderRadarIn('ratingRadar'); renderNilHistoryChart('ratingHistory'); }
+  if (tab === 'rating')   {
+    renderScoreBandIn('ratingBand');
+    renderRadarIn('ratingRadar');
+    renderNilHistoryChart('ratingHistory');
+    renderScoreHero();
+  }
   if (tab === 'actions')  renderActionsIn('actionPlan');
 };
 
