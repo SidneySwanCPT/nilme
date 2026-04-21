@@ -1,0 +1,9 @@
+{
+  "name": "camp8-functions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Camp 8 Netlify serverless functions — runtime dependencies only.",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

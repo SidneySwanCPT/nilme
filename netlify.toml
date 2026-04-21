@@ -9,6 +9,11 @@
 [functions."news-scanner"]
   schedule = "0 8 * * *"
 
+# Weekly pattern-detect — Mondays 11:00 UTC. Proposes trend/modifier
+# changes as status='pending' rows in detected_patterns. Admins review.
+[functions."pattern-detect"]
+  schedule = "0 11 * * 1"
+
 # ---- Redirects ----
 [[redirects]]
   from = "/api/*"

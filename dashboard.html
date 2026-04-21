@@ -410,12 +410,16 @@
       </div>
     </div>
 
-    <!-- RATING (radar + history bars) -->
+    <!-- RATING (score hero + radar + history bars) -->
     <div class="dash-panel" id="panel-rating">
       <div class="panel-header">
         <div class="panel-title">Camp 8 <span>Rating</span></div>
-        <a href="nil-rating.html" class="panel-add-btn">+ New Evaluation</a>
+        <div style="display:flex;gap:8px">
+          <button class="panel-add-btn" id="recalcScoreBtn" onclick="recalcScore()">↻ Recalculate Score</button>
+          <a href="nil-rating.html" class="panel-add-btn">+ New Evaluation</a>
+        </div>
       </div>
+      <div id="scoreHero"></div>
       <div id="ratingRadar"></div>
       <div id="ratingHistory"></div>
     </div>
@@ -686,6 +690,7 @@ async function loadDashboard() {
     loadGoals(),
     loadRatingSnapshots(),
     loadActions(),
+    loadLatestScore(),
   ]);
 
   updateStatCards();
@@ -1077,6 +1082,91 @@ function gradeColor(g) {
 // ============================================
 // NEW WIDGETS WIRING
 // ============================================
+
+// ---- Camp 8 Score (/api/score) ----
+let latestScoreCalc = null;
+async function loadLatestScore() {
+  if (!athleteId) return;
+  const sb2 = getSupabase();
+  const { data } = await sb2.from('score_calculations')
+    .select('*').eq('athlete_id', athleteId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  latestScoreCalc = data || null;
+  renderScoreHero();
+}
+
+function renderScoreHero() {
+  const el = document.getElementById('scoreHero');
+  if (!el) return;
+  if (!latestScoreCalc) {
+    el.innerHTML = '<div class="c8score-hero empty">No score calculated yet — click <strong>Recalculate Score</strong> above to generate one.</div>';
+    return;
+  }
+  const s = latestScoreCalc;
+  const drivers = s.what_drives_up || [];
+  const holdbacks = s.what_holds_back || [];
+  const actions = s.top_3_actions || [];
+  el.innerHTML = `
+    <div class="c8score-hero">
+      <div class="c8score-hero-main">
+        <div class="c8score-num">${s.score}</div>
+        <div class="c8score-scale">of 850</div>
+        <div class="c8score-version">formula v${esc(s.formula_version)} · modifiers v${esc(s.modifier_version)}</div>
+      </div>
+      <div class="c8score-body">
+        <div class="c8score-expl">${formatExplanation(s.explanation)}</div>
+        <div class="c8score-cols">
+          <div>
+            <div class="c8score-col-head">Driving this score</div>
+            ${drivers.length ? drivers.map(d => `<div class="c8score-chip up">${esc(d.label)} · ${d.pct_of_max}%</div>`).join('') : '<div class="c8score-empty-col">—</div>'}
+          </div>
+          <div>
+            <div class="c8score-col-head">Holding you back</div>
+            ${holdbacks.length ? holdbacks.map(d => `<div class="c8score-chip down">${esc(d.label)} · ${d.pct_of_max}%</div>`).join('') : '<div class="c8score-empty-col">—</div>'}
+          </div>
+        </div>
+        <div class="c8score-actions">
+          <div class="c8score-col-head">Top 3 recommended actions</div>
+          ${actions.length ? actions.map((a,i) => `<div class="c8score-action"><div class="c8score-action-num">${i+1}</div><div><div class="c8score-action-title">${esc(a.title)}</div><div class="c8score-action-rat">${esc(a.rationale)}</div>${a.projected_uplift_points ? `<div class="c8score-action-lift">+${a.projected_uplift_points} pts projected</div>` : ''}</div></div>`).join('') : '<div class="c8score-empty-col">—</div>'}
+        </div>
+      </div>
+    </div>`;
+}
+
+function formatExplanation(txt) {
+  return esc(txt || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+async function recalcScore() {
+  const btn = document.getElementById('recalcScoreBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Calculating…'; }
+  try {
+    const sb2 = getSupabase();
+    const { data: sess } = await sb2.auth.getSession();
+    const jwt = sess && sess.session ? sess.session.access_token : null;
+    if (!jwt) throw new Error('Not signed in.');
+    const res = await fetch('/api/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+      body: JSON.stringify({ trigger_source: 'user' })
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Score API error');
+    latestScoreCalc = {
+      ...result,
+      what_drives_up: result.what_drives_up,
+      what_holds_back: result.what_holds_back,
+      top_3_actions: result.top_3_actions
+    };
+    renderScoreHero();
+    if (typeof showToast === 'function') showToast('Score updated: ' + result.score + ' (' + result.grade + ')', 'success');
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('Could not recalculate: ' + err.message, 'error');
+    else alert('Could not recalculate: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Recalculate Score'; }
+  }
+}
+
 
 // ---- Rating snapshots (8-factor radar history) ----
 let ratingSnapshots = [];

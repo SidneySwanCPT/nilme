@@ -279,3 +279,148 @@ CREATE INDEX IF NOT EXISTS idx_snapshots_athlete ON athlete_rating_snapshots(ath
 ALTER TABLE athlete_rating_snapshots ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Athletes manage own rating snapshots" ON athlete_rating_snapshots FOR ALL
   USING (athlete_id IN (SELECT id FROM athletes WHERE user_id = auth.uid()));
+
+-- ============================================
+-- CAMP 8 SCORING ENGINE (deterministic, versioned, continuously-learnable)
+-- The runtime reads weights/modifiers/trends from these tables on every calc.
+-- Weights are NEVER hardcoded in netlify/functions/score.js.
+-- ============================================
+
+-- Formula version (one active at a time)
+CREATE TABLE IF NOT EXISTS scoring_formula_versions (
+  version TEXT PRIMARY KEY,
+  description TEXT,
+  active BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- The 8 factors per formula version (max_points summing to 770 for v1.0.0)
+CREATE TABLE IF NOT EXISTS scoring_factors (
+  id SERIAL PRIMARY KEY,
+  formula_version TEXT NOT NULL REFERENCES scoring_formula_versions(version) ON DELETE CASCADE,
+  key TEXT NOT NULL,
+  label TEXT NOT NULL,
+  max_points INTEGER NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(formula_version, key)
+);
+
+-- Modifier version (profile-driven weight adjustments)
+CREATE TABLE IF NOT EXISTS scoring_modifier_versions (
+  version TEXT PRIMARY KEY,
+  description TEXT,
+  active BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- A modifier fires when trigger_expr evaluates true against the athlete's
+-- profile context; it then scales specific factor weights and/or applies a
+-- confidence multiplier to the total. See score.js evalTrigger().
+CREATE TABLE IF NOT EXISTS scoring_modifiers (
+  id SERIAL PRIMARY KEY,
+  modifier_version TEXT NOT NULL REFERENCES scoring_modifier_versions(version) ON DELETE CASCADE,
+  key TEXT NOT NULL,
+  label TEXT NOT NULL,
+  description TEXT,
+  trigger_expr JSONB NOT NULL,            -- { field, op, value } OR { all:[...] } OR { any:[...] }
+  weight_adjustments JSONB NOT NULL,      -- { <factor_key>: <multiplier>, ... }
+  confidence_multiplier NUMERIC(5,3),     -- applied to total points if set
+  active BOOLEAN DEFAULT TRUE,
+  priority INTEGER DEFAULT 100,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(modifier_version, key)
+);
+
+-- Market trend multipliers, updated weekly by data ingestion layer.
+CREATE TABLE IF NOT EXISTS trend_weights (
+  id SERIAL PRIMARY KEY,
+  key TEXT UNIQUE NOT NULL,
+  label TEXT,
+  target_factor TEXT,                     -- matches scoring_factors.key; NULL = global
+  multiplier NUMERIC(5,3) DEFAULT 1.000,
+  scope JSONB,                            -- e.g. { "position":["QB"], "state":["GA"] }
+  source TEXT,
+  notes TEXT,
+  last_updated TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_trend_weights_factor ON trend_weights(target_factor);
+
+-- Every score calculation — full audit trail.
+CREATE TABLE IF NOT EXISTS score_calculations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  athlete_id UUID REFERENCES athletes(id) ON DELETE CASCADE,
+  score INTEGER NOT NULL,                 -- 300-850
+  raw_points NUMERIC(8,2),
+  max_points INTEGER,                     -- 770 for v1.0.0
+  formula_version TEXT NOT NULL,
+  modifier_version TEXT NOT NULL,
+  trend_snapshot_ts TIMESTAMPTZ,
+  factor_breakdown JSONB NOT NULL,        -- per-factor raw/modified/contribution/modifiers/trend_multiplier
+  applied_modifiers JSONB,
+  applied_trends JSONB,
+  what_drives_up JSONB,
+  what_holds_back JSONB,
+  top_3_actions JSONB,
+  explanation TEXT,
+  inputs_hash TEXT,                       -- sha256 of canonical inputs — determinism check
+  trigger_source TEXT,                    -- user | signal-ingest | pattern-detect | scheduled
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_score_calc_athlete ON score_calculations(athlete_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_score_calc_hash ON score_calculations(athlete_id, inputs_hash);
+
+-- Raw signals ingested by EC2 signal processor.
+CREATE TABLE IF NOT EXISTS signal_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  athlete_id UUID REFERENCES athletes(id) ON DELETE CASCADE,
+  signal_type TEXT NOT NULL,              -- offer_received | combine_update | social_jump | ...
+  payload JSONB,
+  source TEXT,
+  observed_at TIMESTAMPTZ DEFAULT NOW(),
+  processed_at TIMESTAMPTZ,
+  score_calc_id UUID REFERENCES score_calculations(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_signal_events_athlete ON signal_events(athlete_id, observed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_signal_events_unprocessed ON signal_events(processed_at) WHERE processed_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_signal_events_type ON signal_events(signal_type, observed_at DESC);
+
+-- Output of the weekly pattern-detect job — always reviewed before applied.
+CREATE TABLE IF NOT EXISTS detected_patterns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  pattern_type TEXT NOT NULL,             -- signal_outcome_correlation | factor_decay | modifier_opportunity
+  description TEXT,
+  evidence JSONB,
+  suggested_change JSONB,
+  status TEXT DEFAULT 'pending',          -- pending | approved | rejected | applied
+  reviewed_by UUID REFERENCES auth.users(id),
+  reviewed_at TIMESTAMPTZ,
+  applied_to_version TEXT,
+  run_id UUID,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_detected_patterns_status ON detected_patterns(status, created_at DESC);
+
+-- RLS: athletes see their own score_calcs + signals; scoring internals are server-only.
+ALTER TABLE score_calculations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Athletes read own scores" ON score_calculations FOR SELECT
+  USING (athlete_id IN (SELECT id FROM athletes WHERE user_id = auth.uid()));
+
+ALTER TABLE signal_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Athletes read own signals" ON signal_events FOR SELECT
+  USING (athlete_id IN (SELECT id FROM athletes WHERE user_id = auth.uid()));
+
+ALTER TABLE scoring_formula_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scoring_factors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scoring_modifier_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scoring_modifiers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trend_weights ENABLE ROW LEVEL SECURITY;
+ALTER TABLE detected_patterns ENABLE ROW LEVEL SECURITY;
+
+-- Factors + formula versions are public so the UI can render the legend.
+CREATE POLICY "Public read factors" ON scoring_factors FOR SELECT USING (TRUE);
+CREATE POLICY "Public read formula versions" ON scoring_formula_versions FOR SELECT USING (TRUE);
+-- Modifiers / trend_weights / detected_patterns have NO public policy — server-only.
