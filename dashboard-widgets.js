@@ -551,9 +551,11 @@
       return;
     }
 
-    // Project next 2 points via simple linear fit
-    var projected = projectSeries(data.map(function(d) { return d.score; }), 2);
-    var max = 100;
+    // Allow caller to specify scale — engine scores are 300–850, NIL scores 0–100.
+    var max = (opts && opts.max) ? opts.max : 100;
+    var min = (opts && opts.min) ? opts.min : 0;
+    // Project next 2 points via simple linear fit (capped at max)
+    var projected = projectSeries(data.map(function(d) { return d.score; }), 2, max);
     var total = data.length + projected.length;
 
     var latest = data[data.length-1];
@@ -576,13 +578,14 @@
         '</div>' +
         '<div class="c8bars-chart" id="c8barsChart">' +
           data.map(function(d, i) {
-            var h = Math.max(6, Math.round((d.score / max) * 100));
+            // Normalize to 0-100% of chart height based on min/max
+            var h = Math.max(6, Math.round(((d.score - min) / (max - min)) * 100));
             return '<button class="c8bars-bar actual" style="height:0%" data-c8bars-idx="' + i + '" data-c8bars-target="' + h + '" aria-label="Score ' + d.score + ' on ' + fmt(new Date(d.created_at)) + '">' +
               '<span class="c8bars-bar-val">' + d.score + '</span>' +
             '</button>';
           }).join('') +
           projected.map(function(v, i) {
-            var h = Math.max(6, Math.round((v / max) * 100));
+            var h = Math.max(6, Math.round(((v - min) / (max - min)) * 100));
             return '<div class="c8bars-bar projected" style="height:0%" data-c8bars-target="' + h + '" title="Projected ' + v + '">' +
               '<span class="c8bars-bar-val">~' + v + '</span>' +
             '</div>';
@@ -623,7 +626,8 @@
     }
   }
 
-  function projectSeries(values, n) {
+  function projectSeries(values, n, ceiling) {
+    var cap = ceiling || 100;
     if (values.length < 2) return Array(n).fill(values[0] || 0);
     // linear regression slope
     var N = values.length;
@@ -634,7 +638,7 @@
     var out = [];
     for (var j = 0; j < n; j++) {
       var v = Math.round(intercept + slope * (N + j));
-      out.push(Math.max(0, Math.min(100, v)));
+      out.push(Math.max(0, Math.min(cap, v)));
     }
     return out;
   }
