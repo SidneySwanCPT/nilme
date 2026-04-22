@@ -567,8 +567,6 @@ function openForm(type) {
       <div class="form-group form-full"><label class="form-label">Description</label><input class="form-input" id="f_desc" placeholder="Brief description of the camp"></div>
     </div>
     <button class="form-submit" onclick="submitCamp()">Save Camp</button>`;
-  }
-
   } else if (type === 'coach') {
     title.textContent = 'Add Program';
     body.innerHTML = `<div class="form-grid">
@@ -589,6 +587,7 @@ function openForm(type) {
       <div class="form-group form-full"><label class="form-label">Staff Page URL</label><input class="form-input" id="fc_staff" placeholder="https://..."></div>
     </div>
     <button class="form-submit" onclick="submitCoach()">Save Program</button>`;
+  }
 
   modal.classList.add('open');
 }
