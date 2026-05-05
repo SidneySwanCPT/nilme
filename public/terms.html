@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Terms of Service</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { overflow-y: auto; height: auto; }
+    .policy-page { margin-top: var(--nav-height); max-width: 760px; margin-left: auto; margin-right: auto; padding: var(--space-xl) var(--space-lg); }
+    .policy-eyebrow { font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:var(--gold);margin-bottom:6px; }
+    .policy-title { font-family:var(--font-display);font-size:clamp(2rem,4vw,3rem);color:var(--text-primary);margin-bottom:8px; }
+    .policy-date { font-size:.78rem;color:var(--text-muted);margin-bottom:var(--space-xl); }
+    .policy-section { margin-bottom:var(--space-xl); }
+    .policy-section h2 { font-size:1.1rem;font-weight:700;color:var(--gold);margin-bottom:var(--space-sm);padding-bottom:8px;border-bottom:1px solid var(--border-color); }
+    .policy-section p,.policy-section li { font-size:.88rem;color:var(--text-secondary);line-height:1.8;margin-bottom:10px; }
+    .policy-section ul { padding-left:var(--space-lg); }
+    .policy-highlight { background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.2);border-radius:var(--radius-sm);padding:var(--space-md);margin-bottom:var(--space-md); }
+    .policy-highlight p { margin:0;font-size:.84rem;color:var(--text-secondary);line-height:1.6; }
+    .policy-contact { background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--space-lg);margin-top:var(--space-xl); }
+    @media(max-width:768px) { .policy-page { padding:var(--space-lg) var(--space-md); } }
+  </style>
+</head>
+<body>
+<div id="nav-root"></div>
+<script src="supabase-client.js"></script>
+<script src="nav.js"></script>
+
+<div class="policy-page">
+  <div class="policy-eyebrow">Legal</div>
+  <h1 class="policy-title">Terms of Service</h1>
+  <div class="policy-date">Last Updated: April 2026 · Effective: April 2026</div>
+
+  <div class="policy-highlight">
+    <p>By creating an account or using Camp 8, you agree to these Terms. Please read them carefully. If you are under 18, a parent or legal guardian must review and agree to these Terms on your behalf.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>1. About Camp 8</h2>
+    <p>Camp 8 is operated by ASA Professional Services (Georgia). We provide a football recruiting intelligence platform including AI-powered athlete evaluation tools, a coaches directory, camp planning tools, NIL guidance, and related services ("the Platform").</p>
+    <p>Contact: <a href="mailto:support@fbintel-central.com" style="color:var(--gold)">support@fbintel-central.com</a></p>
+  </div>
+
+  <div class="policy-section">
+    <h2>2. Eligibility</h2>
+    <ul>
+      <li>You must be at least 13 years old to use Camp 8.</li>
+      <li>Users aged 13–17 must have parental or guardian consent.</li>
+      <li>By using the Platform, you represent that you meet these age requirements.</li>
+      <li>You must provide accurate information when creating your account.</li>
+    </ul>
+  </div>
+
+  <div class="policy-section">
+    <h2>3. Your Account</h2>
+    <p>You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. You agree to notify us immediately of any unauthorized access at support@fbintel-central.com.</p>
+    <p>You may not share your account with others, create multiple accounts, or use another person's account without permission.</p>
+    <p>We reserve the right to suspend or terminate accounts that violate these Terms.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>4. Platform Use — What's Allowed</h2>
+    <ul>
+      <li>Creating and managing your athletic profile</li>
+      <li>Using AI tools to evaluate your NIL value, combine performance, and recruiting potential</li>
+      <li>Searching the coaches directory and using the AI email writer for legitimate recruiting outreach</li>
+      <li>Browsing camp listings and managing your camp schedule</li>
+      <li>Accessing NCAA rules and recruiting guidance</li>
+      <li>Sharing your Camp 8 scores and achievements on social media</li>
+    </ul>
+  </div>
+
+  <div class="policy-section">
+    <h2>5. Platform Use — What's Not Allowed</h2>
+    <ul>
+      <li>Submitting false or misleading athletic statistics or profile information</li>
+      <li>Using AI-generated content to deceive college coaches or scouts</li>
+      <li>Attempting to reverse-engineer, scrape, or copy the Camp 8 scoring algorithm or AI systems</li>
+      <li>Using the platform for commercial purposes without written permission</li>
+      <li>Harassing, threatening, or impersonating other users or coaches</li>
+      <li>Attempting to gain unauthorized access to backend systems</li>
+      <li>Using automated tools, bots, or scripts to access the Platform</li>
+      <li>Violating any applicable laws including NCAA recruiting rules</li>
+    </ul>
+    <p>Violation of these rules may result in immediate account termination.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>6. AI Tools and Accuracy</h2>
+    <p>Camp 8's AI-powered tools — including the NIL Evaluator, Combine Evaluator, Recruiting Score, and AI Mentor — are provided for informational and educational purposes only.</p>
+    <p><strong style="color:var(--text-primary)">The Camp 8 Athlete Rating is not a guarantee of recruiting outcomes, scholarship offers, or NIL deal values.</strong> It is an estimation tool based on the information you provide and general benchmarks. Actual recruiting decisions are made by coaches and programs, not by Camp 8.</p>
+    <p>Coaches directory information including names, titles, and social handles changes frequently. Always verify contact information on the school's official athletics website before reaching out.</p>
+    <p>Camp listing information is maintained to the best of our ability but may not always be current. Verify event details directly with camp organizers before registering or traveling.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>7. Stats Verification and MaxPreps Integration</h2>
+    <p>When you provide a MaxPreps URL, Camp 8 will attempt to retrieve your publicly available statistics. The MaxPreps Verified badge indicates that your stats were successfully pulled from MaxPreps at the time of import — it does not constitute official NCAA certification or independent verification.</p>
+    <p>You are responsible for ensuring that your profile accurately reflects your athletic performance. Submitting false statistics violates these Terms and may constitute fraud when used in recruiting communications.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>8. Intellectual Property</h2>
+    <p>The Camp 8 platform, including its AI scoring algorithms, prompt engineering, design, branding, content, and Camp 8 Athlete Rating methodology, is owned by ASA Professional Services and protected by applicable intellectual property laws.</p>
+    <p>You retain ownership of your personal information and athletic data. By using Camp 8, you grant us a limited license to process and display your data within the platform for the purpose of providing our services.</p>
+    <p>You may not copy, reproduce, or redistribute any portion of the Camp 8 platform without written permission.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>9. NCAA Compliance</h2>
+    <p>Camp 8 provides general NCAA recruiting information for educational purposes. This information does not constitute legal or compliance advice. Recruiting rules change frequently.</p>
+    <p>You are responsible for understanding and complying with all NCAA, NAIA, NJCAA, and other governing body rules that apply to your recruiting situation. Camp 8 is not liable for any eligibility consequences arising from recruiting activities conducted through or informed by our platform.</p>
+    <p>If you have specific compliance questions, consult your school's athletic director or a qualified compliance professional.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>10. Disclaimers and Limitation of Liability</h2>
+    <p>Camp 8 is provided "as is" without warranties of any kind, express or implied. We do not guarantee that the platform will be error-free, uninterrupted, or that any particular outcome will result from using our tools.</p>
+    <p>To the maximum extent permitted by law, ASA Professional Services shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of Camp 8, including lost scholarship opportunities, NIL deal losses, or recruiting outcomes.</p>
+    <p>Our total liability to you for any claim shall not exceed the amount you paid for Camp 8 services in the 12 months preceding the claim.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>11. Governing Law</h2>
+    <p>These Terms are governed by the laws of the State of Georgia, United States. Any disputes shall be resolved in the courts of Fulton County, Georgia, or through binding arbitration at our election.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>12. Changes to These Terms</h2>
+    <p>We may update these Terms periodically. We will notify you of significant changes via email or in-app notice at least 14 days before they take effect. Your continued use of Camp 8 constitutes acceptance of updated Terms.</p>
+  </div>
+
+  <div class="policy-contact">
+    <p><strong style="color:var(--text-primary)">Questions about these Terms?</strong> Contact us at <a href="mailto:support@fbintel-central.com" style="color:var(--gold)">support@fbintel-central.com</a> or write to: ASA Professional Services, Alpharetta, Georgia.</p>
+  </div>
+</div>
+</body>
+</html>

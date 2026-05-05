@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Georgia Football Intelligence</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="home-styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="home-page">
+
+<!-- Login redirect overlay -->
+<div id="loginRedirectOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(8,8,16,0.97);align-items:center;justify-content:center;flex-direction:column;gap:var(--space-lg)">
+  <div style="font-family:var(--font-display);font-size:2.5rem;color:var(--gold);letter-spacing:0.04em">Camp 8</div>
+  <div style="font-size:0.9rem;color:var(--text-secondary)">Taking you to sign in…</div>
+  <div style="width:40px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden">
+    <div style="height:100%;background:var(--gold);border-radius:2px;animation:loadBar 0.8s ease forwards"></div>
+  </div>
+  <style>@keyframes loadBar{from{width:0}to{width:100%}}</style>
+</div>
+
+<!-- Navigation -->
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<!-- Hero -->
+<section class="hero-slider">
+  <div class="slider-track">
+    <div class="slide active" style="background-image:url('hero-bg.jpg')"></div>
+  </div>
+  <div class="slider-overlay"></div>
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-eyebrow">Georgia Football Intelligence</div>
+      <h1 class="hero-title">Camp <span>8</span></h1>
+      <p class="hero-subtitle">The hub for Georgia high school football — recruiting maps, prospect camps, NIL news, and program power rankings.</p>
+      <!-- App Coming Soon -->
+      <div class="hero-app-badge">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        App Coming Soon — iOS &amp; Android
+      </div>
+    </div>
+    <!-- Camp 8 AI on right side of hero -->
+    <div class="hero-ai-panel">
+      <div class="hero-ai-eyebrow">Powered by Claude AI</div>
+      <a href="chat.html" class="hero-ai-btn">
+        <div class="hero-ai-btn-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <div>
+          <div class="hero-ai-label">Camp 8 AI</div>
+          <div class="hero-ai-sub">Your football mentor</div>
+        </div>
+        <span class="hero-ai-arrow">→</span>
+      </a>
+      <div class="hero-ai-caps">
+        <a href="chat.html?topic=nil" class="hero-ai-cap">💰 NIL Status</a>
+        <a href="nil-rating.html" class="hero-ai-cap">⭐ Prospect Eval</a>
+        <a href="combine-eval.html" class="hero-ai-cap">⚡ Combine Grader</a>
+        <a href="chat.html?topic=combine" class="hero-ai-cap">🏋️ Training Plans</a>
+        <a href="chat.html?topic=email" class="hero-ai-cap">✉️ Coach Emails</a>
+        <a href="chat.html?topic=recruiting" class="hero-ai-cap">🎓 Recruiting Rules</a>
+      </div>
+      <a href="dashboard.html" class="hero-dash-link">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        My Athlete Dashboard
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Free Features Blurb -->
+<div class="free-features-bar">
+  <div class="ffb-inner">
+    <div class="ffb-label">🔓 Free with a Camp 8 account:</div>
+    <div class="ffb-items">
+      <a href="nil-rating.html" class="ffb-item-btn">⭐ NIL Rating AI</a>
+      <a href="combine-eval.html" class="ffb-item-btn">⚡ Combine Evaluator</a>
+      <a href="dashboard.html" class="ffb-item-btn">📊 Athlete Dashboard</a>
+      <a href="chat.html" class="ffb-item-btn">🏈 AI Mentor Chat</a>
+      <a href="dashboard.html" class="ffb-item-btn">📅 Camp Planner</a>
+      <a href="chat.html?topic=email" class="ffb-item-btn">✉️ Coach Email Writer</a>
+    </div>
+    <div class="ffb-auth-btns">
+      <a href="login.html?tab=signup" class="ffb-cta">Create Free Account</a>
+      <a href="login.html" class="ffb-signin">Sign In</a>
+    </div>
+  </div>
+</div>
+
+<!-- Countdown to Friday Night Lights -->
+<div class="countdown-bar">
+  <div class="countdown-label">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Countdown to Friday Night Lights
+  </div>
+  <div class="countdown-timer" id="countdownTimer">
+    <div class="cd-unit"><span class="cd-num" id="cd-days">--</span><span class="cd-lbl">Days</span></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-unit"><span class="cd-num" id="cd-hours">--</span><span class="cd-lbl">Hrs</span></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-unit"><span class="cd-num" id="cd-mins">--</span><span class="cd-lbl">Min</span></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-unit"><span class="cd-num" id="cd-secs">--</span><span class="cd-lbl">Sec</span></div>
+  </div>
+  <div class="countdown-label" style="opacity:0.6">First kickoff of the 2026 season</div>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+  <a href="camps.html" class="stat-link">
+    <span class="stat-big-num">755</span>
+    <span class="stat-big-label">Prospect Camps</span>
+  </a>
+  <div class="stat-div"></div>
+  <a href="recruits.html" class="stat-link">
+    <span class="stat-big-num">200+</span>
+    <span class="stat-big-label">Tracked Recruits</span>
+  </a>
+  <div class="stat-div"></div>
+  <a href="commitments.html" class="stat-link">
+    <span class="stat-big-num">35+</span>
+    <span class="stat-big-label">Commitments</span>
+  </a>
+  <div class="stat-div"></div>
+  <a href="nil-central.html" class="stat-link nil-stat">
+    <span class="stat-big-num">NIL</span>
+    <span class="stat-big-label">Central</span>
+  </a>
+  <div class="stat-div"></div>
+  <a href="powerhouse.html" class="stat-link">
+    <span class="stat-big-num">GA·FL·TX·CA</span>
+    <span class="stat-big-label">4 States Covered</span>
+  </a>
+</div>
+
+<!-- Logged-in user profile bar -->
+<div class="user-profile-bar" id="userProfileBar" style="display:none">
+  <div class="upb-inner">
+    <div class="upb-avatar" id="upbAvatar">?</div>
+    <div class="upb-info">
+      <div class="upb-name" id="upbName">Athlete</div>
+      <div class="upb-details" id="upbDetails"></div>
+    </div>
+    <div class="upb-scores">
+      <div class="upb-score-card" id="upbNilCard">
+        <div class="upb-score-num" id="upbNilScore">—</div>
+        <div class="upb-score-lbl">NIL Score</div>
+      </div>
+      <div class="upb-score-card" id="upbCombineCard">
+        <div class="upb-score-num" id="upbCombineGrade">—</div>
+        <div class="upb-score-lbl">Combine Grade</div>
+      </div>
+      <div class="upb-score-card">
+        <div class="upb-score-num" id="upbCamps">0</div>
+        <div class="upb-score-lbl">Starred Camps</div>
+      </div>
+      <div class="upb-score-card">
+        <div class="upb-score-num" id="upbOffers">0</div>
+        <div class="upb-score-lbl">Offers</div>
+      </div>
+    </div>
+    <div class="upb-actions">
+      <a href="dashboard.html" class="upb-btn primary">My Dashboard</a>
+      <a href="nil-rating.html" class="upb-btn">NIL Eval</a>
+      <a href="combine-eval.html" class="upb-btn">Combine Eval</a>
+      <button onclick="doHomeSignOut()" class="upb-signout">Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     EVALUATION TOOLS — See Where You Rank
+     ============================================ -->
+<section class="eval-section">
+  <div class="eval-eyebrow">Athlete Evaluation Tools</div>
+  <h2 class="eval-headline">See Where You <span>Rank</span></h2>
+  <p class="eval-sub">Two free tools built to show you exactly where you stand — and what to do next.</p>
+  <div class="eval-signup-banner">
+    <div class="esb-text">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      These tools require a free Camp 8 account
+    </div>
+    <div class="esb-btns">
+      <a href="login.html?tab=signup" class="esb-btn primary">Create Free Account</a>
+      <a href="login.html" class="esb-btn outline">Sign In</a>
+    </div>
+  </div>
+  <div class="eval-cards">
+    <a href="login.html" class="eval-card nil-card" onclick="smoothLoginRedirect(event,'login.html?from=nil-rating')">
+      <div class="eval-card-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div class="eval-card-content">
+        <div class="eval-card-tag">NIL</div>
+        <h3 class="eval-card-title">NIL Rating Tool</h3>
+        <p class="eval-card-desc">Enter your profile and get a score out of 100 showing your NIL market value — plus a personalized action plan and camp recommendations.</p>
+        <div class="eval-card-cta">Get My NIL Score →</div>
+      </div>
+      <div class="eval-card-score-preview">
+        <div class="score-preview-ring">
+          <svg viewBox="0 0 80 80" width="80" height="80">
+            <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(212,168,67,0.15)" stroke-width="6"/>
+            <circle cx="40" cy="40" r="34" fill="none" stroke="#d4a843" stroke-width="6" stroke-dasharray="213.6" stroke-dashoffset="60" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+          </svg>
+          <div class="score-preview-num">72</div>
+        </div>
+        <div class="score-preview-label">Sample Score</div>
+      </div>
+    </a>
+
+    <a href="login.html" class="eval-card combine-card" onclick="smoothLoginRedirect(event,'login.html?from=combine-eval')">
+      <div class="eval-card-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div class="eval-card-content">
+        <div class="eval-card-tag">COMBINE</div>
+        <h3 class="eval-card-title">Combine Evaluator</h3>
+        <p class="eval-card-desc">Enter your combine stats and get graded on every measurable — 40 time, vertical, strength, and more. Know exactly what to work on before your next camp.</p>
+        <div class="eval-card-cta">Grade My Numbers →</div>
+      </div>
+      <div class="eval-card-score-preview">
+        <div class="combine-bars">
+          <div class="cbar"><div class="cbar-fill" style="height:75%;background:#4a90d9"></div><span>Speed</span></div>
+          <div class="cbar"><div class="cbar-fill" style="height:88%;background:#50c878"></div><span>Power</span></div>
+          <div class="cbar"><div class="cbar-fill" style="height:62%;background:#e8872b"></div><span>Agility</span></div>
+          <div class="cbar"><div class="cbar-fill" style="height:80%;background:#FFD700"></div><span>Size</span></div>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+
+
+<!-- ============================================
+     TOP 5 FEATURED CAMPS
+     ============================================ -->
+<section class="featured-camps-section">
+  <!-- Big Schedule CTA above camps -->
+  <div class="camp-schedule-cta">
+    <div class="csc-inner">
+      <div class="csc-icon">📅</div>
+      <div class="csc-text">
+        <h3 class="csc-title">Sign In to Plan Your Camp Schedule</h3>
+        <p class="csc-sub">Star camps, build your personal calendar, track what you've attended, and get reminders — all in your free athlete dashboard.</p>
+      </div>
+      <div class="csc-btns">
+        <a href="login.html?tab=signup" class="csc-btn primary">Create Free Account</a>
+        <a href="login.html" class="csc-btn outline">Sign In</a>
+        <a href="camps.html" class="csc-btn ghost">Browse All 755 Camps</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="featured-camps-header">
+    <div>
+      <div class="section-eyebrow">Editor's Picks</div>
+      <h2 class="section-title-lg">Top <span>8</span> Elite Camps</h2>
+      <p class="section-subtitle">The highest-tier prospect camps — handpicked from Georgia and the Southeast.</p>
+    </div>
+    <a href="camps.html" class="section-link-btn">View All 755 Camps →</a>
+  </div>
+  <div class="featured-camps-grid" id="featuredCampsGrid">
+    <!-- Populated by JS -->
+    <div class="fc-skeleton"></div>
+    <div class="fc-skeleton"></div>
+    <div class="fc-skeleton"></div>
+    <div class="fc-skeleton"></div>
+    <div class="fc-skeleton"></div>
+    <div class="fc-skeleton"></div>
+    <div class="fc-skeleton"></div>
+    <div class="fc-skeleton"></div>
+  </div>
+</section>
+
+<!-- Camps Teaser -->
+<section class="camps-teaser-section">
+  <div class="camps-teaser-inner">
+    <div class="camps-teaser-left">
+      <div class="section-eyebrow">755 Prospect Camps</div>
+      <h2 class="section-title-lg">Plan Your <span>Camp Schedule</span></h2>
+      <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.6;margin-bottom:var(--space-lg);max-width:400px">Browse, filter, and star the camps you want to attend. Build a personalized schedule, get reminded of upcoming dates, and track which ones you've attended — all in your free athlete dashboard.</p>
+      <div class="camps-teaser-btns">
+        <a href="camps.html" class="camps-teaser-btn primary">Browse All 755 Camps</a>
+        <a href="login.html" class="camps-teaser-btn outline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Sign In to Plan Your Schedule
+        </a>
+      </div>
+    </div>
+    <div class="camps-teaser-right" id="campsTeaserCards">
+      <!-- 4 teaser camp cards populated by JS -->
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================
+     MAIN DASHBOARD (News + Widget)
+     ============================================ -->
+<main class="dashboard">
+  <!-- Camps Widget -->
+  <aside class="right-rail">
+    <div class="widget">
+      <div class="widget-header">
+        <h3 class="widget-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Upcoming Camps
+        </h3>
+        <span class="widget-badge" id="campsBadge">Loading…</span>
+      </div>
+      <div class="camps-state-row">
+        <button class="camp-state-btn active" onclick="filterCampsWidget('all',this)">All</button>
+        <button class="camp-state-btn" onclick="filterCampsWidget('Georgia',this)">GA</button>
+        <button class="camp-state-btn" onclick="filterCampsWidget('Florida',this)">FL</button>
+        <button class="camp-state-btn" onclick="filterCampsWidget('Texas',this)">TX</button>
+        <button class="camp-state-btn" onclick="filterCampsWidget('North Carolina',this)">NC</button>
+      </div>
+      <div class="camp-list" id="campList">
+        <div class="camp-skeleton"></div>
+        <div class="camp-skeleton"></div>
+        <div class="camp-skeleton"></div>
+        <div class="camp-skeleton"></div>
+      </div>
+      <a href="camps.html" class="widget-cta">
+        View All Camps + Map
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </aside>
+
+  <!-- News — secondary position -->
+  <section class="news-section">
+    <div class="section-header">
+      <div class="section-title-row">
+        <h2 class="section-title">Latest News</h2>
+        <div class="live-dot"><span></span> Live Feed</div>
+      </div>
+      <div class="news-tabs">
+        <button class="news-tab active" onclick="switchFeed('ga-football',this)">Georgia HS Football</button>
+        <button class="news-tab" onclick="switchFeed('nil',this)">NIL &amp; Recruiting</button>
+        <button class="news-tab" onclick="switchFeed('national',this)">National</button>
+      </div>
+    </div>
+    <div class="news-grid" id="newsGrid">
+      <div class="news-skeleton news-skeleton-featured"></div>
+      <div class="news-skeleton"></div>
+      <div class="news-skeleton"></div>
+      <div class="news-skeleton"></div>
+      <div class="news-skeleton"></div>
+    </div>
+    <div class="news-error" id="newsError" style="display:none;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div>
+        <p style="margin-bottom:8px;">Live feed unavailable — browse directly:</p>
+        <div class="fallback-links">
+          <a href="https://www.on3.com/high-school/category/football/news/" target="_blank" rel="noopener">On3 HS Football →</a>
+          <a href="https://www.maxpreps.com/news/football/" target="_blank" rel="noopener">MaxPreps →</a>
+          <a href="https://247sports.com/football/" target="_blank" rel="noopener">247Sports →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- App Coming Soon -->
+<div class="app-coming-soon-strip">
+  <div class="acs-label">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+    Camp 8 App — Coming Soon
+  </div>
+  <div class="acs-store">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M8 12l4-4 4 4"/></svg>
+    App Store
+  </div>
+  <div class="acs-store">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    Google Play
+  </div>
+  <span style="font-size:0.72rem;color:var(--text-muted)">iOS &amp; Android · Notify me when it launches</span>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a href="index.html" class="footer-brand">Camp <span>8</span></a>
+    <div class="footer-links">
+      <a href="nil-central.html">NIL Central</a>
+      <a href="camps.html">Prospect Camps</a>
+      <a href="recruits.html">Recruiting Central</a>
+      <a href="commitments.html">Commitments</a>
+      <a href="transfer-portal.html">Transfer Portal</a>
+      <a href="athlete-hub.html">Athlete Hub</a>
+      <a href="powerhouse.html">Powerhouse Central</a>
+    </div>
+    <a href="https://www.instagram.com/n.i.l.me" target="_blank" rel="noopener" class="ig-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+      @n.i.l.me
+    </a>
+  </div>
+</footer>
+
+<script src="camps-data.js"></script>
+<script>
+// ============================================
+// COUNTDOWN TO FRIDAY NIGHT LIGHTS
+// Target: August 22, 2026 7:00 PM ET
+// ============================================
+const KICKOFF = new Date('2026-08-22T19:00:00-04:00');
+
+function updateCountdown() {
+  const now = new Date();
+  const diff = KICKOFF - now;
+  if (diff <= 0) {
+    document.getElementById('countdownTimer').innerHTML = '<span style="color:var(--gold);font-weight:700;font-size:1rem">🏈 Season Has Begun!</span>';
+    return;
+  }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  document.getElementById('cd-days').textContent  = String(d).padStart(2,'0');
+  document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
+  document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
+  document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+// ============================================
+// NEWS FEEDS
+// ============================================
+const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+const FEEDS = {
+  'ga-football': [
+    'https://news.google.com/rss/search?q=Georgia+high+school+football+recruiting&hl=en-US&gl=US&ceid=US:en',
+    'https://news.google.com/rss/search?q=Georgia+HS+football+2026+2027+commitment&hl=en-US&gl=US&ceid=US:en'
+  ],
+  'nil': [
+    'https://news.google.com/rss/search?q=NIL+high+school+football+deal+2026&hl=en-US&gl=US&ceid=US:en',
+    'https://news.google.com/rss/search?q=high+school+athlete+NIL+Georgia+Florida+Texas&hl=en-US&gl=US&ceid=US:en'
+  ],
+  'national': [
+    'https://news.google.com/rss/search?q=high+school+football+recruiting+national+prospect&hl=en-US&gl=US&ceid=US:en',
+    'https://news.google.com/rss/search?q=football+prospect+camp+showcase+2026+top+recruit&hl=en-US&gl=US&ceid=US:en'
+  ]
+};
+const newsCache = {};
+
+async function loadNews(feedKey) {
+  const grid = document.getElementById('newsGrid');
+  const errEl = document.getElementById('newsError');
+  errEl.style.display = 'none';
+  grid.innerHTML = '<div class="news-skeleton news-skeleton-featured"></div>' + Array(4).fill('<div class="news-skeleton"></div>').join('');
+  if (newsCache[feedKey]) { renderNews(newsCache[feedKey]); return; }
+  const sources = FEEDS[feedKey] || FEEDS['ga-football'];
+  const results = await Promise.allSettled(
+    sources.map(url => fetch(RSS2JSON + encodeURIComponent(url) + '&count=10').then(r => r.json()).then(d => d.items || []))
+  );
+  let items = [];
+  results.forEach(r => { if (r.status === 'fulfilled') items = items.concat(r.value); });
+  const seen = new Set();
+  items = items.filter(it => { const k=(it.title||'').slice(0,60); if(seen.has(k)) return false; seen.add(k); return true; });
+  items.sort((a,b) => new Date(b.pubDate||0) - new Date(a.pubDate||0));
+  if (!items.length) { grid.innerHTML=''; errEl.style.display='flex'; return; }
+  newsCache[feedKey] = items;
+  renderNews(items);
+}
+
+function switchFeed(key, btn) {
+  document.querySelectorAll('.news-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadNews(key);
+}
+
+function renderNews(items) {
+  const grid = document.getElementById('newsGrid');
+  grid.innerHTML = '';
+  items.slice(0, 11).forEach((item, i) => {
+    const date = item.pubDate ? fmtDate(item.pubDate) : '';
+    const src  = item.author || xDomain(item.link) || '';
+    const title = strip(item.title || '');
+    const desc  = strip(item.description || '').slice(0, 130) + '…';
+    const a = document.createElement('a');
+    a.className = 'news-card' + (i===0?' news-card-featured':'');
+    a.href = item.link || '#'; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.innerHTML = `<div class="news-card-meta"><span class="news-source">${esc(src)}</span><span class="news-date">${esc(date)}</span></div><div class="news-card-title">${esc(title)}</div>${i===0?`<div class="news-card-desc">${esc(desc)}</div>`:''}<div class="news-card-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>`;
+    grid.appendChild(a);
+  });
+}
+
+// ============================================
+// CAMP UTILITIES
+// ============================================
+const FTBL = ['football','gridiron','qb','linebacker','7on7','combine','offense','defense','nfl','wr','db','ol','dl'];
+const TC = {1:'#FFD700',2:'#c41e3a',3:'#e8872b',4:'#4a90d9',5:'#7a7a9a'};
+
+function isFootball(c) {
+  const h = [c.name,c.host,c.university,c.description,c.ages].join(' ').toLowerCase();
+  const excl = ['basketball','baseball','soccer','softball','lacrosse'];
+  if (excl.some(t => h.includes(t) && !h.includes('football'))) return false;
+  return FTBL.some(k => h.includes(k)) || !c.division || c.division==='N/A' || c.division==='';
+}
+
+function parseDate(s) {
+  if (!s) return null;
+  const c = s.split('–')[0].split('—')[0].split('-')[0].trim();
+  let d = new Date(c); if (!isNaN(d)) return d;
+  d = new Date(c+' 1'); return isNaN(d) ? null : d;
+}
+
+function getUpcomingFootballCamps(stateFilter) {
+  if (typeof CAMPS_DATA === 'undefined') return [];
+  const now = new Date(); now.setHours(0,0,0,0);
+  return CAMPS_DATA.filter(c => {
+    const d = parseDate(c.dates);
+    if (!d || d < now) return false;
+    if (!isFootball(c)) return false;
+    if (stateFilter && stateFilter !== 'all' && c.state !== stateFilter) return false;
+    return true;
+  }).sort((a,b) => parseDate(a.dates) - parseDate(b.dates));
+}
+
+// ============================================
+// FEATURED TOP 5 ELITE GEORGIA CAMPS
+// ============================================
+// Unsplash football images for visual variety
+const CAMP_BG_IMGS = [
+  'https://images.unsplash.com/photo-1566577134770-3d85bb3a9cc4?w=600&q=70&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=70&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=600&q=70&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=600&q=70&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&q=70&auto=format&fit=crop',
+];
+
+function renderFeaturedCamps() {
+  if (typeof CAMPS_DATA === 'undefined') return;
+  const now = new Date(); now.setHours(0,0,0,0);
+
+  // Auto-pick: Tier 1, Georgia, upcoming, sorted by date
+  let elite = CAMPS_DATA.filter(c => {
+    const d = parseDate(c.dates);
+    return d && d >= now && c.tier === 1 && c.state === 'Georgia' && isFootball(c);
+  }).sort((a,b) => parseDate(a.dates) - parseDate(b.dates));
+
+  // If fewer than 5 GA Tier 1, add Tier 1 from other states
+  if (elite.length < 5) {
+    const others = CAMPS_DATA.filter(c => {
+      const d = parseDate(c.dates);
+      return d && d >= now && c.tier === 1 && c.state !== 'Georgia' && isFootball(c) && !elite.includes(c);
+    }).sort((a,b) => parseDate(a.dates) - parseDate(b.dates));
+    elite = elite.concat(others);
+  }
+
+  elite = elite.slice(0, 8);
+  const grid = document.getElementById('featuredCampsGrid');
+  grid.innerHTML = '';
+
+  elite.forEach((camp, i) => {
+    const card = document.createElement('a');
+    card.className = 'featured-camp-card';
+    card.href = `camps.html?openCamp=${camp.id}`;
+    card.style.backgroundImage = `url('${CAMP_BG_IMGS[i % CAMP_BG_IMGS.length]}')`;
+    card.innerHTML = `
+      <div class="fc-overlay"></div>
+      <div class="fc-rank">#${i+1}</div>
+      <div class="fc-content">
+        <div class="fc-tier" style="color:#FFD700">${camp.tierLabel}</div>
+        <div class="fc-name">${esc(camp.name)}</div>
+        <div class="fc-loc">${esc(camp.city)}, ${esc(camp.stateAbbrev)}</div>
+        <div class="fc-date">${esc(camp.dates || 'TBD')}</div>
+        ${camp.inviteOnly ? '<div class="fc-badge invite">Invite Only</div>' : '<div class="fc-badge open">Open Registration</div>'}
+      </div>
+      <div class="fc-arrow">View Details →</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  if (!elite.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px">No upcoming elite camps found. <a href="camps.html" style="color:var(--gold)">Browse all camps →</a></div>';
+  }
+}
+
+// ============================================
+// PLAIN CAMP CARDS (no photos)
+// ============================================
+let plainFilterState = 'all';
+
+function setPlainFilter(state, btn) {
+  plainFilterState = state;
+  document.querySelectorAll('.reel-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlainCamps();
+}
+
+function renderPlainCamps() {
+  if (typeof CAMPS_DATA === 'undefined') return;
+  const stateFilter = plainFilterState === 'all' ? null : plainFilterState;
+  const camps = getUpcomingFootballCamps(stateFilter).slice(0, 12);
+  const grid = document.getElementById('plainCampsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  if (!camps.length) {
+    grid.innerHTML = '<div style="color:var(--text-muted);font-size:0.9rem;padding:40px;text-align:center">No upcoming camps for this filter.</div>';
+    return;
+  }
+  camps.forEach(camp => {
+    const color = TC[camp.tier] || '#7a7a9a';
+    const card = document.createElement('a');
+    card.className = 'plain-camp-card';
+    card.href = `camps.html?openCamp=${camp.id}`;
+    card.innerHTML = `
+      <div class="pcc-tier" style="color:${color}">${esc(camp.tierLabel)}</div>
+      <div class="pcc-name">${esc(camp.name)}</div>
+      <div class="pcc-loc">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${esc(camp.city)}, ${esc(camp.stateAbbrev)}
+      </div>
+      <div class="pcc-date">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        ${esc(camp.dates || 'TBD')}
+      </div>
+      ${camp.inviteOnly ? '<div class="pcc-badge invite">Invite Only</div>' : '<div class="pcc-badge open">Open</div>'}
+      <div class="pcc-arrow" style="color:${color}">View Details →</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ============================================
+// CAMPS WIDGET (sidebar)
+// ============================================
+let campState = 'all';
+
+function filterCampsWidget(state, btn) {
+  campState = state;
+  document.querySelectorAll('.camp-state-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCampsWidget();
+}
+
+function renderCampsWidget() {
+  const camps = getUpcomingFootballCamps(campState === 'all' ? null : campState);
+  document.getElementById('campsBadge').textContent = camps.length + ' upcoming';
+  const list = document.getElementById('campList');
+  list.innerHTML = '';
+  if (!camps.length) { list.innerHTML = '<div class="camp-empty">No upcoming camps found.</div>'; return; }
+  camps.slice(0, 9).forEach(camp => {
+    const color = TC[camp.tier] || '#7a7a9a';
+    const a = document.createElement('a');
+    a.className = 'camp-item';
+    a.href = `camps.html?openCamp=${camp.id}`;
+    a.innerHTML = `
+      <div class="camp-item-date"><span class="camp-item-dot" style="background:${color}"></span><span class="camp-item-dates">${camp.dates||'TBD'}</span></div>
+      <div class="camp-item-name">${esc(camp.name)}</div>
+      <div class="camp-item-loc">${camp.city}, ${camp.stateAbbrev} &middot; <span class="camp-item-tier" style="color:${color}">${camp.tierLabel}</span></div>`;
+    list.appendChild(a);
+  });
+}
+
+// ============================================
+// UTILS
+// ============================================
+function fmtDate(s){try{const d=new Date(s),n=new Date(),df=Math.floor((n-d)/1000);if(df<3600)return Math.floor(df/60)+'m ago';if(df<86400)return Math.floor(df/3600)+'h ago';if(df<604800)return Math.floor(df/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch{return'';}}
+function xDomain(url){try{return new URL(url).hostname.replace('www.','');}catch{return'';}}
+function strip(h){const d=document.createElement('div');d.innerHTML=h;return d.textContent||d.innerText||'';}
+function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+
+// ============================================
+// CAMPS TEASER (4 plain cards, no auth needed)
+// ============================================
+function renderCampsTeaser() {
+  if (typeof CAMPS_DATA === 'undefined') return;
+  const camps = getUpcomingFootballCamps(null).slice(0, 4);
+  const el = document.getElementById('campsTeaserCards');
+  if (!el) return;
+  if (!camps.length) { el.style.display = 'none'; return; }
+  el.innerHTML = camps.map(camp => {
+    const color = TC[camp.tier] || '#7a7a9a';
+    return `<div class="camps-teaser-card">
+      <div class="ctc-tier" style="color:${color}">${esc(camp.tierLabel)}</div>
+      <div class="ctc-name">${esc(camp.name)}</div>
+      <div class="ctc-loc">${esc(camp.city)}, ${esc(camp.stateAbbrev)}</div>
+      <div class="ctc-date">${esc(camp.dates || 'TBD')}</div>
+    </div>`;
+  }).join('') +
+  `<a href="login.html" class="ctc-more">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    Sign in to see all 755 camps + plan your schedule
+  </a>`;
+}
+
+// ============================================
+// BOOT
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  loadNews('ga-football');
+  renderCampsWidget();
+  renderFeaturedCamps();
+  renderCampsTeaser();
+  checkHomeAuth();
+});
+
+// ============================================
+// HOME PAGE AUTH CHECK — show profile bar if logged in
+// ============================================
+function smoothLoginRedirect(e, url) {
+  e.preventDefault();
+  const overlay = document.getElementById('loginRedirectOverlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    // Re-trigger animation
+    overlay.querySelector('div[style*="animation"]').style.animation = 'none';
+    setTimeout(() => {
+      overlay.querySelector('div[style*="animation"]').style.animation = '';
+      setTimeout(() => window.location.href = url, 900);
+    }, 10);
+  } else {
+    window.location.href = url;
+  }
+}
+
+async function checkHomeAuth() {
+  if (typeof window.supabase === 'undefined') return;
+
+  const sb = window.supabase.createClient(
+    'https://afikpptrkkfpoatadhyg.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmaWtwcHRya2tmcG9hdGFkaHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDM4MjIsImV4cCI6MjA5MDU3OTgyMn0.fSpFH4kP_iyDAptTlTIQLL5tjhzjFe6PWFDMdWV55uI'
+  );
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  const user = session.user;
+  const bar = document.getElementById('userProfileBar');
+  if (bar) bar.style.display = '';
+
+  // Update nav login btn to dashboard
+  const navBtn = document.getElementById('navLoginBtn');
+  if (navBtn) {
+    navBtn.textContent = '📊 My Dashboard';
+    navBtn.href = 'dashboard.html';
+  }
+
+  // Hide signup prompts since they're logged in
+  document.querySelectorAll('.eval-signup-banner, .camp-schedule-cta, .ffb-auth-btns').forEach(el => {
+    el.style.display = 'none';
+  });
+
+  // Update eval card links to actual tools
+  document.querySelectorAll('.eval-card.nil-card').forEach(a => a.href = 'nil-rating.html');
+  document.querySelectorAll('.eval-card.combine-card').forEach(a => a.href = 'combine-eval.html');
+
+  // Update feature bar buttons (already correct hrefs)
+
+  // Load athlete profile
+  try {
+    const { data: profile } = await sb.from('athletes').select('*').eq('user_id', user.id).single();
+
+    if (profile) {
+      const name = profile.name || user.email.split('@')[0];
+      document.getElementById('upbAvatar').textContent = name.charAt(0).toUpperCase();
+      document.getElementById('upbName').textContent = name;
+      const parts = [];
+      if (profile.position) parts.push(profile.position);
+      if (profile.school) parts.push(profile.school);
+      if (profile.state) parts.push(profile.state);
+      if (profile.graduation_year) parts.push("Class of '" + String(profile.graduation_year).slice(-2));
+      document.getElementById('upbDetails').textContent = parts.join(' · ') || user.email;
+    } else {
+      document.getElementById('upbName').textContent = user.email.split('@')[0];
+      document.getElementById('upbDetails').textContent = user.email;
+    }
+
+    // Load latest combine score
+    const { data: combine } = await sb.from('athlete_combine_scores')
+      .select('overall_grade').eq('athlete_id', profile?.id).order('created_at', { ascending: false }).limit(1);
+    if (combine?.[0]) {
+      const g = combine[0].overall_grade;
+      const el = document.getElementById('upbCombineGrade');
+      el.textContent = g;
+      el.style.color = g.startsWith('A') ? '#FFD700' : g.startsWith('B') ? '#50c878' : '#e8872b';
+    }
+
+    // Load latest NIL score
+    const { data: nil } = await sb.from('athlete_nil_scores')
+      .select('score, grade').eq('athlete_id', profile?.id).order('created_at', { ascending: false }).limit(1);
+    if (nil?.[0]) {
+      document.getElementById('upbNilScore').textContent = nil[0].score;
+    }
+
+    // Load starred camps count
+    const { count: campsCount } = await sb.from('athlete_starred_camps')
+      .select('*', { count: 'exact', head: true }).eq('athlete_id', profile?.id);
+    document.getElementById('upbCamps').textContent = campsCount || 0;
+
+    // Load offers count
+    const { count: offersCount } = await sb.from('athlete_offers')
+      .select('*', { count: 'exact', head: true }).eq('athlete_id', profile?.id);
+    document.getElementById('upbOffers').textContent = offersCount || 0;
+
+  } catch(e) {
+    document.getElementById('upbName').textContent = user.email.split('@')[0];
+    document.getElementById('upbDetails').textContent = user.email;
+  }
+}
+
+async function doHomeSignOut() {
+  if (typeof window.supabase === 'undefined') return;
+  const sb = window.supabase.createClient(
+    'https://afikpptrkkfpoatadhyg.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmaWtwcHRya2tmcG9hdGFkaHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDM4MjIsImV4cCI6MjA5MDU3OTgyMn0.fSpFH4kP_iyDAptTlTIQLL5tjhzjFe6PWFDMdWV55uI'
+  );
+  await sb.auth.signOut();
+  window.location.reload();
+}
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

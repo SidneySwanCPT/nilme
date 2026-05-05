@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Coaches Directory</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth-guard.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body { overflow-y: auto; height: auto; }
+    .coaches-page { margin-top: var(--nav-height); }
+
+    /* Header */
+    .coaches-header { padding: var(--space-xl); background: linear-gradient(135deg,rgba(212,168,67,0.07) 0%,transparent 100%); border-bottom: 1px solid var(--border-color); }
+    .coaches-header-inner { max-width: 1100px; margin: 0 auto; }
+    .coaches-disclaimer {
+      display:flex;align-items:flex-start;gap:8px;
+      padding:10px 14px;margin-bottom:var(--space-lg);
+      background:rgba(232,135,43,0.08);border:1px solid rgba(232,135,43,0.2);
+      border-radius:var(--radius-sm);font-size:.78rem;color:#e8872b;line-height:1.5;
+    }
+    .coaches-eyebrow { font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:var(--gold);margin-bottom:6px; }
+    .coaches-title { font-family:var(--font-display);font-size:clamp(2rem,4vw,3.5rem);letter-spacing:.04em;color:var(--text-primary);margin-bottom:8px; }
+    .coaches-title span { color:var(--gold); }
+    .coaches-subtitle { font-size:.88rem;color:var(--text-secondary);line-height:1.6;max-width:540px;margin-bottom:var(--space-lg); }
+    .coaches-stats { display:flex;gap:var(--space-xl);flex-wrap:wrap; }
+    .cs-stat { text-align:center; }
+    .cs-num { font-family:var(--font-display);font-size:1.8rem;color:var(--gold);line-height:1; }
+    .cs-lbl { font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:2px; }
+
+    /* Controls */
+    .coaches-controls { position:sticky;top:var(--nav-height);z-index:100;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);padding:10px var(--space-xl); }
+    .coaches-controls-inner { max-width:1100px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center; }
+    .search-wrap { position:relative;flex:1;min-width:200px; }
+    .search-icon { position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none; }
+    .coaches-search { width:100%;padding:8px 10px 8px 32px;font-size:.84rem;font-family:var(--font-body);background:rgba(255,255,255,.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary);outline:none;box-sizing:border-box; }
+    .coaches-search:focus { border-color:var(--gold); }
+    .coaches-search::placeholder { color:var(--text-muted); }
+    .coaches-filter { padding:8px 10px;font-size:.82rem;font-family:var(--font-body);background:rgba(255,255,255,.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-secondary);outline:none;cursor:pointer; }
+    .coaches-filter:focus { border-color:var(--gold); }
+    .coaches-count { font-size:.75rem;color:var(--text-muted);margin-left:auto;white-space:nowrap; }
+
+    /* List */
+    .coaches-body { max-width:1100px;margin:0 auto;padding:var(--space-md) var(--space-xl); }
+
+    .coaches-list-header {
+      display:grid;
+      grid-template-columns:48px 1fr 80px 120px 40px 120px 140px;
+      padding:8px 16px;
+      font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);
+      border-bottom:1px solid var(--border-color);
+      margin-bottom:4px;
+    }
+
+    .coach-row {
+      display:grid;
+      grid-template-columns:48px 1fr 80px 120px 40px 120px 140px;
+      align-items:center;
+      padding:14px 16px;
+      border:1px solid var(--border-color);
+      border-radius:var(--radius-sm);
+      margin-bottom:4px;
+      background:var(--bg-card);
+      cursor:pointer;
+      transition:all .15s;
+      gap:10px;
+    }
+    .coach-row:hover { border-color:rgba(212,168,67,.4);background:var(--gold-dim); }
+
+    /* Logo cell */
+    .cr-logo { width:44px;height:44px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .cr-logo img { width:38px;height:38px;object-fit:contain; }
+    .cr-logo-fallback { font-size:.8rem;font-weight:800;color:var(--gold); }
+
+    /* School cell */
+    .cr-school-name { font-size:.95rem;font-weight:700;color:var(--text-primary);line-height:1.2; }
+    .cr-nickname { font-size:.72rem;color:var(--text-muted); }
+
+    /* Division badge */
+    .cr-div { padding:2px 8px;border-radius:100px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;display:inline-block; }
+    .cr-div.fbs  { background:rgba(212,168,67,.15);color:var(--gold); }
+    .cr-div.fcs  { background:rgba(74,144,217,.15);color:#4a90d9; }
+    .cr-div.d2   { background:rgba(80,200,120,.15);color:#50c878; }
+    .cr-div.d3   { background:rgba(232,135,43,.15);color:#e8872b; }
+    .cr-div.juco { background:rgba(196,30,58,.15);color:#c41e3a; }
+    .cr-div.naia { background:rgba(160,80,200,.15);color:#a050c8; }
+
+    /* Coach name cell */
+    .cr-coach { font-size:.82rem;color:var(--text-secondary); }
+    .cr-coach span { color:var(--text-muted);font-size:.72rem;display:block; }
+
+    /* State cell */
+    .cr-state { font-size:.82rem;font-weight:700;color:var(--text-secondary);text-align:center; }
+
+    /* Conference cell */
+    .cr-conf { font-size:.75rem;color:var(--text-muted); }
+
+    .cr-social { display:flex;align-items:center;gap:5px;flex-wrap:wrap; }
+    .social-pill { display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:.7rem;font-weight:600;text-decoration:none;transition:all .15s;white-space:nowrap; }
+    .x-pill { background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text-secondary); }
+    .x-pill:hover { background:rgba(255,255,255,.12);color:#fff; }
+    .ig-pill { background:rgba(225,48,108,.1);border:1px solid rgba(225,48,108,.2);color:#e1306c;padding:3px 8px; }
+    .ig-pill:hover { background:rgba(225,48,108,.2); }
+    .social-link-full { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:100px;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .15s; }
+    .social-link-full.x { background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text-secondary); }
+    .social-link-full.x:hover { background:rgba(255,255,255,.12);color:#fff; }
+    .social-link-full.ig { background:rgba(225,48,108,.1);border:1px solid rgba(225,48,108,.2);color:#e1306c; }
+    .social-link-full.ig:hover { background:rgba(225,48,108,.2); }
+    .coaches-empty { text-align:center;padding:var(--space-xl);color:var(--text-muted);font-size:.88rem; }
+
+    /* ---- COACH DETAIL MODAL ---- */
+    .coach-modal { display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.87);align-items:center;justify-content:center;padding:var(--space-lg); }
+    .coach-modal.open { display:flex; }
+    .coach-modal-box { background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-lg);width:100%;max-width:760px;max-height:92vh;overflow-y:auto; }
+
+    .cm-header { padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--border-color);position:sticky;top:0;background:var(--bg-secondary);z-index:1;display:flex;align-items:center;gap:var(--space-md); }
+    .cm-logo { width:52px;height:52px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .cm-logo img { width:44px;height:44px;object-fit:contain; }
+    .cm-logo-fallback { font-size:1.1rem;font-weight:800;color:var(--gold); }
+    .cm-school { font-family:var(--font-display);font-size:1.6rem;letter-spacing:.03em;color:var(--text-primary);line-height:1; }
+    .cm-school-sub { font-size:.78rem;color:var(--text-muted);margin-top:3px; }
+    .cm-close { margin-left:auto;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--border-color);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;flex-shrink:0; }
+
+    .cm-body { padding:var(--space-lg); }
+
+    .cm-info-row { display:flex;gap:var(--space-sm);margin-bottom:var(--space-lg);flex-wrap:wrap; }
+    .cm-badge { padding:4px 12px;border-radius:100px;font-size:.72rem;font-weight:700; }
+
+    .cm-staff-grid { display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);margin-bottom:var(--space-lg); }
+    .cm-staff-card { background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:var(--space-md); }
+    .cm-staff-role { font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px; }
+    .cm-staff-name { font-size:.9rem;font-weight:700;color:var(--text-primary); }
+    .cm-staff-tbd { font-size:.85rem;color:var(--text-muted);font-style:italic; }
+
+    .cm-staff-link { display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,.04);border:1px solid var(--border-color);border-radius:100px;font-size:.78rem;color:var(--text-muted);text-decoration:none;transition:all .15s;margin-bottom:var(--space-lg); }
+    .cm-staff-link:hover { color:var(--gold);border-color:var(--gold); }
+
+    .cm-email-trigger { width:100%;padding:12px;background:var(--gold);color:#0a0a12;border:none;border-radius:var(--radius-md);font-size:.9rem;font-weight:800;cursor:pointer;font-family:var(--font-body);text-transform:uppercase;letter-spacing:.06em;transition:background .15s; }
+    .cm-email-trigger:hover { background:var(--gold-bright); }
+
+    /* Email section inside modal */
+    .cm-email-section { display:none;border-top:1px solid var(--border-color);padding-top:var(--space-lg);margin-top:var(--space-lg); }
+    .cm-email-section.open { display:block; }
+    .em-step-label { font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:var(--space-sm); }
+    .em-grid { display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);margin-bottom:var(--space-md); }
+    .em-field { display:flex;flex-direction:column;gap:4px; }
+    .em-field-label { font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted); }
+    .em-input,.em-select { padding:8px 11px;font-size:.84rem;font-family:var(--font-body);background:rgba(255,255,255,.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary);outline:none;width:100%;box-sizing:border-box; }
+    .em-input:focus,.em-select:focus { border-color:var(--gold); }
+    .em-input::placeholder { color:var(--text-muted); }
+    .em-full { grid-column:1/-1; }
+    .em-gen-btn { width:100%;padding:11px;background:var(--gold);color:#0a0a12;border:none;border-radius:var(--radius-md);font-size:.88rem;font-weight:800;cursor:pointer;font-family:var(--font-body);text-transform:uppercase;letter-spacing:.06em; }
+    .em-gen-btn:disabled { opacity:.5;cursor:not-allowed; }
+    .em-output-wrap { display:none;margin-top:var(--space-md); }
+    .em-output-wrap.visible { display:block; }
+    .em-output { background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--space-md);font-size:.84rem;color:var(--text-primary);line-height:1.7;white-space:pre-wrap;min-height:180px;margin-bottom:var(--space-md); }
+    .em-actions { display:flex;gap:8px;flex-wrap:wrap; }
+    .em-btn { display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:100px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all .15s; }
+    .em-btn.copy { background:var(--gold);color:#0a0a12;border:none; }
+    .em-btn.gmail { background:rgba(234,67,53,.12);border:1px solid rgba(234,67,53,.3);color:#ea4335; }
+    .em-btn.regen { background:transparent;border:1px solid var(--border-color);color:var(--text-muted); }
+
+    @media(max-width:900px) {
+      .coaches-list-header { display:none; }
+      .coach-row { grid-template-columns:44px 1fr 80px 100px; }
+      .coach-row .cr-coach,.coach-row .cr-social,.coach-row .cr-conf { display:none; }
+      .coach-row .cr-conf { display:none; }
+    }
+    @media(max-width:600px) {
+      .coaches-header,.coaches-body { padding:var(--space-lg) var(--space-md); }
+      .coaches-controls { padding:8px var(--space-md); }
+      .cm-staff-grid { grid-template-columns:1fr; }
+      .em-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<div class="coaches-page">
+  <!-- Header -->
+  <div class="coaches-header">
+    <div class="coaches-header-inner">
+      <div class="coaches-eyebrow">Recruiting Resource</div>
+      <h1 class="coaches-title">Coaches <span>Directory</span></h1>
+      <p class="coaches-subtitle">Search every college football program from FBS to JUCO. Click any school to see the full staff and write a personalized coach email with AI.</p>
+      <div class="coaches-disclaimer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Coaching staffs change frequently. We update this directory as changes are reported — if you spot an error, verify with the school's official athletics site before reaching out.
+      </div>
+      <div class="coaches-stats">
+        <div class="cs-stat"><div class="cs-num" id="statTotal">—</div><div class="cs-lbl">Programs</div></div>
+        <div class="cs-stat"><div class="cs-num">FBS–JUCO</div><div class="cs-lbl">All Divisions</div></div>
+        <div class="cs-stat"><div class="cs-num" id="statStates">—</div><div class="cs-lbl">States</div></div>
+        <div class="cs-stat"><div class="cs-num" id="statConfs">—</div><div class="cs-lbl">Conferences</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="coaches-controls">
+    <div class="coaches-controls-inner">
+      <div class="search-wrap">
+        <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="coaches-search" id="coachSearch" placeholder="Search school, coach, city, conference…" oninput="filterCoaches()">
+      </div>
+      <select class="coaches-filter" id="fDiv" onchange="filterCoaches()">
+        <option value="">All Divisions</option>
+        <option value="FBS">FBS</option>
+        <option value="FCS">FCS</option>
+        <option value="D2">Division II</option>
+        <option value="D3">Division III</option>
+        <option value="JUCO">JUCO</option>
+        <option value="NAIA">NAIA</option>
+      </select>
+      <select class="coaches-filter" id="fState" onchange="filterCoaches()"></select>
+      <select class="coaches-filter" id="fConf" onchange="filterCoaches()"></select>
+      <span class="coaches-count" id="coachCount">Loading…</span>
+    </div>
+  </div>
+
+  <!-- List -->
+  <div class="coaches-body">
+    <div class="coaches-list-header">
+      <div></div>
+      <div>School</div>
+      <div>Division</div>
+      <div>Head Coach</div>
+      <div>ST</div>
+      <div>Conference</div>
+      <div>Social</div>
+    </div>
+    <div id="coachesList"><div style="padding:var(--space-xl);text-align:center;color:var(--text-muted)">Loading programs…</div></div>
+    <div class="coaches-empty" id="coachesEmpty" style="display:none">No programs match your search. Try adjusting the filters.</div>
+  </div>
+  <div style="max-width:1100px;margin:var(--space-lg) auto 0;padding:0 var(--space-xl) var(--space-xl)">
+    <p style="font-size:.75rem;color:var(--text-muted);line-height:1.6;display:flex;align-items:flex-start;gap:8px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-sm)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Coaching staffs change frequently — hires, transfers, and reassignments happen year-round. We update this directory as changes become available, but always verify current staff on the school's official athletics website before reaching out.
+    </p>
+  </div>
+</div>
+
+<!-- Coach Detail + Email Modal -->
+<div class="coach-modal" id="coachModal" onclick="if(event.target===this)closeCoachModal()">
+  <div class="coach-modal-box" id="coachModalBox">
+    <div class="cm-header">
+      <div class="cm-logo" id="cmLogo"></div>
+      <div>
+        <div class="cm-school" id="cmSchool"></div>
+        <div class="cm-school-sub" id="cmSub"></div>
+      </div>
+      <button class="cm-close" onclick="closeCoachModal()">&#x2715;</button>
+    </div>
+    <div class="cm-body">
+      <div class="cm-info-row" id="cmBadges"></div>
+      <div class="cm-staff-grid" id="cmStaff"></div>
+      <div id="cmStaffLink"></div>
+      <button class="cm-email-trigger" onclick="toggleEmailSection()">
+        &#x2709; Write Email to This Coach with AI
+      </button>
+
+      <!-- Email section -->
+      <div class="cm-email-section" id="cmEmailSection">
+        <div class="em-step-label" style="margin-top:var(--space-lg)">Your Profile</div>
+        <div class="em-grid">
+          <div class="em-field"><label class="em-field-label">Your Name</label><input class="em-input" id="em_name" placeholder="First Last"></div>
+          <div class="em-field"><label class="em-field-label">Position</label><input class="em-input" id="em_pos" placeholder="QB, WR, CB…"></div>
+          <div class="em-field"><label class="em-field-label">Height / Weight</label><input class="em-input" id="em_size" placeholder="6-1 / 185 lbs"></div>
+          <div class="em-field"><label class="em-field-label">Grad Year</label><input class="em-input" id="em_year" placeholder="2026"></div>
+          <div class="em-field"><label class="em-field-label">High School</label><input class="em-input" id="em_school" placeholder="School, State"></div>
+          <div class="em-field"><label class="em-field-label">GPA</label><input class="em-input" id="em_gpa" placeholder="3.8"></div>
+          <div class="em-field em-full"><label class="em-field-label">Key Stats / Achievements</label><input class="em-input" id="em_stats" placeholder="4.52 forty, 38 vertical, All-State 2025…"></div>
+          <div class="em-field em-full"><label class="em-field-label">Current Offers (optional)</label><input class="em-input" id="em_offers" placeholder="Georgia, Florida…"></div>
+          <div class="em-field em-full"><label class="em-field-label">Hudl / Film Link (optional)</label><input class="em-input" id="em_hudl" placeholder="https://hudl.com/…"></div>
+          <div class="em-field em-full"><label class="em-field-label">Tone</label>
+            <select class="em-select" id="em_tone">
+              <option value="professional">Professional — formal, polished</option>
+              <option value="confident">Confident — direct, assertive</option>
+              <option value="humble">Humble — respectful, eager</option>
+            </select>
+          </div>
+        </div>
+        <button class="em-gen-btn" id="emGenBtn" onclick="generateEmail()">Generate Email with Camp 8 AI &#x2192;</button>
+        <div class="em-output-wrap" id="emOutputWrap">
+          <div class="em-step-label" style="margin-top:var(--space-md)">Your Personalized Email</div>
+          <div class="em-output" id="emOutput"></div>
+          <div class="em-actions">
+            <button class="em-btn copy" id="emCopyBtn" onclick="copyEmail()">Copy to Clipboard</button>
+            <button class="em-btn gmail" onclick="openGmail()">Open in Gmail</button>
+            <button class="em-btn regen" onclick="generateEmail()">&#x21BA; Regenerate</button>
+          </div>
+          <p style="font-size:.72rem;color:var(--text-muted);margin-top:var(--space-md);line-height:1.5">
+          Send from your own email — looks more authentic to coaches than a platform send.
+          <span id="emContactHint" style="display:none;margin-top:4px;display:block"></span>
+        </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script src="coaches-data.js"></script>
+<script src="ai-chat.js"></script>
+<script>
+var allCoaches=[], filtered=[], curCoach=null, genEmail='';
+var DC={FBS:'fbs',FCS:'fcs',D2:'d2',D3:'d3',JUCO:'juco',NAIA:'naia'};
+
+function xIcon(){ return '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.264 5.633L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>'; }
+function igIcon(){ return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>'; }
+
+function rcSocialHtml(c){
+  var html='';
+  if(c.rcTwitter) html+='<a href="https://x.com/'+c.rcTwitter+'" target="_blank" rel="noopener" class="social-pill x-pill" onclick="event.stopPropagation()" title="@'+ex(c.rcTwitter)+'">'+xIcon()+'@'+ex(c.rcTwitter)+'</a>';
+  if(c.rcInstagram) html+='<a href="https://instagram.com/'+c.rcInstagram+'" target="_blank" rel="noopener" class="social-pill ig-pill" onclick="event.stopPropagation()" title="@'+ex(c.rcInstagram)+'">'+igIcon()+'</a>';
+  if(!html) html='<span style="font-size:.72rem;color:var(--text-muted);font-style:italic">—</span>';
+  return html;
+}
+
+function ex(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+
+function logoUrl(c){
+  if(c.espnId) return 'https://a.espncdn.com/i/teamlogos/ncaa/500/'+c.espnId+'.png';
+  if(c.domain) return 'https://www.google.com/s2/favicons?domain='+c.domain+'&sz=128';
+  return null;
+}
+
+function logoHtml(c, size){
+  var sz=size||36;
+  var url=logoUrl(c);
+  var initials=(c.school||'?').split(' ').filter(function(w){return w.length>2;}).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase()||'?';
+  if(url){
+    return '<img src="'+url+'" width="'+(sz-4)+'" height="'+(sz-4)+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'" style="object-fit:contain" alt="">' +
+           '<span class="cr-logo-fallback" style="display:none">'+ex(initials)+'</span>';
+  }
+  return '<span class="cr-logo-fallback">'+ex(initials)+'</span>';
+}
+
+function buildFilters(){
+  var states=[...new Set(allCoaches.map(function(c){return c.state;}))].filter(Boolean).sort();
+  var confs=[...new Set(allCoaches.map(function(c){return c.conference;}))].filter(Boolean).sort();
+  var se=document.getElementById('fState');
+  se.innerHTML='<option value="">All States</option>';
+  states.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;se.appendChild(o);});
+  var ce=document.getElementById('fConf');
+  ce.innerHTML='<option value="">All Conferences</option>';
+  confs.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;ce.appendChild(o);});
+  document.getElementById('statTotal').textContent=allCoaches.length;
+  document.getElementById('statStates').textContent=states.length;
+  document.getElementById('statConfs').textContent=confs.length;
+}
+
+function filterCoaches(){
+  var q=document.getElementById('coachSearch').value.trim().toLowerCase();
+  var dv=document.getElementById('fDiv').value;
+  var st=document.getElementById('fState').value;
+  var cf=document.getElementById('fConf').value;
+  filtered=allCoaches.filter(function(c){
+    if(dv&&c.division!==dv)return false;
+    if(st&&c.state!==st)return false;
+    if(cf&&c.conference!==cf)return false;
+    if(q){var h=[c.school,c.nickname,c.headCoach,c.oc,c.dc,c.recruitingCoord,c.city,c.conference].join(' ').toLowerCase();if(!h.includes(q))return false;}
+    return true;
+  });
+  renderList();
+}
+
+function renderList(){
+  var el=document.getElementById('coachesList');
+  var em=document.getElementById('coachesEmpty');
+  document.getElementById('coachCount').textContent=filtered.length+' programs';
+  if(!filtered.length){el.innerHTML='';em.style.display='';return;}
+  em.style.display='none';
+  el.innerHTML=filtered.map(function(c,i){
+    var dc=DC[c.division]||'fbs';
+    var hc=(!c.headCoach||c.headCoach==='TBD')?'<span style="color:var(--text-muted);font-style:italic;font-size:.75rem">TBD</span>':ex(c.headCoach);
+    return '<div class="coach-row" onclick="openCoachModal('+i+')">'+
+      '<div class="cr-logo">'+logoHtml(c,36)+'</div>'+
+      '<div><div class="cr-school-name">'+ex(c.school)+'</div><div class="cr-nickname">'+ex(c.nickname||'')+'</div></div>'+
+      '<div><span class="cr-div '+dc+'">'+ex(c.division)+'</span></div>'+
+      '<div class="cr-coach">'+hc+'<span>'+ex(c.city||'')+'</span></div>'+
+      '<div class="cr-state">'+ex(c.state||'')+'</div>'+
+      '<div class="cr-conf">'+ex(c.conference||'')+'</div>'+
+      '<div class="cr-social">'+rcSocialHtml(c)+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openCoachModal(idx){
+  curCoach=filtered[idx];
+  if(!curCoach)return;
+  genEmail='';
+  var dc=DC[curCoach.division]||'fbs';
+
+  // Logo
+  var lEl=document.getElementById('cmLogo');
+  lEl.innerHTML=logoHtml(curCoach,52);
+
+  document.getElementById('cmSchool').textContent=curCoach.school+(curCoach.nickname?' '+curCoach.nickname:'');
+  document.getElementById('cmSub').textContent=(curCoach.city||'')+(curCoach.state?', '+curCoach.state:'')+(curCoach.conference?' · '+curCoach.conference:'');
+
+  // Badges
+  document.getElementById('cmBadges').innerHTML=
+    '<span class="cm-badge cr-div '+dc+'" style="font-size:.75rem">'+ex(curCoach.division)+'</span>'+
+    '<span class="cm-badge" style="background:rgba(255,255,255,.06);color:var(--text-muted);font-size:.75rem;padding:4px 12px;border-radius:100px">'+ex(curCoach.conference||'')+'</span>';
+
+  // Staff grid
+  document.getElementById('cmStaff').innerHTML=(function(){
+    var rows=[
+      {role:'Head Coach', name:curCoach.headCoach, tw:curCoach.hcTwitter, ig:curCoach.hcInstagram},
+      {role:'Off. Coordinator', name:curCoach.oc, tw:'', ig:''},
+      {role:'Def. Coordinator', name:curCoach.dc, tw:'', ig:''},
+      {role:'Recruiting Coord', name:curCoach.recruitingCoord, tw:curCoach.rcTwitter, ig:curCoach.rcInstagram}
+    ];
+    return rows.map(function(row){
+      var tbd=!row.name||row.name==='TBD';
+      var socials='';
+      if(row.tw) socials+='<a href="https://x.com/'+ex(row.tw)+'" target="_blank" rel="noopener" class="social-link-full x" style="margin-top:6px">'+xIcon()+'@'+ex(row.tw)+'</a>';
+      if(row.ig) socials+='<a href="https://instagram.com/'+ex(row.ig)+'" target="_blank" rel="noopener" class="social-link-full ig" style="margin-top:6px">'+igIcon()+'@'+ex(row.ig)+'</a>';
+      return '<div class="cm-staff-card">'+
+        '<div class="cm-staff-role">'+ex(row.role)+'</div>'+
+        '<div class="'+(tbd?'cm-staff-tbd':'cm-staff-name')+'">'+ex(tbd?'TBD':row.name)+'</div>'+
+        (socials?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">'+socials+'</div>':'')+
+      '</div>';
+    }).join('');
+  })();
+
+  // Contact info + staff link
+  var contactHtml = '';
+  if(curCoach.contactEmail||curCoach.contactPhone||curCoach.mailingAddress) {
+    contactHtml += '<div style="background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.15);border-radius:var(--radius-md);padding:var(--space-md);margin-bottom:var(--space-md)">';
+    contactHtml += '<div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Contact Information</div>';
+    if(curCoach.contactEmail) contactHtml += '<div style="font-size:.82rem;margin-bottom:5px"><span style="color:var(--text-muted);min-width:60px;display:inline-block">Email:</span> <a href="mailto:'+ex(curCoach.contactEmail)+'" style="color:var(--gold);text-decoration:none">'+ex(curCoach.contactEmail)+'</a></div>';
+    if(curCoach.contactPhone) contactHtml += '<div style="font-size:.82rem;margin-bottom:5px"><span style="color:var(--text-muted);min-width:60px;display:inline-block">Phone:</span> <span style="color:var(--text-primary)">'+ex(curCoach.contactPhone)+'</span></div>';
+    if(curCoach.mailingAddress) contactHtml += '<div style="font-size:.78rem;color:var(--text-muted);margin-top:4px">'+ex(curCoach.mailingAddress)+'</div>';
+    contactHtml += '</div>';
+  }
+  if(curCoach.staffPage) contactHtml += '<a href="'+ex(curCoach.staffPage)+'" target="_blank" rel="noopener" class="cm-staff-link">View Full Staff Page &#x2197;</a>';
+  document.getElementById('cmStaffLink').innerHTML = contactHtml;
+
+  // Reset email section
+  document.getElementById('cmEmailSection').classList.remove('open');
+  document.getElementById('emOutputWrap').classList.remove('visible');
+  document.getElementById('emOutput').textContent='';
+
+  // Pre-fill from athlete profile
+  if(window._ap){
+    var p=window._ap;
+    if(p.name)document.getElementById('em_name').value=p.name;
+    if(p.position)document.getElementById('em_pos').value=p.position;
+    if(p.graduation_year)document.getElementById('em_year').value=p.graduation_year;
+    if(p.school)document.getElementById('em_school').value=p.school+(p.state?', '+p.state:'');
+    if(p.hudl_url)document.getElementById('em_hudl').value=p.hudl_url;
+    if(p.height&&p.weight)document.getElementById('em_size').value=p.height+' / '+p.weight+' lbs';
+  }
+
+  // Show contact email hint in email section
+  var hint = document.getElementById('emContactHint');
+  if(hint && curCoach.contactEmail) {
+    hint.innerHTML = 'Send to: <strong style="color:var(--gold)">'+ex(curCoach.contactEmail)+'</strong>';
+    hint.style.display = 'block';
+  } else if(hint) { hint.style.display = 'none'; }
+  document.getElementById('coachModal').classList.add('open');
+}
+
+function closeCoachModal(){document.getElementById('coachModal').classList.remove('open');}
+
+function toggleEmailSection(){
+  document.getElementById('cmEmailSection').classList.toggle('open');
+}
+
+async function generateEmail(){
+  var name=document.getElementById('em_name').value.trim();
+  var pos=document.getElementById('em_pos').value.trim();
+  if(!name||!pos){alert('Name and position are required.');return;}
+  var btn=document.getElementById('emGenBtn');
+  btn.disabled=true;btn.textContent='Generating…';
+  document.getElementById('emOutputWrap').classList.remove('visible');
+  var tone=document.getElementById('em_tone').value;
+  var td={professional:'formal and polished',confident:'direct and confident',humble:'respectful and eager'}[tone];
+  var prompt='Write a college football recruiting email.\n\nATHLETE:\nName: '+name+'\nPosition: '+pos+
+    '\nHeight/Weight: '+(document.getElementById('em_size').value||'N/A')+
+    '\nGrad Year: '+(document.getElementById('em_year').value||'')+
+    '\nHigh School: '+(document.getElementById('em_school').value||'N/A')+
+    '\nGPA: '+(document.getElementById('em_gpa').value||'N/A')+
+    '\nStats: '+(document.getElementById('em_stats').value||'N/A')+
+    '\nOffers: '+(document.getElementById('em_offers').value||'None listed')+
+    '\nFilm: '+(document.getElementById('em_hudl').value||'Available upon request')+
+    '\n\nSCHOOL:\nSchool: '+curCoach.school+' '+(curCoach.nickname||'')+
+    '\nDivision: '+curCoach.division+'\nConference: '+curCoach.conference+
+    '\nHead Coach: '+(curCoach.headCoach||'Coach')+
+    '\nLocation: '+curCoach.city+', '+curCoach.state+
+    '\n\nTONE: '+td+
+    '\n\nWrite a complete recruiting email with Subject line (starting "Subject: "), greeting, intro, key stats, why this specific program, current offers, film link, professional closing. Under 200 words. Just the email.';
+  try{
+    var r=await CAMP8_AI.send({messages:[{role:'user',content:prompt}],system:'You write concise authentic college football recruiting emails for high school athletes.',max_tokens:600});
+    genEmail=r;
+    document.getElementById('emOutput').textContent=r;
+    document.getElementById('emOutputWrap').classList.add('visible');
+    document.getElementById('coachModalBox').scrollTop=document.getElementById('coachModalBox').scrollHeight;
+  }catch(e){alert('Error generating email. Try again.');}
+  btn.disabled=false;btn.textContent='Generate Email with Camp 8 AI \u2192';
+}
+
+function copyEmail(){
+  if(!genEmail)return;
+  navigator.clipboard.writeText(genEmail).then(function(){
+    var b=document.getElementById('emCopyBtn');b.textContent='\u2713 Copied!';
+    setTimeout(function(){b.textContent='Copy to Clipboard';},2000);
+  });
+}
+
+function openGmail(){
+  if(!genEmail)return;
+  var lines=genEmail.split('\n');
+  var sl=lines.find(function(l){return l.startsWith('Subject:');});
+  var subj=sl?sl.replace('Subject:','').trim():'Football Recruiting Inquiry';
+  var body=genEmail.replace(sl+'\n','').trim();
+  window.open('https://mail.google.com/mail/?view=cm&fs=1&su='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body),'_blank');
+}
+
+document.addEventListener('DOMContentLoaded',async function(){
+  allCoaches=COACHES_DATA.slice().sort(function(a,b){return a.school.localeCompare(b.school);});
+  buildFilters();filtered=allCoaches;renderList();
+  try{
+    var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    var res=await sb.from('coaches_admin').select('*').eq('is_active',true);
+    if(res.data&&res.data.length){
+      var mp=res.data.map(function(r){return{school:r.school,nickname:r.nickname||'',division:r.division||'FBS',conference:r.conference||'',state:r.state||'',city:r.city||'',headCoach:r.head_coach||'TBD',oc:r.oc||'TBD',dc:r.dc||'TBD',recruitingCoord:r.recruiting_coord||'TBD',staffPage:r.staff_page||'',domain:r.domain||''};});
+      var base=COACHES_DATA.filter(function(c){return!mp.find(function(m){return m.school.toLowerCase()===c.school.toLowerCase();});});
+      allCoaches=base.concat(mp).sort(function(a,b){return a.school.localeCompare(b.school);});
+      buildFilters();filtered=allCoaches;renderList();
+    }
+    var u=await sb.auth.getUser();
+    if(u.data&&u.data.user){var pr=await sb.from('athletes').select('*').eq('user_id',u.data.user.id).single();if(pr.data)window._ap=pr.data;}
+  }catch(e){}
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeCoachModal();});
+</script>
+</body>
+</html>

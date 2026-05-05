@@ -441,7 +441,7 @@ async function doResetPassword() {
     sucEl.style.display = 'block';
     // Strip recovery tokens from the URL so a refresh doesn't re-enter recovery mode.
     history.replaceState(null, '', window.location.pathname);
-    setTimeout(function() { window.location.replace('index.html'); }, 1200);
+    setTimeout(function() { window.location.href = 'index.html'; }, 1200);
   } catch (err) {
     btn.disabled = false;
     btn.textContent = 'Update Password';
@@ -523,14 +523,12 @@ async function doSignIn() {
   } catch (_) { /* splash is non-blocking */ }
 
   // Show motivational splash before redirect.
-  // The stored redirect is a relative path (see auth-guard.js) so it works on
-  // both fbintel-central.com and Capacitor's capacitor://localhost origin.
   const redirect = sessionStorage.getItem('camp8_redirect') || 'index.html';
   sessionStorage.removeItem('camp8_redirect');
   if (typeof showLoginSplash === 'function') {
     try { await showLoginSplash(splashOpts); } catch (_) {}
   }
-  window.location.replace(redirect);
+  window.location.href = redirect;
 }
 
 // ---- Sign Up ----
@@ -595,7 +593,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // If already logged in, redirect home
   const user = await getCurrentUser();
-  if (user) window.location.replace('index.html');
+  if (user) window.location.href = 'index.html';
 });
 </script>
 </body>

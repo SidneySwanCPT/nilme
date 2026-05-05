@@ -13,14 +13,7 @@ let _supabase = null;
 function getSupabase() {
   if (_supabase) return _supabase;
   if (typeof window !== 'undefined' && window.supabase) {
-    _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        flowType: 'pkce',
-        detectSessionInUrl: true,
-        persistSession: true,
-        storage: window.localStorage
-      }
-    });
+    _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return _supabase;
   }
   console.error('Supabase SDK not loaded');
@@ -73,7 +66,7 @@ async function signIn(email, password) {
 async function signOut() {
   const sb = getSupabase();
   await sb.auth.signOut();
-  window.location.replace('index.html');
+  window.location.href = 'index.html';
 }
 
 // ---- Session listener ----

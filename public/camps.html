@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Prospect Camps</title>
+  
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- MarkerCluster -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="camps-styles.css">
+  <style>
+    body { overflow-y: auto; height: auto; }
+    .main-content { position: relative; flex-shrink: 0; }
+
+    /* Camps Hero */
+    .camps-hero-block { position: relative; height: 400px; overflow: hidden; }
+    .camps-hero-img { position: absolute; inset: 0; background-size: cover; background-position: center; }
+    .camps-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(8,8,16,0.9) 45%, rgba(8,8,16,0.4) 100%); }
+    .camps-hero-content { position: relative; z-index: 1; padding: var(--space-xl); height: 100%; display: flex; flex-direction: column; justify-content: center; }
+    .ch-eyebrow { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 8px; }
+    .ch-title { font-family: var(--font-display); font-size: clamp(2.5rem,5vw,4rem); letter-spacing: 0.04em; color: #fff; margin-bottom: 10px; }
+    .ch-title span { color: var(--gold); }
+    .ch-sub { font-size: 0.92rem; color: rgba(255,255,255,0.7); line-height: 1.6; max-width: 420px; margin-bottom: var(--space-lg); }
+
+    /* Featured camp cards in hero */
+    .ch-camps-strip { display: flex; gap: var(--space-md); margin-top: var(--space-md); overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+    .ch-camps-strip::-webkit-scrollbar { display: none; }
+    .ch-camp-pill {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 10px 14px;
+      background: rgba(10,10,22,0.85);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s ease;
+      min-width: 180px;
+      backdrop-filter: blur(8px);
+    }
+    .ch-camp-pill:hover { border-color: var(--gold); background: rgba(212,168,67,0.12); }
+    .ch-pill-tier { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+    .ch-pill-name { font-size: 0.82rem; font-weight: 700; color: #fff; line-height: 1.3; }
+    .ch-pill-loc { font-size: 0.7rem; color: rgba(255,255,255,0.55); }
+    .ch-pill-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+
+    /* Map section below hero */
+    .camps-map-section { position: relative; height: 100vh; min-height: 600px; }
+  </style>
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- Navigation -->
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<!-- Camps Hero with featured upcoming camps -->
+<div class="camps-hero-block">
+  <div class="camps-hero-img" style="background-image:url('camp-hero.webp')"></div>
+  <div class="camps-hero-overlay"></div>
+  <div class="camps-hero-content">
+    <div class="ch-eyebrow">755 Prospect Camps</div>
+    <h1 class="ch-title">Prospect <span>Camps</span></h1>
+    <p class="ch-sub">Find, filter, and register for elite football camps across Georgia, Florida, Texas &amp; California.</p>
+    <div class="ch-camps-strip" id="chCampsStrip">
+      <!-- Populated by JS after data loads -->
+    </div>
+  </div>
+</div>
+
+<!-- Main Content (Map) -->
+<div class="main-content camps-map-section">
+  <!-- View Toggle -->
+  <div class="view-toggle-bar">
+    <button class="view-btn active" data-view="map" onclick="switchView('map')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      Map View
+    </button>
+    <button class="view-btn" data-view="list" onclick="switchView('list')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      List View
+    </button>
+    <button class="view-btn" data-view="calendar" onclick="switchView('calendar')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Calendar
+    </button>
+    <div class="camp-count-badge" id="campCount">755 camps</div>
+  </div>
+
+  <!-- Legend Bar (always visible on page) -->
+  <div class="page-legend-bar">
+    <span class="page-legend-title">Exposure Tiers:</span>
+    <div class="page-legend-item"><span class="legend-circle" style="width:11px;height:11px;background:#FFD700;flex-shrink:0;"></span><span>Elite — National invite-only</span></div>
+    <div class="page-legend-item"><span class="legend-circle" style="width:11px;height:11px;background:#c41e3a;flex-shrink:0;"></span><span>Premier — Power 5 &amp; showcases</span></div>
+    <div class="page-legend-item"><span class="legend-circle" style="width:11px;height:11px;background:#e8872b;flex-shrink:0;"></span><span>High — D1 Group of 5</span></div>
+    <div class="page-legend-item"><span class="legend-circle" style="width:11px;height:11px;background:#4a90d9;flex-shrink:0;"></span><span>Solid — D2</span></div>
+    <div class="page-legend-item"><span class="legend-circle" style="width:11px;height:11px;background:#7a7a9a;flex-shrink:0;"></span><span>Development — D3/NAIA/JUCO</span></div>
+  </div>
+
+  <!-- Map View -->
+  <div class="camps-map-view" id="mapView">
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+    
+    <!-- Filter Sidebar -->
+    <div class="sidebar camps-sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>Filter Camps</h2>
+        <p>Spring + Summer 2026</p>
+      </div>
+      <div class="sidebar-body">
+        <!-- Search -->
+        <div class="filter-group">
+          <label class="filter-label">Search</label>
+          <input type="text" class="camp-search-input" id="campSearch" placeholder="Search camps, schools..." oninput="applyFilters()">
+        </div>
+
+        <!-- Host Type -->
+        <div class="filter-group">
+          <label class="filter-label">Host Type</label>
+          <div class="filter-buttons" id="typeFilter">
+            <button class="filter-btn active" data-value="all" onclick="setFilter('type', 'all', this)">All</button>
+            <button class="filter-btn" data-value="University-hosted" onclick="setFilter('type', 'University-hosted', this)">University</button>
+            <button class="filter-btn" data-value="Company-led" onclick="setFilter('type', 'Company-led', this)">Company</button>
+          </div>
+        </div>
+
+        <!-- Tier -->
+        <div class="filter-group">
+          <label class="filter-label">Exposure Tier</label>
+          <div class="filter-buttons" id="tierFilter">
+            <button class="filter-btn active" data-value="all" onclick="setFilter('tier', 'all', this)">All</button>
+            <button class="filter-btn tier-elite" data-value="1" onclick="setFilter('tier', '1', this)">Elite</button>
+            <button class="filter-btn tier-premier" data-value="2" onclick="setFilter('tier', '2', this)">Premier</button>
+            <button class="filter-btn tier-high" data-value="3" onclick="setFilter('tier', '3', this)">High</button>
+            <button class="filter-btn tier-solid" data-value="4" onclick="setFilter('tier', '4', this)">Solid</button>
+            <button class="filter-btn tier-dev" data-value="5" onclick="setFilter('tier', '5', this)">Development</button>
+          </div>
+        </div>
+
+        <!-- Division -->
+        <div class="filter-group">
+          <label class="filter-label">Division</label>
+          <div class="filter-buttons" id="divisionFilter">
+            <button class="filter-btn active" data-value="all" onclick="setFilter('division', 'all', this)">All</button>
+            <button class="filter-btn" data-value="D1" onclick="setFilter('division', 'D1', this)">D1</button>
+            <button class="filter-btn" data-value="D2" onclick="setFilter('division', 'D2', this)">D2</button>
+            <button class="filter-btn" data-value="D3" onclick="setFilter('division', 'D3', this)">D3</button>
+            <button class="filter-btn" data-value="NAIA" onclick="setFilter('division', 'NAIA', this)">NAIA</button>
+            <button class="filter-btn" data-value="JUCO" onclick="setFilter('division', 'JUCO', this)">JUCO</button>
+          </div>
+        </div>
+
+        <!-- State -->
+        <div class="filter-group">
+          <label class="filter-label">State</label>
+          <select class="camp-state-select" id="stateFilter" onchange="applyFilters()">
+            <option value="all">All States</option>
+          </select>
+        </div>
+
+        <!-- Invite Only -->
+        <div class="filter-group">
+          <label class="filter-label">Access</label>
+          <div class="filter-buttons" id="accessFilter">
+            <button class="filter-btn active" data-value="all" onclick="setFilter('access', 'all', this)">All</button>
+            <button class="filter-btn" data-value="open" onclick="setFilter('access', 'open', this)">Open</button>
+            <button class="filter-btn" data-value="invite" onclick="setFilter('access', 'invite', this)">Invite Only</button>
+          </div>
+        </div>
+
+        <!-- Reset -->
+        <button class="reset-filters-btn" onclick="resetFilters()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          Reset Filters
+        </button>
+
+
+      </div>
+    </div>
+  </div>
+
+  <!-- List View -->
+  <div class="camps-list-view" id="listView" style="display:none;">
+    <div class="list-controls">
+      <!-- Same filters as sidebar but horizontal -->
+      <div class="list-filter-row">
+        <select class="camp-state-select" id="listStateFilter" onchange="applyFilters()">
+          <option value="all">All States</option>
+        </select>
+        <select class="camp-state-select" id="listTypeFilter" onchange="syncListFilter('type', this.value)">
+          <option value="all">All Types</option>
+          <option value="University-hosted">University-hosted</option>
+          <option value="Company-led">Company-led</option>
+        </select>
+        <select class="camp-state-select" id="listTierFilter" onchange="syncListFilter('tier', this.value)">
+          <option value="all">All Tiers</option>
+          <option value="1">Elite</option>
+          <option value="2">Premier</option>
+          <option value="3">High</option>
+          <option value="4">Solid</option>
+          <option value="5">Development</option>
+        </select>
+        <select class="camp-state-select" id="listDivFilter" onchange="syncListFilter('division', this.value)">
+          <option value="all">All Divisions</option>
+          <option value="D1">D1</option>
+          <option value="D2">D2</option>
+          <option value="D3">D3</option>
+          <option value="NAIA">NAIA</option>
+          <option value="JUCO">JUCO</option>
+        </select>
+        <input type="text" class="camp-search-input list-search" id="listSearch" placeholder="Search..." oninput="document.getElementById('campSearch').value=this.value; applyFilters()">
+      </div>
+    </div>
+    <div class="list-scroll" id="listScroll">
+      <table class="data-table camps-table" id="campsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('name')">Camp Name</th>
+            <th onclick="sortTable('host')">Host</th>
+            <th onclick="sortTable('state')">Location</th>
+            <th onclick="sortTable('dates')">Date</th>
+            <th onclick="sortTable('tier')">Tier</th>
+            <th onclick="sortTable('division')">Division</th>
+            <th onclick="sortTable('cost')">Cost</th>
+            <th>Access</th>
+          </tr>
+        </thead>
+        <tbody id="campsTableBody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+  <!-- Calendar View -->
+  <div class="camps-calendar-view" id="calendarView" style="display:none;">
+    <div class="cal-controls">
+      <button class="cal-nav-btn" onclick="calNav(-1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <h2 class="cal-month-title" id="calMonthTitle">April 2026</h2>
+      <button class="cal-nav-btn" onclick="calNav(1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <div class="cal-grid-header">
+      <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-day-detail" id="calDayDetail" style="display:none;">
+      <div class="cal-detail-header">
+        <span id="calDetailDate"></span>
+        <button onclick="document.getElementById('calDayDetail').style.display='none'" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem">✕</button>
+      </div>
+      <div class="cal-detail-list" id="calDetailList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="camps-data.js"></script>
+<script src="camps-map.js"></script>
+<script src="shared.js"></script>
+<script>
+// Populate hero camps strip after data loads
+(function() {
+  function initHeroStrip() {
+    if (typeof CAMPS_DATA === 'undefined') return;
+    var now = new Date(); now.setHours(0,0,0,0);
+    var TC = {1:'#FFD700',2:'#c41e3a',3:'#e8872b',4:'#4a90d9',5:'#7a7a9a'};
+    function parseD(s){ if(!s) return null; var c=s.split('–')[0].split('—')[0].split('-')[0].trim(); var d=new Date(c); return isNaN(d)?null:d; }
+    function isFootball(c){ var h=[c.name,c.host,c.university,c.description].join(' ').toLowerCase(); var ex=['basketball','baseball','soccer','softball','lacrosse']; if(ex.some(t=>h.includes(t)&&!h.includes('football'))) return false; return ['football','gridiron','qb','7on7','combine','linebacker','wr','db','ol','dl'].some(k=>h.includes(k))||!c.division||c.division==='N/A'; }
+    function esc(s){ var d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+
+    var camps = CAMPS_DATA.filter(function(c){
+      var d = parseD(c.dates);
+      return d && d >= now && c.tier <= 2 && isFootball(c);
+    }).sort(function(a,b){ return parseD(a.dates)-parseD(b.dates); }).slice(0,10);
+
+    var strip = document.getElementById('chCampsStrip');
+    if (!strip) return;
+    strip.innerHTML = '';
+    camps.forEach(function(camp){
+      var color = TC[camp.tier]||'#7a7a9a';
+      var a = document.createElement('a');
+      a.className = 'ch-camp-pill';
+      a.href = 'camps.html?openCamp=' + camp.id;
+      a.innerHTML =
+        '<div class="ch-pill-tier" style="color:'+color+'">'+esc(camp.tierLabel)+'</div>'+
+        '<div class="ch-pill-name">'+esc(camp.name)+'</div>'+
+        '<div class="ch-pill-loc">'+esc(camp.city)+', '+esc(camp.stateAbbrev)+'</div>'+
+        '<div class="ch-pill-date">'+esc(camp.dates||'TBD')+'</div>';
+      strip.appendChild(a);
+    });
+
+    if (!camps.length) strip.style.display = 'none';
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHeroStrip);
+  } else {
+    initHeroStrip();
+  }
+})();
+</script>
+<script data-pplx-inline-edit>
+(function(){
+  if(window===window.top)return;
+  function inlineAll(orig,clone){
+    if(orig.nodeType!==1)return;
+    try{
+      var cs=getComputedStyle(orig);
+      var t='';
+      for(var i=0;i<cs.length;i++){t+=cs[i]+':'+cs.getPropertyValue(cs[i])+';';}
+      clone.style.cssText=t;
+    }catch(e){}
+    var oc=orig.children,cc=clone.children;
+    for(var j=0;j<oc.length&&j<cc.length;j++){inlineAll(oc[j],cc[j]);}
+  }
+  function stripExternal(clone){
+    var imgs=clone.querySelectorAll('img');
+    for(var i=0;i<imgs.length;i++){
+      var s=imgs[i].getAttribute('src');
+      if(s&&!s.startsWith('data:'))imgs[i].removeAttribute('src');
+    }
+    var all=clone.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var st=all[i].style.cssText;
+      if(st&&st.indexOf('url(')>=0){
+        all[i].style.cssText=st.replace(/url\(["']?(?!data:)[^)"']*["']?\)/gi,'none');
+      }
+    }
+  }
+  window.addEventListener('message',function(e){
+    if(!e.data||e.data.type!=='INLINE_EDIT_CAPTURE_REQUEST')return;
+    var scrollX=window.scrollX||window.pageXOffset||0;
+    var scrollY=window.scrollY||window.pageYOffset||0;
+    var w=window.innerWidth,h=window.innerHeight;
+    try{
+      var clone=document.documentElement.cloneNode(true);
+      var rm=clone.querySelectorAll('script,link[rel="stylesheet"],style');
+      for(var i=0;i<rm.length;i++){rm[i].remove();}
+      inlineAll(document.documentElement,clone);
+      stripExternal(clone);
+      var html=new XMLSerializer().serializeToString(clone);
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
+        +'<foreignObject width="100%" height="100%">'
+        +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px;overflow:hidden">'
+        +'<div style="transform:translate(-'+scrollX+'px,-'+scrollY+'px);transform-origin:top left">'
+        +html+'</div></div></foreignObject></svg>';
+      var svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0);
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:c.toDataURL('image/png'),scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.onerror=function(){
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.src=svgUrl;
+    }catch(err){
+      window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+    }
+  });
+})();
+</script></body>
+</html>

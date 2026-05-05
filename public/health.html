@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Health & Wellness</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth-guard.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>💪</text></svg>">
+  <style>
+    body { overflow-y: auto; height: auto; }
+    .hw-page { margin-top: var(--nav-height); }
+
+    /* ---- Header ---- */
+    .hw-header { padding: var(--space-xl); background: linear-gradient(135deg, rgba(80,200,120,.07) 0%, transparent 100%); border-bottom: 1px solid var(--border-color); }
+    .hw-header-inner { max-width: 1100px; margin: 0 auto; }
+    .hw-eyebrow { font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#50c878;margin-bottom:6px; }
+    .hw-title { font-family:var(--font-display);font-size:clamp(2rem,4vw,3.5rem);letter-spacing:.04em;color:var(--text-primary);margin-bottom:8px; }
+    .hw-title span { color:#50c878; }
+    .hw-sub { font-size:.88rem;color:var(--text-secondary);line-height:1.6;max-width:560px;margin-bottom:var(--space-lg); }
+
+    /* ---- Stats row ---- */
+    .hw-stats { display:flex;gap:var(--space-md);flex-wrap:wrap;margin-bottom:0; }
+    .hw-stat { background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:var(--space-md);min-width:120px;text-align:center; }
+    .hw-stat-num { font-family:var(--font-display);font-size:1.8rem;color:#50c878;line-height:1; }
+    .hw-stat-lbl { font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-top:3px; }
+
+    /* ---- Tab bar ---- */
+    .hw-tabs { border-bottom:1px solid var(--border-color);background:var(--bg-secondary);position:sticky;top:var(--nav-height);z-index:90; }
+    .hw-tabs-inner { max-width:1100px;margin:0 auto;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch; }
+    .hw-tab { padding:14px 22px;font-size:.84rem;font-weight:700;color:var(--text-muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .15s;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0; }
+    .hw-tab:hover { color:var(--text-secondary); }
+    .hw-tab.active { color:#50c878;border-bottom-color:#50c878; }
+
+    /* ---- Body ---- */
+    .hw-body { max-width:1100px;margin:0 auto;padding:var(--space-lg) var(--space-xl); }
+    .hw-section { display:none; }
+    .hw-section.active { display:block; }
+
+    /* ---- Cards ---- */
+    .hw-card { background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;margin-bottom:var(--space-md); }
+    .hw-card-header { padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;gap:var(--space-md); }
+    .hw-card-title { font-size:.88rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary); }
+    .hw-card-body { padding:var(--space-lg); }
+
+    /* ---- Goals ---- */
+    .goals-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-md); }
+    .goal-item { background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:var(--space-md); }
+    .goal-item.complete { border-color:rgba(80,200,120,.3);background:rgba(80,200,120,.05); }
+    .goal-item-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px; }
+    .goal-item-title { font-size:.88rem;font-weight:700;color:var(--text-primary); }
+    .goal-item-status { font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:100px; }
+    .goal-item-status.active { background:rgba(74,144,217,.12);color:#4a90d9; }
+    .goal-item-status.complete { background:rgba(80,200,120,.12);color:#50c878; }
+    .goal-progress-bar { height:4px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;margin:8px 0; }
+    .goal-progress-fill { height:100%;background:#50c878;border-radius:100px;transition:width .5s ease; }
+    .goal-deadline { font-size:.72rem;color:var(--text-muted); }
+    .add-goal-btn { display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(80,200,120,.1);border:1px solid rgba(80,200,120,.3);border-radius:var(--radius-sm);font-size:.8rem;font-weight:700;color:#50c878;cursor:pointer;font-family:var(--font-body);transition:all .15s; }
+    .add-goal-btn:hover { background:rgba(80,200,120,.2); }
+
+    /* ---- Workout plan ---- */
+    .workout-plan { display:grid;gap:var(--space-sm); }
+    .workout-day { background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-sm);overflow:hidden; }
+    .workout-day-header { padding:10px var(--space-md);display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .15s; }
+    .workout-day-header:hover { background:rgba(255,255,255,.03); }
+    .workout-day-name { font-size:.84rem;font-weight:700;color:var(--text-primary); }
+    .workout-day-focus { font-size:.72rem;color:var(--text-muted); }
+    .workout-day-body { display:none;padding:var(--space-md);border-top:1px solid var(--border-color); }
+    .workout-day-body.open { display:block; }
+    .workout-exercise { display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.82rem; }
+    .workout-exercise:last-child { border-bottom:none; }
+    .ex-name { color:var(--text-primary);font-weight:500; }
+    .ex-sets { color:var(--text-muted);font-size:.76rem; }
+    .ex-done { width:20px;height:20px;border-radius:50%;border:1px solid var(--border-color);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:all .15s;flex-shrink:0; }
+    .ex-done.checked { background:#50c878;border-color:#50c878;color:#0a0a12; }
+
+    /* ---- Nutrition ---- */
+    .macro-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md);margin-bottom:var(--space-lg); }
+    .macro-card { background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:var(--space-md);text-align:center; }
+    .macro-num { font-family:var(--font-display);font-size:2rem;line-height:1; }
+    .macro-num.protein { color:#4a90d9; }
+    .macro-num.carbs { color:#e8872b; }
+    .macro-num.fats { color:#50c878; }
+    .macro-unit { font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px; }
+    .macro-lbl { font-size:.72rem;color:var(--text-muted);margin-top:2px; }
+    .meal-plan { display:grid;gap:var(--space-sm); }
+    .meal { background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:var(--space-md); }
+    .meal-time { font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#50c878;margin-bottom:5px; }
+    .meal-desc { font-size:.84rem;color:var(--text-secondary);line-height:1.5; }
+
+    /* ---- AI Chat panel ---- */
+    .hw-chat-wrap { display:flex;gap:0;height:calc(100vh - var(--nav-height) - 120px);min-height:500px;border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden; }
+    .hw-chat-sidebar { width:260px;flex-shrink:0;border-right:1px solid var(--border-color);background:var(--bg-secondary);padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-md);overflow-y:auto; }
+    .hw-chat-area { flex:1;overflow:hidden;display:flex;flex-direction:column; }
+    .hw-sidebar-title { font-size:.82rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#50c878; }
+    .hw-topic-btn { width:100%;text-align:left;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:.8rem;color:var(--text-secondary);cursor:pointer;font-family:var(--font-body);transition:all .15s; }
+    .hw-topic-btn:hover,.hw-topic-btn.active { background:rgba(80,200,120,.1);border-color:rgba(80,200,120,.3);color:#50c878; }
+    .hw-disclaimer { font-size:.68rem;color:var(--text-muted);line-height:1.5;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border-color);border-radius:var(--radius-sm); }
+
+    /* ---- Goal modal ---- */
+    .goal-modal { display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:var(--space-lg); }
+    .goal-modal.open { display:flex; }
+    .goal-modal-box { background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-lg);width:100%;max-width:480px; }
+    .gm-header { padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between; }
+    .gm-title { font-family:var(--font-display);font-size:1.3rem;color:var(--text-primary); }
+    .gm-close { width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--border-color);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem; }
+    .gm-body { padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-md); }
+    .gm-field { display:flex;flex-direction:column;gap:5px; }
+    .gm-label { font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted); }
+    .gm-input,.gm-select { padding:9px 12px;font-size:.85rem;font-family:var(--font-body);background:rgba(255,255,255,.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary);outline:none;width:100%;box-sizing:border-box; }
+    .gm-input:focus,.gm-select:focus { border-color:#50c878; }
+    .gm-submit { padding:11px;background:#50c878;color:#0a0a12;border:none;border-radius:var(--radius-md);font-size:.88rem;font-weight:800;cursor:pointer;font-family:var(--font-body); }
+
+    @media(max-width:768px) {
+      .hw-header { padding:var(--space-lg) var(--space-md); }
+      .hw-body { padding:var(--space-md); }
+      .hw-chat-sidebar { display:none; }
+      .macro-grid { grid-template-columns:1fr 1fr 1fr; }
+    }
+    @media(max-width:480px) {
+      .macro-grid { grid-template-columns:1fr; }
+      .goals-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<div class="hw-page">
+
+  <!-- Header -->
+  <div class="hw-header">
+    <div class="hw-header-inner">
+      <div class="hw-eyebrow">Performance Module</div>
+      <h1 class="hw-title">Health &amp; <span>Wellness</span></h1>
+      <p class="hw-sub">Your body is your product. Track your goals, build your workout plan, and fuel your performance — all powered by Camp 8 AI.</p>
+      <div class="hw-stats">
+        <div class="hw-stat"><div class="hw-stat-num" id="hwGoalCount">—</div><div class="hw-stat-lbl">Active Goals</div></div>
+        <div class="hw-stat"><div class="hw-stat-num" id="hwStreakDays">—</div><div class="hw-stat-lbl">Day Streak</div></div>
+        <div class="hw-stat"><div class="hw-stat-num" id="hwWorkoutsLogged">—</div><div class="hw-stat-lbl">Workouts Logged</div></div>
+        <div class="hw-stat"><div class="hw-stat-num" id="hwWellnessScore">—</div><div class="hw-stat-lbl">Wellness Factor</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="hw-tabs">
+    <div class="hw-tabs-inner">
+      <div class="hw-tab active" onclick="hwTab('goals',this)">Goals</div>
+      <div class="hw-tab" onclick="hwTab('workout',this)">Workout Plan</div>
+      <div class="hw-tab" onclick="hwTab('nutrition',this)">Nutrition</div>
+      <div class="hw-tab" onclick="hwTab('ai',this)">AI Coach</div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="hw-body">
+
+    <!-- Goals Tab -->
+    <div class="hw-section active" id="hw-goals">
+      <div class="hw-card">
+        <div class="hw-card-header">
+          <div class="hw-card-title">My Goals</div>
+          <button class="add-goal-btn" onclick="openGoalModal()">+ Add Goal</button>
+        </div>
+        <div class="hw-card-body">
+          <div class="goals-grid" id="goalsGrid">
+            <div style="grid-column:1/-1;padding:var(--space-lg);text-align:center;color:var(--text-muted)">Loading goals…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress snapshot -->
+      <div class="hw-card">
+        <div class="hw-card-header"><div class="hw-card-title">Recent Progress</div></div>
+        <div class="hw-card-body" id="progressLog">
+          <p style="font-size:.84rem;color:var(--text-muted)">Log workouts and update your goals to track progress here.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workout Plan Tab -->
+    <div class="hw-section" id="hw-workout">
+      <div class="hw-card">
+        <div class="hw-card-header">
+          <div class="hw-card-title">Weekly Training Plan</div>
+          <button class="add-goal-btn" onclick="buildWorkoutPlan()">🤖 Build with AI</button>
+        </div>
+        <div class="hw-card-body">
+          <div id="workoutPlanWrap">
+            <p style="font-size:.84rem;color:var(--text-secondary);line-height:1.6;margin-bottom:var(--space-lg)">No workout plan yet. Click <strong style="color:#50c878">Build with AI</strong> to generate a personalized weekly training plan based on your position, goals, and the camps you're targeting.</p>
+            <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap">
+              <button class="add-goal-btn" onclick="buildWorkoutPlan()">Generate My Plan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nutrition Tab -->
+    <div class="hw-section" id="hw-nutrition">
+      <div class="hw-card">
+        <div class="hw-card-header">
+          <div class="hw-card-title">Daily Macro Targets</div>
+          <button class="add-goal-btn" onclick="calcMacros()">🤖 Calculate Mine</button>
+        </div>
+        <div class="hw-card-body">
+          <div class="macro-grid" id="macroGrid">
+            <div class="macro-card"><div class="macro-num protein" id="macroProtein">—</div><div class="macro-unit">grams</div><div class="macro-lbl">Protein</div></div>
+            <div class="macro-card"><div class="macro-num carbs" id="macroCarbs">—</div><div class="macro-unit">grams</div><div class="macro-lbl">Carbs</div></div>
+            <div class="macro-card"><div class="macro-num fats" id="macroFats">—</div><div class="macro-unit">grams</div><div class="macro-lbl">Healthy Fats</div></div>
+          </div>
+          <div id="mealPlanWrap">
+            <p style="font-size:.84rem;color:var(--text-secondary);line-height:1.6">Click <strong style="color:#50c878">Calculate Mine</strong> to get personalized macro targets and a sample meal plan based on your size, position, and training schedule.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hw-card">
+        <div class="hw-card-header"><div class="hw-card-title">NCAA-Compliant Supplements</div></div>
+        <div class="hw-card-body">
+          <p style="font-size:.84rem;color:var(--text-secondary);line-height:1.7;margin-bottom:var(--space-md)">Before taking any supplement, verify it is on the NCAA's approved list. The NCAA bans many substances that are legal and sold over the counter.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm)">
+            <div style="padding:var(--space-sm) var(--space-md);background:rgba(80,200,120,.06);border:1px solid rgba(80,200,120,.2);border-radius:var(--radius-sm)">
+              <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;color:#50c878;margin-bottom:4px">Generally Allowed</div>
+              <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.6">Creatine · Protein powder · Caffeine (moderate) · Multivitamins · Fish oil · Vitamin D</div>
+            </div>
+            <div style="padding:var(--space-sm) var(--space-md);background:rgba(196,30,58,.06);border:1px solid rgba(196,30,58,.2);border-radius:var(--radius-sm)">
+              <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;color:#c41e3a;margin-bottom:4px">Always Verify First</div>
+              <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.6">Pre-workouts · Fat burners · HGH boosters · Testosterone boosters · SARMS</div>
+            </div>
+          </div>
+          <p style="font-size:.72rem;color:var(--text-muted);margin-top:var(--space-md)">Always check the <a href="https://www.ncaa.org/sports/2015/3/12/ncaa-banned-substance.aspx" target="_blank" style="color:var(--gold)">NCAA Banned Substances list</a> before purchasing any supplement.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Coach Tab -->
+    <div class="hw-section" id="hw-ai">
+      <div class="hw-chat-wrap">
+        <div class="hw-chat-sidebar">
+          <div class="hw-sidebar-title">Ask About</div>
+          <button class="hw-topic-btn active" onclick="hwSetTopic(this,'general')">💬 General wellness</button>
+          <button class="hw-topic-btn" onclick="hwSetTopic(this,'workout')">🏋️ Workout advice</button>
+          <button class="hw-topic-btn" onclick="hwSetTopic(this,'nutrition')">🥗 Nutrition & diet</button>
+          <button class="hw-topic-btn" onclick="hwSetTopic(this,'recovery')">😴 Recovery & sleep</button>
+          <button class="hw-topic-btn" onclick="hwSetTopic(this,'injury')">🩹 Injury prevention</button>
+          <button class="hw-topic-btn" onclick="hwSetTopic(this,'mental')">🧠 Mental performance</button>
+          <button class="hw-topic-btn" onclick="hwSetTopic(this,'combine')">⚡ Combine prep</button>
+          <div class="hw-disclaimer">
+            <strong style="color:var(--text-secondary)">Disclaimer:</strong> This AI provides general wellness guidance for athletes. It is not a substitute for professional medical advice. Always consult a doctor or certified trainer before starting a new program.
+          </div>
+        </div>
+        <div class="hw-chat-area" id="hwChatArea"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add Goal Modal -->
+<div class="goal-modal" id="goalModal" onclick="if(event.target===this)closeGoalModal()">
+  <div class="goal-modal-box">
+    <div class="gm-header">
+      <div class="gm-title">Add Goal</div>
+      <button class="gm-close" onclick="closeGoalModal()">&#x2715;</button>
+    </div>
+    <div class="gm-body">
+      <div class="gm-field"><label class="gm-label">Goal Title</label><input class="gm-input" id="gm_title" placeholder="e.g. Lower 40 time to 4.45"></div>
+      <div class="gm-field"><label class="gm-label">Category</label>
+        <select class="gm-select" id="gm_cat">
+          <option value="speed">Speed & Agility</option>
+          <option value="strength">Strength & Power</option>
+          <option value="weight">Weight Management</option>
+          <option value="endurance">Endurance & Conditioning</option>
+          <option value="skill">Skill Development</option>
+          <option value="recovery">Recovery & Flexibility</option>
+          <option value="nutrition">Nutrition</option>
+          <option value="mental">Mental Performance</option>
+        </select>
+      </div>
+      <div class="gm-field"><label class="gm-label">Target Date</label><input class="gm-input" type="date" id="gm_date"></div>
+      <div class="gm-field"><label class="gm-label">Current Status (0-100%)</label><input class="gm-input" type="number" id="gm_pct" placeholder="0" min="0" max="100"></div>
+      <div class="gm-field"><label class="gm-label">Notes (optional)</label><input class="gm-input" id="gm_notes" placeholder="Any details about this goal…"></div>
+      <button class="gm-submit" onclick="saveGoal()">Save Goal</button>
+    </div>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script src="ai-chat.js"></script>
+<script src="shared.js"></script>
+<script>
+var sb2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var currentUserId = null;
+var currentProfile = null;
+var hwChatInstance = null;
+var currentTopic = 'general';
+
+var HW_SYSTEM = `You are Camp 8's Health & Wellness AI Coach — a certified strength and conditioning specialist with experience training high school football players for college recruitment.
+
+PERSONALITY: Motivating, knowledgeable, practical. You speak like a coach who genuinely cares about the athlete's long-term health and performance. Light, natural encouragement without being over the top.
+
+YOUR ROLE:
+- Provide evidence-based workout advice for football athletes
+- Give nutritional guidance calibrated to position and body type  
+- Advise on recovery, sleep, and injury prevention
+- Help athletes mentally prepare for combines and big games
+- Answer questions about NCAA supplement rules
+
+IMPORTANT RULES:
+- Always recommend consulting a doctor or certified trainer for medical concerns
+- Never diagnose injuries — redirect to medical professionals
+- Keep supplement advice NCAA-compliant only
+- Redirect off-topic questions warmly back to health and wellness
+
+When you know the athlete's profile data, use it to personalize your advice.`;
+
+var TOPIC_PROMPTS = {
+  general:   "I'm here to help with your health and wellness. What would you like to work on?",
+  workout:   "Let's build or improve your workout routine. Tell me about your current training and what you want to achieve.",
+  nutrition: "Good nutrition is a competitive advantage. What are your nutrition goals or questions?",
+  recovery:  "Recovery is where gains happen. Let's talk about your sleep, rest days, and recovery routines.",
+  injury:    "Injury prevention is critical for staying on the field. What's going on?",
+  mental:    "Mental performance separates good athletes from great ones. What's on your mind?",
+  combine:   "Let's get your body ready for the combine. Tell me your current numbers and target dates."
+};
+
+// ---- Tab switching ----
+function hwTab(name, el) {
+  document.querySelectorAll('.hw-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.hw-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('hw-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'ai' && !hwChatInstance) initHWChat();
+}
+
+// ---- Topic switching ----
+function hwSetTopic(btn, topic) {
+  document.querySelectorAll('.hw-topic-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTopic = topic;
+  if (hwChatInstance) {
+    hwChatInstance.reset();
+    hwChatInstance.addMessage('assistant', TOPIC_PROMPTS[topic]);
+  }
+}
+
+// ---- Init AI chat ----
+function initHWChat() {
+  var container = document.getElementById('hwChatArea');
+  var profileContext = currentProfile
+    ? '\n\nATHLETE PROFILE: Name: ' + (currentProfile.name||'') + ', Position: ' + (currentProfile.position||'') + ', Height: ' + (currentProfile.height||'') + ', Weight: ' + (currentProfile.weight||'') + ', Forty: ' + (currentProfile.forty_time||'not tested') + ', Goals: ' + (currentProfile.goal_season||'')
+    : '';
+
+  hwChatInstance = CAMP8_AI.buildChatUI({
+    container,
+    system: HW_SYSTEM + profileContext,
+    welcomeMsg: TOPIC_PROMPTS[currentTopic],
+    placeholder: 'Ask your health & wellness coach…',
+    accentColor: '#50c878',
+  });
+}
+
+// ---- Goals ----
+function openGoalModal() {
+  document.getElementById('goalModal').classList.add('open');
+  var d = new Date(); d.setMonth(d.getMonth() + 3);
+  document.getElementById('gm_date').value = d.toISOString().split('T')[0];
+}
+function closeGoalModal() { document.getElementById('goalModal').classList.remove('open'); }
+
+async function saveGoal() {
+  if (!currentUserId) return;
+  var title = document.getElementById('gm_title').value.trim();
+  if (!title) { alert('Please enter a goal title.'); return; }
+  await sb2.from('athlete_goals').insert({
+    athlete_id: currentUserId,
+    goal_type: document.getElementById('gm_cat').value,
+    description: title,
+    target_date: document.getElementById('gm_date').value,
+    progress_pct: parseInt(document.getElementById('gm_pct').value) || 0,
+    notes: document.getElementById('gm_notes').value,
+    status: 'active'
+  });
+  closeGoalModal();
+  loadGoals();
+}
+
+async function loadGoals() {
+  if (!currentUserId) return;
+  var { data } = await sb2.from('athlete_goals').select('*').eq('athlete_id', currentUserId).order('created_at', { ascending: false });
+  var grid = document.getElementById('goalsGrid');
+  var active = (data || []).filter(g => g.status === 'active').length;
+  document.getElementById('hwGoalCount').textContent = active;
+
+  if (!data || !data.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:var(--space-xl);color:var(--text-muted)">No goals yet. Add your first goal to get started.</div>';
+    return;
+  }
+
+  grid.innerHTML = data.map(function(g) {
+    var done = g.status === 'complete';
+    var pct = g.progress_pct || 0;
+    var deadline = g.target_date ? 'Target: ' + new Date(g.target_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+    return '<div class="goal-item ' + (done?'complete':'') + '">' +
+      '<div class="goal-item-header">' +
+        '<div class="goal-item-title">' + esc(g.description) + '</div>' +
+        '<span class="goal-item-status ' + (done?'complete':'active') + '">' + (done?'Done':'Active') + '</span>' +
+      '</div>' +
+      '<div class="goal-progress-bar"><div class="goal-progress-fill" style="width:' + pct + '%"></div></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+        '<div class="goal-deadline">' + esc(deadline) + '</div>' +
+        '<div style="display:flex;gap:5px">' +
+          '<button onclick="updateGoalPct(\'' + g.id + '\')" style="padding:2px 8px;background:transparent;border:1px solid var(--border-color);border-radius:100px;font-size:.65rem;color:var(--text-muted);cursor:pointer">Update</button>' +
+          (!done ? '<button onclick="completeGoal(\'' + g.id + '\')" style="padding:2px 8px;background:rgba(80,200,120,.1);border:1px solid rgba(80,200,120,.3);border-radius:100px;font-size:.65rem;color:#50c878;cursor:pointer">✓ Done</button>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function updateGoalPct(id) {
+  var pct = prompt('Enter your current progress (0-100%):');
+  if (pct === null) return;
+  var n = Math.min(100, Math.max(0, parseInt(pct) || 0));
+  await sb2.from('athlete_goals').update({ progress_pct: n }).eq('id', id);
+  loadGoals();
+}
+
+async function completeGoal(id) {
+  await sb2.from('athlete_goals').update({ status: 'complete', progress_pct: 100 }).eq('id', id);
+  showToast('Goal completed! 🎉', 'success');
+  loadGoals();
+}
+
+// ---- AI Workout Plan Builder ----
+async function buildWorkoutPlan() {
+  var wrap = document.getElementById('workoutPlanWrap');
+  wrap.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:var(--space-lg);color:var(--text-muted);font-size:.84rem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-18 0" /></svg>Building your personalized plan…</div>';
+
+  var pos = currentProfile?.position || 'athlete';
+  var weight = currentProfile?.weight || '180';
+  var height = currentProfile?.height || '6-0';
+  var forty = currentProfile?.forty_time || 'untested';
+  var goalSeason = currentProfile?.goal_season || 'improve performance';
+
+  try {
+    var res = await fetch('/.netlify/functions/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: 'You are a strength and conditioning coach for high school football players. Respond ONLY with a valid JSON object. No preamble, no markdown.',
+        messages: [{ role: 'user', content: 'Create a 7-day weekly workout plan for a ' + pos + ', ' + height + ', ' + weight + 'lbs, 40 time: ' + forty + ', goal: ' + goalSeason + '. Return JSON: { days: [ { name: "Monday", focus: "Lower Body", exercises: [ { name: "Squats", sets: "4x8 @ 70%", notes: "" } ] } ] }' }],
+        max_tokens: 1000
+      })
+    });
+    var data = await res.json();
+    var text = data.content?.[0]?.text || '';
+    var match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON');
+    var plan = JSON.parse(match[0]);
+    renderWorkoutPlan(plan.days || []);
+  } catch(e) {
+    wrap.innerHTML = '<p style="color:var(--text-muted);font-size:.84rem">Could not generate plan right now. Try again or use the AI Coach tab to ask for a custom plan.</p>';
+  }
+}
+
+function renderWorkoutPlan(days) {
+  var wrap = document.getElementById('workoutPlanWrap');
+  if (!days.length) { wrap.innerHTML = '<p style="color:var(--text-muted)">No plan data.</p>'; return; }
+  wrap.innerHTML = '<div class="workout-plan">' + days.map(function(day, i) {
+    return '<div class="workout-day">' +
+      '<div class="workout-day-header" onclick="toggleDay(this)">' +
+        '<div><div class="workout-day-name">' + esc(day.name) + '</div><div class="workout-day-focus">' + esc(day.focus) + '</div></div>' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
+      '</div>' +
+      '<div class="workout-day-body">' +
+        (day.exercises || []).map(function(ex) {
+          return '<div class="workout-exercise">' +
+            '<div><div class="ex-name">' + esc(ex.name) + '</div>' + (ex.notes ? '<div style="font-size:.72rem;color:var(--text-muted)">' + esc(ex.notes) + '</div>' : '') + '</div>' +
+            '<div style="display:flex;align-items:center;gap:8px"><div class="ex-sets">' + esc(ex.sets) + '</div><div class="ex-done" onclick="this.classList.toggle(\'checked\');this.textContent=this.classList.contains(\'checked\')?\'✓\':\'\'" title="Mark done"></div></div>' +
+          '</div>';
+        }).join('') +
+      '</div>' +
+    '</div>';
+  }).join('') + '</div>';
+}
+
+function toggleDay(header) {
+  var body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ---- Macros Calculator ----
+async function calcMacros() {
+  var weight = parseInt(currentProfile?.weight) || 180;
+  var pos = currentProfile?.position || 'athlete';
+  var forty = currentProfile?.forty_time;
+
+  // Position-based multipliers
+  var posMulti = { QB:15, RB:16, WR:15, TE:16, OL:18, DL:18, DE:17, LB:16, CB:15, S:15, K:14, P:14 };
+  var multi = posMulti[pos] || 16;
+  var calories = Math.round(weight * multi);
+  var protein = Math.round(weight * 1.0);
+  var fats = Math.round(calories * 0.25 / 9);
+  var carbs = Math.round((calories - (protein * 4) - (fats * 9)) / 4);
+
+  document.getElementById('macroProtein').textContent = protein;
+  document.getElementById('macroCarbs').textContent = carbs;
+  document.getElementById('macroFats').textContent = fats;
+
+  // Generate meal plan
+  var wrap = document.getElementById('mealPlanWrap');
+  wrap.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:var(--space-md) 0;color:var(--text-muted);font-size:.84rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-18 0"/></svg>Building your meal plan…</div>';
+
+  try {
+    var res = await fetch('/.netlify/functions/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: 'You are a sports nutritionist for high school football players. Respond ONLY with valid JSON. No preamble or markdown.',
+        messages: [{ role: 'user', content: 'Create a sample daily meal plan for a ' + pos + ', ' + weight + 'lbs, targeting ~' + calories + ' calories, ' + protein + 'g protein, ' + carbs + 'g carbs, ' + fats + 'g fats. Return JSON: { meals: [ { time: "7:00 AM", label: "Breakfast", description: "..." } ] }' }],
+        max_tokens: 600
+      })
+    });
+    var data = await res.json();
+    var text = data.content?.[0]?.text || '';
+    var match = text.match(/\{[\s\S]*\}/);
+    var plan = match ? JSON.parse(match[0]) : null;
+    if (plan && plan.meals) {
+      wrap.innerHTML = '<div class="meal-plan">' + plan.meals.map(function(m) {
+        return '<div class="meal"><div class="meal-time">' + esc(m.time) + ' — ' + esc(m.label) + '</div><div class="meal-desc">' + esc(m.description) + '</div></div>';
+      }).join('') + '</div>';
+    } else throw new Error('no meals');
+  } catch(e) {
+    wrap.innerHTML = '<p style="font-size:.84rem;color:var(--text-muted)">Meal plan unavailable. Use the AI Coach tab to ask for personalized meal ideas.</p>';
+  }
+}
+
+// ---- Boot ----
+document.addEventListener('DOMContentLoaded', async function() {
+  var { data: { user } } = await sb2.auth.getUser();
+  if (!user) { window.location.href = 'login.html'; return; }
+  currentUserId = user.id;
+
+  var { data: profile } = await sb2.from('athletes').select('*').eq('user_id', user.id).single();
+  if (profile) {
+    currentProfile = profile;
+    // Show profile-based stats
+    var ws = 0;
+    if (profile.forty_time) ws += 20;
+    if (profile.height && profile.weight) ws += 15;
+    if (profile.goal_season) ws += 15;
+    document.getElementById('hwWellnessScore').textContent = ws + '/50';
+  }
+
+  loadGoals();
+
+  // Workout streak (simplified)
+  document.getElementById('hwStreakDays').textContent = '0';
+  document.getElementById('hwWorkoutsLogged').textContent = '0';
+});
+
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeGoalModal(); });
+</script>
+</body>
+</html>

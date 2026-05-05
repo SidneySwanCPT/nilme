@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Athlete Hub</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="home-styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body{overflow-y:auto;height:auto;}
+    .hub-header{margin-top:60px;padding:var(--space-xl) var(--space-xl);background:linear-gradient(180deg,rgba(212,168,67,0.07) 0%,transparent 100%);border-bottom:1px solid var(--border-color);text-align:center;}
+    .hub-eyebrow{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:var(--gold);opacity:0.8;margin-bottom:var(--space-sm);}
+    .hub-title{font-family:var(--font-display);font-size:clamp(2.5rem,6vw,5rem);letter-spacing:0.04em;color:var(--text-primary);margin-bottom:var(--space-md);}
+    .hub-title span{color:var(--gold);}
+    .hub-sub{font-size:1rem;color:var(--text-secondary);max-width:520px;margin:0 auto;line-height:1.6;}
+    .hub-headline{font-family:var(--font-display);font-size:clamp(2rem,4vw,3rem);letter-spacing:0.04em;color:var(--text-primary);text-align:center;margin:var(--space-xl) 0 var(--space-lg);}
+    .hub-headline span{color:var(--gold);}
+    .hub-content{max-width:1100px;margin:0 auto;padding:var(--space-xl);}
+    .hub-tools{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-xl);margin-bottom:var(--space-xl);}
+    .hub-tool-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-lg);overflow:hidden;text-decoration:none;color:inherit;transition:all var(--transition-med);display:flex;flex-direction:column;}
+    .hub-tool-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,0.4);}
+    .htc-header{padding:var(--space-xl);background:linear-gradient(135deg,rgba(212,168,67,0.1) 0%,rgba(212,168,67,0.03) 100%);}
+    .htc-header.blue{background:linear-gradient(135deg,rgba(74,144,217,0.1) 0%,rgba(74,144,217,0.03) 100%);}
+    .htc-tag{font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:var(--space-sm);}
+    .htc-tag.gold{color:var(--gold);}
+    .htc-tag.blue{color:#4a90d9;}
+    .htc-title{font-family:var(--font-display);font-size:2rem;letter-spacing:0.04em;color:var(--text-primary);margin-bottom:var(--space-sm);}
+    .htc-title span.gold{color:var(--gold);}
+    .htc-title span.blue{color:#4a90d9;}
+    .htc-desc{font-size:0.88rem;color:var(--text-secondary);line-height:1.6;}
+    .htc-features{padding:var(--space-lg) var(--space-xl);flex:1;}
+    .htc-feature{display:flex;align-items:flex-start;gap:var(--space-sm);padding:8px 0;border-bottom:1px solid var(--border-color);font-size:0.82rem;color:var(--text-secondary);}
+    .htc-feature:last-child{border-bottom:none;}
+    .htc-feature-icon{flex-shrink:0;margin-top:1px;}
+    .htc-cta{display:block;padding:var(--space-md) var(--space-xl);font-size:0.9rem;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.08em;transition:all var(--transition-fast);}
+    .htc-cta.gold-cta{background:var(--gold);color:#0a0a12;}
+    .htc-cta.gold-cta:hover{background:var(--gold-bright);}
+    .htc-cta.blue-cta{background:#4a90d9;color:#fff;}
+    .htc-cta.blue-cta:hover{background:#5aa0e9;}
+
+    .hub-how{background:var(--bg-secondary);border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);padding:var(--space-xl);}
+    .hub-how-inner{max-width:1100px;margin:0 auto;}
+    .how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-lg);margin-top:var(--space-lg);}
+    .how-step{text-align:center;}
+    .how-num{font-family:var(--font-display);font-size:3rem;color:var(--gold);line-height:1;margin-bottom:var(--space-sm);}
+    .how-title{font-size:0.9rem;font-weight:700;color:var(--text-primary);margin-bottom:var(--space-xs);}
+    .how-desc{font-size:0.78rem;color:var(--text-secondary);line-height:1.5;}
+
+    @media(max-width:768px){
+      .hub-tools{grid-template-columns:1fr;}
+      .how-steps{grid-template-columns:1fr 1fr;}
+      .hub-header,.hub-content,.hub-how{padding:var(--space-lg) var(--space-md);}
+    }
+    @media(max-width:480px){.how-steps{grid-template-columns:1fr;}}
+  </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth-guard.js"></script>
+</head>
+<body>
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<div class="hub-header">
+  <div class="hub-eyebrow">Free Tools for High School Athletes</div>
+  <h1 class="hub-title">Athlete <span>Hub</span></h1>
+  <p class="hub-sub">Two free evaluation tools that show you exactly where you rank — and what to do next to earn your scholarship.</p>
+</div>
+
+<!-- How It Works -->
+<div class="hub-how">
+  <div class="hub-how-inner">
+    <h2 style="font-family:var(--font-display);font-size:1.8rem;text-align:center;color:var(--text-primary)">How It Works</h2>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div class="how-title">Enter Your Info</div>
+        <div class="how-desc">Fill in your stats, social media following, location, and recruiting profile</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div class="how-title">Get Your Score</div>
+        <div class="how-desc">Our algorithm grades you against real recruiting and combine benchmarks</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div class="how-title">See Your Gaps</div>
+        <div class="how-desc">Every weak area is broken down with specific advice on how to improve it</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">4</div>
+        <div class="how-title">Take Action</div>
+        <div class="how-desc">Get matched with camps, next steps, and a plan to get noticed by coaches</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tools -->
+<div class="hub-content">
+  <h2 class="hub-headline">See Where You <span>Rank</span></h2>
+  <div class="hub-tools">
+
+    <!-- NIL Rating Tool -->
+    <a href="nil-rating.html" class="hub-tool-card">
+      <div class="htc-header">
+        <div class="htc-tag gold">NIL Evaluation</div>
+        <h2 class="htc-title">NIL <span class="gold">Rating Tool</span></h2>
+        <p class="htc-desc">Get a score out of 100 that shows your NIL market value — how attractive you are to brands, what drives your value, and exactly what to do to improve it.</p>
+      </div>
+      <div class="htc-features">
+        <div class="htc-feature"><span class="htc-feature-icon">📍</span><span>Location &amp; market size analysis — does your city help or hurt your NIL value?</span></div>
+        <div class="htc-feature"><span class="htc-feature-icon">⭐</span><span>Star rating impact — see how much recruiting rank drives brand interest</span></div>
+        <div class="htc-feature"><span class="htc-feature-icon">📱</span><span>Social media scoring — Instagram, TikTok, and Twitter/X all factor in</span></div>
+        <div class="htc-feature"><span class="htc-feature-icon">🏕️</span><span>Personalized camp recommendations from your existing 755-camp database</span></div>
+        <div class="htc-feature"><span class="htc-feature-icon">📋</span><span>Step-by-step action plan to raise your NIL score</span></div>
+      </div>
+      <div class="htc-cta gold-cta">Get My NIL Score →</div>
+    </a>
+
+    <!-- Combine Evaluator -->
+    <a href="combine-eval.html" class="hub-tool-card">
+      <div class="htc-header blue">
+        <div class="htc-tag blue">Combine Evaluation</div>
+        <h2 class="htc-title">Combine <span class="blue">Evaluator</span></h2>
+        <p class="htc-desc">Enter your combine numbers and get graded on every measurable against real position benchmarks. See where your numbers stack up and what to train before your next camp.</p>
+      </div>
+      <div class="htc-features">
+        <div class="htc-feature"><span class="htc-feature-icon">⚡</span><span>40-yard dash, vertical, broad jump, shuttle — all graded by position</span></div>
+        <div class="htc-feature"><span class="htc-feature-icon">💪</span><span>Strength metrics: bench press reps, squat, power clean (optional deep dive)</span></div>
+        <div class="htc-feature"><span class="htc-feature-icon">🎯</span><span>Position-specific benchmarks — a CB grade is different from an OT grade</span></div>
+        <div class="htc-feature"><span class="htc-feature-icon">📊</span><span>Percentile rankings — see exactly where you stand in your position group</span></div>
+        <div class="htc-feature"><span class="htc-feature-icon">🏋️</span><span>Specific training advice for every weak area identified</span></div>
+      </div>
+      <div class="htc-cta blue-cta">Grade My Numbers →</div>
+    </a>
+  </div>
+
+  <!-- Bottom links -->
+  <div style="display:flex;flex-wrap:wrap;gap:var(--space-md);justify-content:center;padding-top:var(--space-md);border-top:1px solid var(--border-color);">
+    <a href="camps.html" style="color:var(--text-muted);font-size:0.82rem;text-decoration:none;padding:8px 16px;border:1px solid var(--border-color);border-radius:100px;transition:all var(--transition-fast)">Browse 755 Prospect Camps →</a>
+    <a href="nil-central.html" style="color:var(--text-muted);font-size:0.82rem;text-decoration:none;padding:8px 16px;border:1px solid var(--border-color);border-radius:100px;transition:all var(--transition-fast)">NIL Rules by State →</a>
+    <a href="nil-sponsors.html" style="color:var(--text-muted);font-size:0.82rem;text-decoration:none;padding:8px 16px;border:1px solid var(--border-color);border-radius:100px;transition:all var(--transition-fast)">NIL Sponsor Directory →</a>
+    <a href="recruits.html" style="color:var(--text-muted);font-size:0.82rem;text-decoration:none;padding:8px 16px;border:1px solid var(--border-color);border-radius:100px;transition:all var(--transition-fast)">Recruiting Central →</a>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a href="index.html" class="footer-brand">Camp <span>8</span></a>
+    <div class="footer-links">
+      <a href="nil-central.html">NIL Central</a>
+      <a href="camps.html">Prospect Camps</a>
+      <a href="recruits.html">Recruiting Central</a>
+      <a href="powerhouse.html">Powerhouse Central</a>
+    </div>
+    <a href="https://www.instagram.com/n.i.l.me" target="_blank" rel="noopener" class="ig-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+      @n.i.l.me
+    </a>
+  </div>
+</footer>
+
+<script src="shared.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Page Not Found</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .err-wrap { text-align: center; padding: var(--space-xl); max-width: 480px; }
+    .err-num { font-family: var(--font-display); font-size: clamp(5rem,20vw,9rem); color: var(--gold); opacity: .15; line-height: 1; margin-bottom: -20px; letter-spacing: .05em; }
+    .err-icon { font-size: 3rem; margin-bottom: var(--space-md); }
+    .err-title { font-family: var(--font-display); font-size: clamp(1.6rem,4vw,2.4rem); color: var(--text-primary); margin-bottom: 10px; }
+    .err-title span { color: var(--gold); }
+    .err-sub { font-size: .88rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: var(--space-xl); }
+    .err-actions { display: flex; gap: var(--space-sm); justify-content: center; flex-wrap: wrap; }
+    .err-btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 22px; border-radius: var(--radius-md); font-size: .86rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: all .15s; font-family: var(--font-body); }
+    .err-btn.primary { background: var(--gold); color: #0a0a12; border: none; }
+    .err-btn.primary:hover { background: var(--gold-bright); }
+    .err-btn.outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); }
+    .err-btn.outline:hover { border-color: var(--border-hover); color: var(--text-primary); }
+  </style>
+</head>
+<body>
+<div class="err-wrap">
+  <div class="err-num">404</div>
+  <div class="err-icon">🏈</div>
+  <h1 class="err-title">Out of <span>Bounds</span></h1>
+  <p class="err-sub">That page doesn't exist or may have moved. Let's get you back in the game.</p>
+  <div class="err-actions">
+    <a href="index.html" class="err-btn primary">← Back to Home</a>
+    <a href="dashboard.html" class="err-btn outline">My Dashboard</a>
+    <a href="camps.html" class="err-btn outline">Browse Camps</a>
+  </div>
+</div>
+</body>
+</html>

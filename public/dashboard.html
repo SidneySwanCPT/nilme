@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Athlete Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard-widgets.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth-guard.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body { overflow-y: auto; height: auto; }
+
+    /* ---- Auth Gate ---- */
+    .auth-gate {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+      margin-top: var(--nav-height);
+    }
+
+    .auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .auth-eyebrow { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 6px; }
+    .auth-title { font-family: var(--font-display); font-size: 2rem; color: var(--text-primary); margin-bottom: 4px; }
+    .auth-title span { color: var(--gold); }
+    .auth-sub { font-size: 0.82rem; color: var(--text-muted); margin-bottom: var(--space-xl); line-height: 1.5; }
+
+    .auth-tabs { display: flex; gap: 0; margin-bottom: var(--space-lg); border-bottom: 1px solid var(--border-color); }
+    .auth-tab { flex: 1; padding: 10px; text-align: center; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+    .auth-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .auth-input {
+      width: 100%; padding: 11px 14px; margin-bottom: var(--space-md);
+      font-size: 0.88rem; font-family: var(--font-body);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm); color: var(--text-primary); outline: none; box-sizing: border-box;
+    }
+    .auth-input:focus { border-color: var(--gold); }
+    .auth-input::placeholder { color: var(--text-muted); }
+
+    .auth-btn {
+      width: 100%; padding: 12px; background: var(--gold); color: #0a0a12;
+      border: none; border-radius: var(--radius-md); font-size: 0.9rem;
+      font-weight: 800; cursor: pointer; font-family: var(--font-body); transition: background 0.15s;
+    }
+    .auth-btn:hover { background: var(--gold-bright); }
+    .auth-error { color: #e05068; font-size: 0.8rem; margin-top: var(--space-sm); text-align: center; }
+    .auth-note { font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: var(--space-md); line-height: 1.5; }
+
+    /* ---- Dashboard ---- */
+    .dashboard-wrap { display: none; margin-top: var(--nav-height); }
+
+    .dash-header {
+      background: linear-gradient(135deg, rgba(212,168,67,0.08) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--space-xl);
+    }
+
+    .dash-header-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; gap: var(--space-xl); flex-wrap: wrap;
+    }
+
+    /* Verified badge */
+    .verified-badge { display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(212,168,67,.15);border:1px solid rgba(212,168,67,.3);border-radius:100px;font-size:.65rem;font-weight:800;color:var(--gold);letter-spacing:.05em;text-transform:uppercase; }
+    .verified-badge.maxpreps { background:rgba(80,200,120,.12);border-color:rgba(80,200,120,.3);color:#50c878; }
+    .verified-badge.admin { background:rgba(74,144,217,.12);border-color:rgba(74,144,217,.3);color:#4a90d9; }
+    .stats-section { background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--space-lg);margin:var(--space-md) 0; }
+    .stats-section-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md); }
+    .stats-section-title { font-size:.82rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text-secondary); }
+    .stats-update-btn { padding:5px 12px;background:transparent;border:1px solid var(--border-color);border-radius:100px;font-size:.72rem;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);transition:all .15s; }
+    .stats-update-btn:hover { border-color:var(--gold);color:var(--gold); }
+    .stats-pills { display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px; }
+    .stat-pill { background:rgba(255,255,255,.04);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:8px 12px;text-align:center; }
+    .stat-pill-val { font-family:var(--font-display);font-size:1.3rem;color:var(--gold);line-height:1; }
+    .stat-pill-lbl { font-size:.65rem;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.05em; }
+    .profile-complete-bar { height:4px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;margin-top:6px; }
+    .profile-complete-fill { height:100%;background:var(--gold);border-radius:100px;transition:width .5s ease; }
+    .dash-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--gold-dim); border: 3px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 2rem; color: var(--gold);
+      flex-shrink: 0;
+    }
+
+    .dash-name { font-family: var(--font-display); font-size: 2rem; color: var(--text-primary); line-height: 1; margin-bottom: 4px; }
+    .dash-details { font-size: 0.85rem; color: var(--text-secondary); }
+    .dash-details span { color: var(--gold); font-weight: 700; }
+
+    .dash-header-actions { margin-left: auto; display: flex; gap: var(--space-sm); flex-wrap: wrap; }
+    .dash-action-btn {
+      padding: 8px 18px; font-size: 0.8rem; font-weight: 700; font-family: var(--font-body);
+      border-radius: 100px; cursor: pointer; transition: all 0.15s;
+    }
+    .dash-action-btn.primary { background: var(--gold); color: #0a0a12; border: none; }
+    .dash-action-btn.primary:hover { background: var(--gold-bright); }
+    .dash-action-btn.outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); }
+    .dash-action-btn.outline:hover { color: var(--text-primary); border-color: var(--border-hover); }
+    .dash-action-btn.danger { background: transparent; border: 1px solid rgba(196,30,58,0.3); color: #c41e3a; }
+
+    /* Stat cards row */
+    .dash-stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--space-sm);
+      max-width: 1200px;
+      margin: var(--space-lg) auto;
+      padding: 0 var(--space-xl);
+    }
+
+    .dash-stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dash-stat-card:hover { border-color: var(--gold); background: var(--gold-dim); }
+    .dsc-num { font-family: var(--font-display); font-size: 2.2rem; color: var(--gold); line-height: 1; }
+    .dsc-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-top: 3px; }
+    .dsc-sub { font-size: 0.72rem; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Tabs */
+    .dash-tabs {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 var(--space-xl);
+      display: flex; gap: 4px; border-bottom: 1px solid var(--border-color);
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .dash-tabs::-webkit-scrollbar { display: none; }
+    .dash-tab {
+      padding: 10px 18px; font-size: 0.85rem; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; white-space: nowrap;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: all 0.15s;
+    }
+    .dash-tab:hover { color: var(--text-secondary); }
+    .dash-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* Tab content */
+    .dash-content { max-width: 1200px; margin: 0 auto; padding: var(--space-xl); }
+    .dash-panel { display: none; }
+    .dash-panel.active { display: block; }
+
+    /* Section headers */
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-lg); flex-wrap: wrap; gap: var(--space-sm); }
+    .panel-title { font-family: var(--font-display); font-size: 1.5rem; color: var(--text-primary); }
+    .panel-title span { color: var(--gold); }
+    .panel-add-btn { padding: 7px 16px; background: var(--gold-dim); border: 1px solid var(--gold); border-radius: 100px; color: var(--gold); font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
+    .panel-add-btn:hover { background: rgba(212,168,67,0.2); }
+
+    /* Score history chart */
+    .score-history { display: flex; flex-direction: column; gap: var(--space-md); }
+    .score-entry {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg);
+      display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap;
+    }
+    .se-grade { font-family: var(--font-display); font-size: 2rem; min-width: 48px; text-align: center; }
+    .se-details { flex: 1; min-width: 200px; }
+    .se-title { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); }
+    .se-date { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .se-bar-row { display: flex; gap: var(--space-sm); margin-top: var(--space-sm); flex-wrap: wrap; }
+    .se-stat { font-size: 0.75rem; color: var(--text-secondary); background: rgba(255,255,255,0.04); padding: 3px 8px; border-radius: 100px; }
+
+    /* Camps grid */
+    .camps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md); }
+    .camp-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: var(--space-md);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .cc-tier { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+    .cc-name { font-size: 0.92rem; font-weight: 700; color: var(--text-primary); }
+    .cc-loc { font-size: 0.78rem; color: var(--text-secondary); }
+    .cc-date { font-size: 0.75rem; color: var(--text-muted); }
+    .cc-status select { padding: 5px 10px; font-size: 0.75rem; font-family: var(--font-body); background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-secondary); outline: none; width: 100%; }
+    .cc-remove { padding: 5px 12px; background: rgba(196,30,58,0.08); border: 1px solid rgba(196,30,58,0.2); border-radius: 100px; color: #c41e3a; font-size: 0.72rem; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; align-self: flex-start; }
+
+    /* Map */
+    #dashMap { height: 360px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: var(--space-lg); }
+
+    /* Calendar */
+    .cal-ticker { background: rgba(212,168,67,0.06); border: 1px solid rgba(212,168,67,0.15); border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); margin-bottom: var(--space-lg); overflow: hidden; }
+    .cal-ticker-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 8px; }
+    .cal-ticker-items { display: flex; gap: var(--space-xl); overflow-x: auto; scrollbar-width: none; }
+    .cal-ticker-items::-webkit-scrollbar { display: none; }
+    .cti { flex-shrink: 0; text-align: center; }
+    .cti-date { font-family: var(--font-display); font-size: 1.4rem; color: var(--gold); line-height: 1; }
+    .cti-name { font-size: 0.72rem; color: var(--text-primary); font-weight: 600; max-width: 120px; }
+    .cti-loc { font-size: 0.65rem; color: var(--text-muted); }
+
+    /* Offers */
+    .offers-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .offer-item {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg);
+      display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap;
+    }
+    .oi-college { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); flex: 1; }
+    .oi-div { font-size: 0.75rem; color: var(--text-muted); }
+    .oi-status { padding: 3px 10px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; }
+    .oi-remove { padding: 4px 10px; background: rgba(196,30,58,0.08); border: 1px solid rgba(196,30,58,0.2); border-radius: 100px; color: #c41e3a; font-size: 0.7rem; cursor: pointer; font-family: var(--font-body); }
+
+    /* Goals */
+    .goals-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .goal-item {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg);
+      display: flex; align-items: center; gap: var(--space-md);
+    }
+    .goal-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-color); flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .goal-check.done { background: var(--gold); border-color: var(--gold); color: #0a0a12; font-size: 0.75rem; }
+    .goal-check:hover { border-color: var(--gold); }
+    .goal-text { flex: 1; font-size: 0.88rem; }
+    .goal-text.done { text-decoration: line-through; color: var(--text-muted); }
+    .goal-cat { padding: 2px 8px; border-radius: 100px; font-size: 0.65rem; font-weight: 700; background: rgba(255,255,255,0.06); color: var(--text-muted); flex-shrink: 0; }
+    .goal-del { color: var(--text-muted); cursor: pointer; font-size: 1rem; flex-shrink: 0; transition: color 0.15s; }
+    .goal-del:hover { color: #c41e3a; }
+
+    /* AI tools row */
+    .ai-tools-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-md); margin-top: var(--space-lg); }
+    .ai-tool-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-lg); text-decoration: none; color: inherit; transition: all 0.15s; display: flex; flex-direction: column; gap: 8px; }
+    .ai-tool-card:hover { border-color: var(--gold); background: var(--gold-dim); transform: translateY(-2px); }
+    .atc-icon { font-size: 1.5rem; }
+    .atc-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+    .atc-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; }
+
+    /* Inline forms */
+    .inline-form { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-md); display: none; }
+    .inline-form.open { display: block; }
+    .inline-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-md); }
+    .if-input, .if-select {
+      padding: 8px 12px; font-size: 0.82rem; font-family: var(--font-body);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm); color: var(--text-primary); outline: none; width: 100%; box-sizing: border-box;
+    }
+    .if-input:focus, .if-select:focus { border-color: var(--gold); }
+    .if-input::placeholder { color: var(--text-muted); }
+    .if-submit { padding: 8px 20px; background: var(--gold); color: #0a0a12; border: none; border-radius: 100px; font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: var(--font-body); }
+    .if-cancel { padding: 8px 16px; background: transparent; border: 1px solid var(--border-color); border-radius: 100px; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; font-family: var(--font-body); margin-left: 6px; }
+
+    .empty-state { padding: var(--space-xl); text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+
+    /* Social post preview */
+    .social-post-preview {
+      background: linear-gradient(135deg, #0a0a12 0%, #1a1a30 100%);
+      border: 2px solid var(--gold);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      text-align: center;
+      max-width: 400px;
+      margin: var(--space-lg) auto;
+    }
+    .spp-logo { font-family: var(--font-display); font-size: 1.5rem; color: var(--gold); margin-bottom: var(--space-md); }
+    .spp-name { font-family: var(--font-display); font-size: 2.5rem; color: #fff; line-height: 1; margin-bottom: 6px; }
+    .spp-action { font-size: 1rem; color: var(--gold); font-weight: 700; margin-bottom: var(--space-sm); }
+    .spp-college { font-family: var(--font-display); font-size: 1.8rem; color: #fff; }
+    .spp-details { font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: var(--space-sm); }
+    .spp-tag { font-size: 0.72rem; color: var(--gold); margin-top: var(--space-sm); }
+
+    @media(max-width:768px){
+      .dash-stats-row { grid-template-columns: 1fr 1fr; }
+      .dash-content { padding: var(--space-md); }
+      .camps-grid { grid-template-columns: 1fr; }
+      .ai-tools-row { grid-template-columns: 1fr 1fr; }
+      .inline-form-grid { grid-template-columns: 1fr; }
+      .dash-header { padding: var(--space-md); }
+      .dash-stats-row { padding: 0 var(--space-md); }
+      .dash-tabs { padding: 0 var(--space-md); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<!-- ===== AUTH GATE ===== -->
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div class="auth-eyebrow">Your Personal Hub</div>
+    <h1 class="auth-title">Athlete <span>Dashboard</span></h1>
+    <p class="auth-sub">Track your combine scores, NIL progress, starred camps, college offers, and goals — all in one place. Free account, no credit card needed.</p>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="setAuthTab('signin',this)">Sign In</div>
+      <div class="auth-tab" onclick="setAuthTab('signup',this)">Create Account</div>
+    </div>
+
+    <div id="authSignin">
+      <input type="email" class="auth-input" id="siEmail" placeholder="Email address">
+      <input type="password" class="auth-input" id="siPass" placeholder="Password">
+      <button class="auth-btn" onclick="doSignIn()">Sign In</button>
+    </div>
+
+    <div id="authSignup" style="display:none">
+      <input type="email" class="auth-input" id="suEmail" placeholder="Email address">
+      <input type="password" class="auth-input" id="suPass" placeholder="Password (min 8 characters)">
+      <input type="password" class="auth-input" id="suPass2" placeholder="Confirm password">
+      <button class="auth-btn" onclick="doSignUp()">Create Free Account</button>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+    <p class="auth-note">Your data is private and only visible to you. We never share your information.</p>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="dashboard-wrap" id="dashWrap">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div class="dash-header-inner">
+      <div class="dash-avatar" id="dashAvatar">?</div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="dash-name" id="dashName">Athlete</div>
+          <div id="verifiedBadge" style="display:none"></div>
+        </div>
+        <div class="dash-details" id="dashDetails">Complete your profile to get started</div>
+        <div class="profile-complete-bar" style="width:200px;margin-top:6px"><div class="profile-complete-fill" id="profileCompleteFill" style="width:0%"></div></div>
+      </div>
+      <div class="dash-header-actions">
+        <button class="dash-action-btn primary" onclick="showTab('overview')">Dashboard</button>
+        <button class="dash-action-btn outline" onclick="showProfileEdit()">Edit Profile</button>
+        <button class="dash-action-btn danger" onclick="doSignOut()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="dash-stats-row">
+    <div class="dash-stat-card" onclick="openStatExplainer('combine')">
+      <div class="dsc-num" id="statCombineGrade">—</div>
+      <div class="dsc-label">Combine Grade</div>
+      <div class="dsc-sub">Latest eval</div>
+    </div>
+    <div class="dash-stat-card" onclick="openStatExplainer('nil')">
+      <div class="dsc-num" id="statNilScore">—</div>
+      <div class="dsc-label">NIL Score</div>
+      <div class="dsc-sub">Out of 100</div>
+    </div>
+    <div class="dash-stat-card" onclick="openStatExplainer('camps')">
+      <div class="dsc-num" id="statCamps">0</div>
+      <div class="dsc-label">Starred Camps</div>
+      <div class="dsc-sub">On your list</div>
+    </div>
+    <div class="dash-stat-card" onclick="openStatExplainer('offers')">
+      <div class="dsc-num" id="statOffers">0</div>
+      <div class="dsc-label">Offers</div>
+      <div class="dsc-sub">College offers</div>
+    </div>
+    <div class="dash-stat-card" onclick="openStatExplainer('goals')">
+      <div class="dsc-num" id="statGoals">0</div>
+      <div class="dsc-label">Goals</div>
+      <div class="dsc-sub">Active goals</div>
+    </div>
+  </div>
+
+  <!-- Stat explainer modal -->
+  <div id="statExplainerModal" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(8,8,16,0.86);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:var(--space-lg)" onclick="if(event.target===this)closeStatExplainer()">
+    <div class="stat-explainer-sheet" id="statExplainerSheet"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="dash-tabs">
+    <div class="dash-tab active" onclick="showTab('overview',this)">Overview</div>
+    <div class="dash-tab" onclick="showTab('rating',this)">Rating</div>
+    <div class="dash-tab" onclick="showTab('calendar',this)">Calendar</div>
+    <div class="dash-tab" onclick="showTab('actions',this)">Action Plan</div>
+    <div class="dash-tab" onclick="showTab('combine',this)">Combine</div>
+    <div class="dash-tab" onclick="showTab('nil',this)">NIL</div>
+    <div class="dash-tab" onclick="showTab('camps',this)">My Camps</div>
+    <div class="dash-tab" onclick="showTab('offers',this)">Offers</div>
+    <div class="dash-tab" onclick="showTab('goals',this)">Goals</div>
+    <div class="dash-tab" onclick="showTab('tools',this)">AI Tools</div>
+  </div>
+
+  <div class="dash-content">
+
+    <!-- OVERVIEW -->
+    <div class="dash-panel active" id="panel-overview">
+      <!-- Score band (if scored) -->
+      <div id="overviewBand"></div>
+
+      <!-- AI Tools front-and-center — primary CTAs -->
+      <div class="ov-section">
+        <div class="ov-section-head">
+          <div class="ov-section-title">AI Tools</div>
+          <div class="ov-section-sub">Your Camp 8 toolkit. Every result saves to your dashboard.</div>
+        </div>
+        <div class="ov-tools" id="overviewTools"></div>
+      </div>
+
+      <!-- Goals progress + radar preview -->
+      <div class="ov-grid-2">
+        <div class="ov-card">
+          <div class="ov-section-head">
+            <div class="ov-section-title">Camp 8 Rating</div>
+            <div class="ov-section-sub">Tap any spoke for what moves it.</div>
+          </div>
+          <div id="overviewRadar"></div>
+        </div>
+        <div class="ov-card">
+          <div class="ov-section-head">
+            <div class="ov-section-title">Goals Progress</div>
+            <div class="ov-section-sub">Track what's done and what's next.</div>
+          </div>
+          <div id="overviewGoals"></div>
+        </div>
+      </div>
+
+      <!-- Score history + calendar -->
+      <div class="ov-grid-2">
+        <div class="ov-card">
+          <div class="ov-section-head">
+            <div class="ov-section-title">Score History</div>
+            <div class="ov-section-sub">Click a bar to see what changed.</div>
+          </div>
+          <div id="overviewBars"></div>
+        </div>
+        <div class="ov-card">
+          <div class="ov-section-head">
+            <div class="ov-section-title">Upcoming Events</div>
+            <div class="ov-section-sub">Next 30 days across camps, visits, combines + more.</div>
+          </div>
+          <div id="overviewCalendar"></div>
+        </div>
+      </div>
+
+      <!-- AI action plan (top items) -->
+      <div class="ov-section">
+        <div class="ov-section-head">
+          <div class="ov-section-title">Next Moves</div>
+          <div class="ov-section-sub">AI-curated — complete, snooze, or ask AI.</div>
+        </div>
+        <div id="overviewActions"></div>
+      </div>
+    </div>
+
+    <!-- RATING (band + radar + history bars + explanation) -->
+    <div class="dash-panel" id="panel-rating">
+      <div class="panel-header">
+        <div class="panel-title">Camp 8 <span>Rating</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="panel-add-btn" id="recalcScoreBtn" onclick="recalcScore()">↻ Recalculate Score</button>
+          <a href="nil-rating.html" class="panel-add-btn">+ New Evaluation</a>
+        </div>
+      </div>
+      <div id="ratingBand"></div>
+      <div id="ratingRadar"></div>
+      <div id="ratingHistory"></div>
+      <div id="scoreHero"></div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="dash-panel" id="panel-calendar">
+      <div class="panel-header">
+        <div class="panel-title">Camps <span>Calendar</span></div>
+        <a href="camps.html" class="panel-add-btn">Browse Camps →</a>
+      </div>
+      <div id="campsCalendar"></div>
+    </div>
+
+    <!-- ACTION PLAN -->
+    <div class="dash-panel" id="panel-actions">
+      <div class="panel-header">
+        <div class="panel-title">AI <span>Action Plan</span></div>
+        <button class="panel-add-btn" onclick="requestAIActions()">↻ Refresh from AI</button>
+      </div>
+      <div id="actionPlan"></div>
+    </div>
+
+    <!-- COMBINE HISTORY -->
+    <div class="dash-panel" id="panel-combine">
+      <div class="panel-header">
+        <div class="panel-title">Combine <span>History</span></div>
+        <a href="combine-eval.html" class="panel-add-btn">+ New Evaluation</a>
+      </div>
+      <div id="combineHistoryList"><div class="empty-state">No combine evaluations yet. <a href="combine-eval.html" style="color:var(--gold)">Run your first eval →</a></div></div>
+    </div>
+
+    <!-- NIL HISTORY -->
+    <div class="dash-panel" id="panel-nil">
+      <div class="panel-header">
+        <div class="panel-title">NIL Score <span>History</span></div>
+        <a href="nil-rating.html" class="panel-add-btn">+ New Evaluation</a>
+      </div>
+      <div id="nilHistoryList"><div class="empty-state">No NIL evaluations yet. <a href="nil-rating.html" style="color:var(--gold)">Get your NIL score →</a></div></div>
+    </div>
+
+    <!-- CAMPS -->
+    <div class="dash-panel" id="panel-camps">
+      <div class="panel-header">
+        <div class="panel-title">My <span>Camps</span></div>
+        <a href="camps.html" class="panel-add-btn">Browse Camps →</a>
+      </div>
+      <div class="map-toggle-row">
+        <button class="map-toggle-btn active" data-map-source="mine">My Camps</button>
+        <button class="map-toggle-btn" data-map-source="upcoming">Upcoming Camps</button>
+        <button class="map-toggle-btn" data-map-source="schools">Pinned Schools</button>
+        <span class="map-toggle-hint" id="mapToggleHint"></span>
+      </div>
+      <div id="dashMap"></div>
+      <div class="camps-grid" id="starredCampsList">
+        <div class="empty-state" style="grid-column:1/-1">No camps starred yet. <a href="camps.html" style="color:var(--gold)">Browse 755 camps →</a></div>
+      </div>
+    </div>
+
+    <!-- OFFERS -->
+    <div class="dash-panel" id="panel-offers">
+      <div class="panel-header">
+        <div class="panel-title">College <span>Offers</span></div>
+        <button class="panel-add-btn" onclick="toggleForm('addOfferForm')">+ Add Offer</button>
+      </div>
+      <div class="inline-form" id="addOfferForm">
+        <div class="inline-form-grid">
+          <input class="if-input" id="of_college" placeholder="College name *">
+          <select class="if-select" id="of_division">
+            <option value="">Division…</option>
+            <option value="FBS">FBS (D1)</option><option value="FCS">FCS (D1-AA)</option>
+            <option value="D2">Division II</option><option value="D3">Division III</option>
+            <option value="JUCO">JUCO</option>
+          </select>
+          <input class="if-input" id="of_conference" placeholder="Conference (e.g. SEC)">
+          <select class="if-select" id="of_type">
+            <option value="Scholarship">Full Scholarship</option>
+            <option value="Partial">Partial Scholarship</option>
+            <option value="Walk-On">Walk-On</option>
+            <option value="Preferred Walk-On">Preferred Walk-On</option>
+          </select>
+        </div>
+        <button class="if-submit" onclick="saveOffer()">Save Offer</button>
+        <button class="if-cancel" onclick="toggleForm('addOfferForm')">Cancel</button>
+      </div>
+      <div class="offers-list" id="offersList"><div class="empty-state">No offers yet. Add your first offer above.</div></div>
+    </div>
+
+    <!-- GOALS -->
+    <div class="dash-panel" id="panel-goals">
+      <div class="panel-header">
+        <div class="panel-title">My <span>Goals</span></div>
+        <button class="panel-add-btn" onclick="toggleForm('addGoalForm')">+ Add Goal</button>
+      </div>
+      <div class="inline-form" id="addGoalForm">
+        <div class="inline-form-grid">
+          <input class="if-input" id="gl_title" placeholder="Goal description *" style="grid-column:1/-1">
+          <select class="if-select" id="gl_category">
+            <option value="general">General</option>
+            <option value="combine">Combine / Training</option>
+            <option value="nil">NIL</option>
+            <option value="recruiting">Recruiting</option>
+            <option value="academic">Academic</option>
+            <option value="camp">Camp</option>
+          </select>
+          <input class="if-input" id="gl_target" placeholder="Target (e.g. Run 4.45 by June)">
+        </div>
+        <button class="if-submit" onclick="saveGoal()">Save Goal</button>
+        <button class="if-cancel" onclick="toggleForm('addGoalForm')">Cancel</button>
+      </div>
+      <div class="goals-list" id="goalsList"><div class="empty-state">No goals yet. Set your first goal above.</div></div>
+    </div>
+
+    <!-- AI TOOLS -->
+    <div class="dash-panel" id="panel-tools">
+      <div class="panel-title" style="margin-bottom:var(--space-md)">AI <span style="color:var(--gold)">Tools</span></div>
+      <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:var(--space-lg)">All your Camp 8 AI tools in one place. Your scores are automatically saved to your dashboard after each evaluation.</p>
+      <div class="ai-tools-row">
+        <a href="nil-rating.html" class="ai-tool-card"><span class="atc-icon">⭐</span><div class="atc-title">NIL Rating</div><div class="atc-desc">Get your NIL market value score</div></a>
+        <a href="combine-eval.html" class="ai-tool-card"><span class="atc-icon">⚡</span><div class="atc-title">Combine Eval</div><div class="atc-desc">Grade your combine numbers</div></a>
+        <a href="chat.html?topic=email" class="ai-tool-card"><span class="atc-icon">✉️</span><div class="atc-title">Coach Email</div><div class="atc-desc">Write a standout coach email</div></a>
+        <a href="chat.html?topic=combine" class="ai-tool-card"><span class="atc-icon">🏋️</span><div class="atc-title">Training Plan</div><div class="atc-desc">Position-specific prep plan</div></a>
+        <a href="chat.html?topic=nil" class="ai-tool-card"><span class="atc-icon">💰</span><div class="atc-title">NIL Advice</div><div class="atc-desc">Navigate deals and eligibility</div></a>
+        <a href="chat.html?topic=recruiting" class="ai-tool-card"><span class="atc-icon">🎓</span><div class="atc-title">Recruiting Rules</div><div class="atc-desc">NCAA rules explained clearly</div></a>
+        <a href="chat.html" class="ai-tool-card"><span class="atc-icon">🏈</span><div class="atc-title">General Chat</div><div class="atc-desc">Ask anything about football</div></a>
+        <a href="ncaa-rules.html" class="ai-tool-card"><span class="atc-icon">📋</span><div class="atc-title">NCAA Rules Guide</div><div class="atc-desc">Full recruiting rules by division</div></a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Profile Edit Modal -->
+<div style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;padding:var(--space-lg)" id="profileModal" onclick="if(event.target===this)closeProfileEdit()">
+  <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-lg);width:100%;max-width:600px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--border-color);position:sticky;top:0;background:var(--bg-secondary)">
+      <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--text-primary)">Edit Profile</div>
+      <button onclick="closeProfileEdit()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid var(--border-color);color:var(--text-secondary);cursor:pointer;font-size:1rem">✕</button>
+    </div>
+    <div style="padding:var(--space-lg)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+        <div style="display:flex;flex-direction:column;gap:5px;grid-column:1/-1"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Full Name</label><input class="auth-input" id="pr_name" placeholder="First Last" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Position</label><input class="auth-input" id="pr_pos" placeholder="QB" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Graduation Year</label><input class="auth-input" id="pr_year" placeholder="2026" type="number" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">State</label><input class="auth-input" id="pr_state" placeholder="GA" maxlength="2" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">City</label><input class="auth-input" id="pr_city" placeholder="Atlanta" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">High School</label><input class="auth-input" id="pr_school" placeholder="School name" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Height</label><input class="auth-input" id="pr_height" placeholder="6-2" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Weight (lbs)</label><input class="auth-input" id="pr_weight" placeholder="185" type="number" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Instagram</label><input class="auth-input" id="pr_ig" placeholder="@handle" style="margin:0"></div>
+        <div style="display:flex;flex-direction:column;gap:5px"><label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Hudl URL</label><input class="auth-input" id="pr_hudl" placeholder="https://hudl.com/..." style="margin:0"></div>
+      </div>
+      <button onclick="saveProfile()" style="width:100%;padding:12px;background:var(--gold);color:#0a0a12;border:none;border-radius:var(--radius-md);font-size:0.9rem;font-weight:800;cursor:pointer;font-family:var(--font-body);margin-top:var(--space-lg)">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth-guard.js"></script>
+<script src="supabase-client.js"></script>
+<script src="camps-data.js"></script>
+<script src="coaches-data.js"></script>
+<script src="ai-chat.js"></script>
+<script src="dashboard-widgets.js"></script>
+<script>
+// ============================================
+// DASHBOARD LOGIC
+// ============================================
+let sb, currentUser, athleteProfile, athleteId;
+let dashMap = null;
+
+const TIER_COLORS = {1:'#FFD700',2:'#c41e3a',3:'#e8872b',4:'#4a90d9',5:'#7a7a9a'};
+
+function esc(s) { const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+
+// ---- Auth ----
+function setAuthTab(tab, btn) {
+  document.querySelectorAll('.auth-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('authSignin').style.display = tab === 'signin' ? '' : 'none';
+  document.getElementById('authSignup').style.display = tab === 'signup' ? '' : 'none';
+  document.getElementById('authError').textContent = '';
+}
+
+async function doSignIn() {
+  const email = document.getElementById('siEmail').value.trim();
+  const pass = document.getElementById('siPass').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Please fill in all fields.'; return; }
+  const { data, error } = await signIn(email, pass);
+  if (error) { errEl.textContent = error.message; return; }
+  currentUser = data.user;
+  await loadDashboard();
+}
+
+async function doSignUp() {
+  const email = document.getElementById('suEmail').value.trim();
+  const pass = document.getElementById('suPass').value;
+  const pass2 = document.getElementById('suPass2').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Please fill in all fields.'; return; }
+  if (pass !== pass2) { errEl.textContent = 'Passwords do not match.'; return; }
+  if (pass.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; return; }
+  const { data, error } = await signUp(email, pass);
+  if (error) { errEl.textContent = error.message; return; }
+  errEl.style.color = '#50c878';
+  errEl.textContent = 'Account created! Check your email to confirm, then sign in.';
+}
+
+async function doSignOut() {
+  await signOut();
+}
+
+// ---- Load dashboard ----
+async function loadDashboard() {
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('dashWrap').style.display = 'block';
+
+  // Stats update trigger
+  async function triggerStatsUpdate() {
+    const { data:{ user } } = await sb.auth.getUser();
+    if(!user) return;
+    const { data:p } = await sb.from('athletes').select('maxpreps_url,stats_mode').eq('user_id', user.id).single();
+    if(!p) return;
+    if(p.stats_mode === 'manual') {
+      alert('Your profile is in manual mode. Go to Settings to update your stats directly.');
+      return;
+    }
+    if(!p.maxpreps_url) {
+      alert('No MaxPreps URL on file. Visit Settings to add your MaxPreps profile link.');
+      return;
+    }
+    const btn = event.target;
+    btn.textContent = 'Updating…';
+    btn.disabled = true;
+    try {
+      const res = await fetch('/.netlify/functions/scrape', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ type:'maxpreps', url: p.maxpreps_url })
+      });
+      const data = await res.json();
+      if(data.success && data.data) {
+        await sb.from('athletes').update({
+          maxpreps_data: data.data,
+          stats_last_scraped: new Date().toISOString(),
+          verified_badge: 'maxpreps'
+        }).eq('user_id', user.id);
+        btn.textContent = '✓ Updated';
+        setTimeout(() => { location.reload(); }, 1000);
+      } else {
+        btn.textContent = 'Failed — try again';
+        btn.disabled = false;
+      }
+    } catch(e) {
+      btn.textContent = 'Error — try again';
+      btn.disabled = false;
+    }
+  }
+
+  // Load profile
+  athleteProfile = await getAthleteProfile(currentUser.id);
+  if (athleteProfile) {
+    athleteId = athleteProfile.id;
+    updateHeaderFromProfile();
+  }
+
+  // Load all data
+  await Promise.all([
+    loadCombineHistory(),
+    loadNilHistory(),
+    loadStarredCamps(),
+    loadOffers(),
+    loadGoals(),
+    loadRatingSnapshots(),
+    loadActions(),
+    loadLatestScore(),
+    loadCalendarEvents(),
+  ]);
+
+  updateStatCards();
+
+  // Paint overview widgets + floating chat with athlete context
+  renderRadarIn('overviewRadar');
+  renderActionsIn('overviewActions', { limit: 4 });
+  renderOverviewTools();
+  renderOverviewGoalsProgress();
+  renderOverviewBars();
+  renderOverviewCalendar();
+  renderScoreBandIn('overviewBand');
+  initDashChat();
+}
+
+// ---- Overview widgets ----
+function renderOverviewTools() {
+  const el = document.getElementById('overviewTools');
+  if (!el) return;
+  const tools = [
+    { href: 'nil-rating.html',       icon: '⭐', title: 'NIL Rating AI',   desc: 'Score your market value' },
+    { href: 'combine-eval.html',     icon: '⚡', title: 'Combine Evaluator',desc: 'Grade your numbers' },
+    { href: 'chat.html',             icon: '🏈', title: 'AI Mentor Chat',  desc: 'Ask anything football' },
+    { href: 'chat.html?topic=email', icon: '✉️', title: 'Coach Email',     desc: 'Draft a standout intro' },
+    { href: 'chat.html?topic=combine', icon: '🏋️', title: 'Training Plan', desc: 'Position-specific prep' },
+    { href: 'camps.html',            icon: '🗺️', title: 'Camp Finder',     desc: 'Browse 755 camps' }
+  ];
+  el.innerHTML = tools.map(t => `
+    <a href="${t.href}" class="ov-tool">
+      <span class="ov-tool-icon">${t.icon}</span>
+      <div>
+        <div class="ov-tool-title">${t.title}</div>
+        <div class="ov-tool-desc">${t.desc}</div>
+      </div>
+    </a>`).join('');
+}
+
+function renderOverviewGoalsProgress() {
+  const el = document.getElementById('overviewGoals');
+  if (!el) return;
+  const total = goalsList.length;
+  const done = goalsList.filter(g => g.completed).length;
+  const open = total - done;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  const upNext = goalsList.filter(g => !g.completed).slice(0, 3);
+
+  if (!total) {
+    el.innerHTML = `<div class="empty-state" style="padding:20px">No goals set yet. <a href="#" onclick="showTab('goals');return false;" style="color:var(--gold)">Add your first goal →</a></div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="ov-goals">
+      <div class="ov-goals-head">
+        <div class="ov-goals-pct">${pct}%</div>
+        <div class="ov-goals-stats">
+          <div><strong>${done}</strong> of <strong>${total}</strong> complete</div>
+          <div class="ov-goals-open">${open} outstanding</div>
+        </div>
+      </div>
+      <div class="ov-goals-bar"><div class="ov-goals-bar-fill" style="width:${pct}%"></div></div>
+      ${upNext.length ? `
+        <div class="ov-goals-up-label">Up next</div>
+        <ul class="ov-goals-list">
+          ${upNext.map(g => `<li><span class="ov-goals-cat">${esc(g.category||'general')}</span>${esc(g.title)}</li>`).join('')}
+        </ul>` : '<div class="ov-goals-done">🏁 All goals complete. <a href="#" onclick="showTab(\'goals\');return false;" style="color:var(--gold)">Set new ones →</a></div>'}
+    </div>`;
+}
+
+function renderOverviewBars() {
+  const el = document.getElementById('overviewBars');
+  if (!el || !window.C8) return;
+  // Prefer score_calculations history (engine scores) when available; fall back to NIL history
+  if (window._scoreHistory && window._scoreHistory.length) {
+    C8.nilBars.render(el, window._scoreHistory, { max: 850, min: 300 });
+  } else {
+    C8.nilBars.render(el, nilHistory);
+  }
+}
+
+function renderOverviewCalendar() {
+  const el = document.getElementById('overviewCalendar');
+  if (!el || !calendarEvents) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const horizon = new Date(today.getTime() + 30 * 86400000);
+  const upcoming = calendarEvents
+    .map(ev => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(ev.event_date || ''));
+      const d = m ? new Date(+m[1], +m[2]-1, +m[3]) : null;
+      return { ev, d };
+    })
+    .filter(x => x.d && x.d >= today && x.d <= horizon)
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 7);
+  if (!upcoming.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:20px">Nothing scheduled in 30 days. <a href="#" onclick="showTab('calendar');return false;" style="color:var(--gold)">Add an event →</a></div>`;
+    return;
+  }
+  const TYPE_ICON = { camp:'🏕️', visit:'🏛️', combine:'⚡', goal:'🎯', game:'🏈', practice:'💪' };
+  const TYPE_COLOR = { camp:'#d4a843', visit:'#4a90d9', combine:'#50c878', goal:'#a050c8', game:'#c41e3a', practice:'#5bc0be' };
+  el.innerHTML = `<div class="ov-cal-list">${upcoming.map(x => {
+    const days = Math.round((x.d - today) / 86400000);
+    const cd = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `in ${days} days`;
+    const color = TYPE_COLOR[x.ev.event_type] || '#d4a843';
+    const icon = TYPE_ICON[x.ev.event_type] || '📅';
+    return `<a href="#" onclick="showTab('calendar');return false;" class="ov-cal-row" style="--c8ev:${color}">
+      <div class="ov-cal-date">${x.d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+      <div class="ov-cal-body">
+        <div class="ov-cal-title"><span class="ov-cal-icon">${icon}</span>${esc(x.ev.event_name)}</div>
+        <div class="ov-cal-loc">${esc(x.ev.location || '')}</div>
+      </div>
+      <div class="ov-cal-cd">${cd}</div>
+    </a>`;
+  }).join('')}</div>
+  <div class="ov-cal-foot"><a href="#" onclick="showTab('calendar');return false;">Full calendar →</a></div>`;
+}
+
+function updateHeaderFromProfile() {
+  const p = athleteProfile;
+  if (!p) return;
+  const name = p.name || 'Athlete';
+  document.getElementById('dashName').textContent = name;
+  document.getElementById('dashAvatar').textContent = name.charAt(0).toUpperCase();
+
+  // Verified badge
+  const badgeEl = document.getElementById('verifiedBadge');
+  if(p.verified_badge === 'maxpreps') {
+    badgeEl.innerHTML = '<span class="verified-badge maxpreps">✓ MaxPreps Verified</span>';
+    badgeEl.style.display = '';
+  } else if(p.verified_badge === 'admin') {
+    badgeEl.innerHTML = '<span class="verified-badge admin">✓ Camp 8 Verified</span>';
+    badgeEl.style.display = '';
+  }
+
+  // Profile completion bar
+  const pct = p.profile_complete_pct || 0;
+  const fillEl = document.getElementById('profileCompleteFill');
+  if(fillEl) fillEl.style.width = pct + '%';
+
+  // Stats display
+  if(p.maxpreps_data || p.manual_stats) {
+    const stats = p.maxpreps_data?.stats || p.manual_stats || {};
+    const keys = Object.keys(stats).slice(0, 8);
+    if(keys.length) {
+      const modeLabel = p.stats_mode === 'maxpreps_verified' ? '<span class="verified-badge maxpreps" style="font-size:.6rem">✓ MaxPreps Verified</span>' : '<span class="verified-badge" style="font-size:.6rem">Self-reported</span>';
+      const pillsHtml = keys.map(k => '<div class="stat-pill"><div class="stat-pill-val">'+esc(stats[k])+'</div><div class="stat-pill-lbl">'+esc(k)+'</div></div>').join('');
+      const statsSection = '<div class="stats-section"><div class="stats-section-header"><div class="stats-section-title">Career Stats ' + modeLabel + '</div><button class="stats-update-btn" onclick="triggerStatsUpdate()">↺ Update Stats</button></div><div class="stats-pills">' + pillsHtml + '</div></div>';
+      const overviewTab = document.getElementById('tab-overview');
+      if(overviewTab) {
+        const existing = overviewTab.querySelector('.stats-section');
+        if(existing) existing.remove();
+        overviewTab.insertAdjacentHTML('afterbegin', statsSection);
+      }
+    }
+  }
+  const parts = [];
+  if (p.pos) parts.push(p.pos);
+  if (p.school) parts.push(p.school);
+  if (p.state) parts.push(p.state);
+  if (p.graduation_year) parts.push("'" + String(p.graduation_year).slice(-2));
+  document.getElementById('dashDetails').innerHTML = parts.join(' · ');
+}
+
+// ---- Tab switching ----
+function showTab(tab, btn) {
+  document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+  else {
+    document.querySelectorAll('.dash-tab').forEach(t => {
+      if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + tab + "'")) t.classList.add('active');
+    });
+  }
+  if (tab === 'camps') initDashMap();
+}
+
+// ---- Combine history ----
+let combineHistory = [];
+async function loadCombineHistory() {
+  if (!athleteId) return;
+  combineHistory = await getCombineHistory(athleteId);
+  renderCombineHistory();
+}
+
+function renderCombineHistory() {
+  const el = document.getElementById('combineHistoryList');
+  if (!combineHistory.length) { el.innerHTML = '<div class="empty-state">No combine evaluations yet. <a href="combine-eval.html" style="color:var(--gold)">Run your first eval →</a></div>'; return; }
+  el.innerHTML = '<div class="score-history">' + combineHistory.map(s => {
+    const stats = s.score_data || {};
+    const statPills = Object.entries(stats).filter(([k]) => ['forty','vertical','broad'].includes(k))
+      .map(([k,v]) => `<span class="se-stat">${k}: ${v}</span>`).join('');
+    return `<div class="score-entry">
+      <div class="se-grade" style="color:${gradeColor(s.overall_grade)}">${esc(s.overall_grade||'?')}</div>
+      <div class="se-details">
+        <div class="se-title">${esc(s.pos||'Unknown')} · Overall: ${esc(s.overall_grade||'?')}</div>
+        <div class="se-date">${new Date(s.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+        <div class="se-bar-row">${statPills}</div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ---- NIL history ----
+let nilHistory = [];
+async function loadNilHistory() {
+  if (!athleteId) return;
+  nilHistory = await getNilHistory(athleteId);
+  renderNilHistory();
+}
+
+function renderNilHistory() {
+  const el = document.getElementById('nilHistoryList');
+  if (!nilHistory.length) { el.innerHTML = '<div class="empty-state">No NIL evaluations yet. <a href="nil-rating.html" style="color:var(--gold)">Get your NIL score →</a></div>'; return; }
+  el.innerHTML = '<div class="score-history">' + nilHistory.map(s => `
+    <div class="score-entry">
+      <div class="se-grade" style="color:${gradeColor(s.grade)}">${esc(s.grade||'?')}</div>
+      <div class="se-details">
+        <div class="se-title">NIL Score: ${esc(String(s.score||'?'))}/100</div>
+        <div class="se-date">${new Date(s.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+        ${s.notes ? `<div class="se-bar-row"><span class="se-stat">${esc(s.notes)}</span></div>` : ''}
+      </div>
+    </div>`).join('') + '</div>';
+}
+
+// ---- Starred camps ----
+let starredCamps = [];
+async function loadStarredCamps() {
+  if (!athleteId) return;
+  starredCamps = await getStarredCamps(athleteId);
+  renderStarredCamps();
+  renderCalTicker();
+  renderOverviewCamps();
+}
+
+function renderStarredCamps() {
+  const el = document.getElementById('starredCampsList');
+  if (!starredCamps.length) { el.innerHTML = '<div class="empty-state" style="grid-column:1/-1">No camps starred yet. <a href="camps.html" style="color:var(--gold)">Browse 755 camps →</a></div>'; return; }
+  const TC = TIER_COLORS;
+  el.innerHTML = starredCamps.map(c => {
+    const color = TC[c.camp_tier] || '#7a7a9a';
+    return `<div class="camp-card">
+      <div class="cc-tier" style="color:${color}">${esc(c.camp_tier === 1 ? 'Elite' : c.camp_tier === 2 ? 'Showcase' : 'Regional')}</div>
+      <div class="cc-name">${esc(c.camp_name)}</div>
+      <div class="cc-loc">${esc(c.camp_city)}, ${esc(c.camp_state)}</div>
+      <div class="cc-date">${esc(c.camp_dates || 'TBD')}</div>
+      <div class="cc-status">
+        <select onchange="updateCampStatus('${c.id}',this.value)">
+          <option value="interested" ${c.status==='interested'?'selected':''}>Interested</option>
+          <option value="planning" ${c.status==='planning'?'selected':''}>Planning to attend</option>
+          <option value="registered" ${c.status==='registered'?'selected':''}>Registered</option>
+          <option value="attended" ${c.status==='attended'?'selected':''}>Attended</option>
+        </select>
+      </div>
+      ${c.status === 'registered' ? `<button onclick="showCampPost('${c.id}')" style="padding:5px 12px;background:rgba(212,168,67,0.12);border:1px solid rgba(212,168,67,0.3);border-radius:100px;color:var(--gold);font-size:0.72rem;cursor:pointer;font-family:var(--font-body)">📱 Create Social Post</button>` : ''}
+      <button class="cc-remove" onclick="removeCamp('${c.id}')">✕ Remove</button>
+    </div>`;
+  }).join('');
+}
+
+function renderCalTicker() {
+  const upcoming = starredCamps.filter(c => {
+    if (!c.camp_dates) return false;
+    const d = new Date(c.camp_dates.split('–')[0]);
+    return !isNaN(d) && d >= new Date();
+  }).sort((a,b) => new Date(a.camp_dates) - new Date(b.camp_dates)).slice(0, 8);
+
+  const el = document.getElementById('calTickerWrap');
+  if (!el) return; // element removed in redesign
+  if (!upcoming.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = `<div class="cal-ticker">
+    <div class="cal-ticker-label">🗓️ Your Upcoming Camps</div>
+    <div class="cal-ticker-items">${upcoming.map(c => {
+      const d = new Date(c.camp_dates.split('–')[0]);
+      return `<div class="cti">
+        <div class="cti-date">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+        <div class="cti-name">${esc(c.camp_name)}</div>
+        <div class="cti-loc">${esc(c.camp_city)}, ${esc(c.camp_state)}</div>
+      </div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+function renderOverviewCamps() {
+  const el = document.getElementById('overviewCamps');
+  if (!el) return; // element removed in redesign; overview now uses renderOverviewCalendar
+  const upcoming = starredCamps.slice(0, 3);
+  if (!upcoming.length) { el.innerHTML = '<div class="empty-state">No camps starred yet. <a href="camps.html" style="color:var(--gold)">Browse camps →</a></div>'; return; }
+  el.innerHTML = upcoming.map(c => `<div style="padding:10px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-sm);margin-bottom:6px">
+    <div style="font-size:0.85rem;font-weight:700;color:var(--text-primary)">${esc(c.camp_name)}</div>
+    <div style="font-size:0.75rem;color:var(--text-muted)">${esc(c.camp_dates||'TBD')} · ${esc(c.camp_city)}, ${esc(c.camp_state)}</div>
+  </div>`).join('');
+}
+
+async function updateCampStatus(starId, status) {
+  const sb2 = getSupabase();
+  await sb2.from('athlete_starred_camps').update({ status }).eq('id', starId);
+  await loadStarredCamps();
+}
+
+async function removeCamp(starId) {
+  const sb2 = getSupabase();
+  await sb2.from('athlete_starred_camps').delete().eq('id', starId);
+  await loadStarredCamps();
+}
+
+function showCampPost(starId) {
+  const camp = starredCamps.find(c => c.id === starId);
+  if (!camp) return;
+  const name = athleteProfile?.name || 'ATHLETE NAME';
+  alert(`Social post preview:\n\n🏈 ${name}\n📍 ${camp.camp_name}\n📅 ${camp.camp_dates || 'TBD'}\n📌 ${camp.camp_city}, ${camp.camp_state}\n\n#Camp8 #Football #Recruiting\n\n(Copy this text and post to your social media!)`);
+}
+
+// ---- Map ----
+// Lightweight geo fallbacks so we always have *something* to place a marker at.
+const STATE_CENTROIDS = {
+  AL:[32.80,-86.79],AK:[61.37,-152.40],AZ:[33.73,-111.43],AR:[34.97,-92.37],CA:[36.12,-119.68],
+  CO:[39.06,-105.31],CT:[41.60,-72.76],DE:[39.32,-75.51],FL:[27.77,-81.69],GA:[33.04,-83.64],
+  HI:[21.09,-157.50],ID:[44.24,-114.48],IL:[40.35,-88.99],IN:[39.85,-86.26],IA:[42.01,-93.21],
+  KS:[38.53,-96.73],KY:[37.67,-84.67],LA:[31.17,-91.87],ME:[44.69,-69.38],MD:[39.06,-76.80],
+  MA:[42.23,-71.53],MI:[43.33,-84.54],MN:[45.69,-93.90],MS:[32.74,-89.68],MO:[38.46,-92.29],
+  MT:[46.92,-110.45],NE:[41.13,-98.27],NV:[38.31,-117.06],NH:[43.45,-71.56],NJ:[40.30,-74.52],
+  NM:[34.84,-106.25],NY:[42.17,-74.95],NC:[35.63,-79.81],ND:[47.53,-99.78],OH:[40.39,-82.76],
+  OK:[35.57,-96.93],OR:[44.57,-122.07],PA:[40.59,-77.21],RI:[41.68,-71.51],SC:[33.86,-80.95],
+  SD:[44.30,-99.44],TN:[35.75,-86.69],TX:[31.05,-97.56],UT:[40.15,-111.86],VT:[44.05,-72.71],
+  VA:[37.77,-78.17],WA:[47.40,-121.49],WV:[38.49,-80.95],WI:[44.27,-89.62],WY:[42.76,-107.30]
+};
+// A few common recruiting-hotspot cities that deserve a tighter fix than state centroid.
+const CITY_LATLNG = {
+  'Atlanta,GA':[33.75,-84.39],'Athens,GA':[33.96,-83.38],'Savannah,GA':[32.08,-81.10],
+  'Buford,GA':[34.12,-83.99],'Gainesville,GA':[34.30,-83.83],'Alpharetta,GA':[34.08,-84.29],
+  'Nashville,TN':[36.16,-86.78],'Knoxville,TN':[35.96,-83.92],'Memphis,TN':[35.15,-90.05],
+  'Tuscaloosa,AL':[33.21,-87.57],'Birmingham,AL':[33.52,-86.80],'Auburn,AL':[32.61,-85.48],
+  'Baton Rouge,LA':[30.45,-91.19],'New Orleans,LA':[29.95,-90.07],
+  'Gainesville,FL':[29.65,-82.33],'Tallahassee,FL':[30.44,-84.28],'Jacksonville,FL':[30.33,-81.66],
+  'Miami,FL':[25.76,-80.19],'Tampa,FL':[27.95,-82.46],'Orlando,FL':[28.54,-81.38],
+  'Oxford,MS':[34.37,-89.52],'Starkville,MS':[33.45,-88.82],
+  'Columbia,SC':[34.00,-81.03],'Clemson,SC':[34.68,-82.84],
+  'Austin,TX':[30.27,-97.74],'College Station,TX':[30.63,-96.33],'Dallas,TX':[32.78,-96.80],
+  'Houston,TX':[29.76,-95.37],'Fort Worth,TX':[32.76,-97.33],'Lubbock,TX':[33.58,-101.85],
+  'Norman,OK':[35.22,-97.44],'Stillwater,OK':[36.12,-97.06],
+  'Fayetteville,AR':[36.07,-94.16],
+  'Columbus,OH':[39.96,-82.99],'Ann Arbor,MI':[42.28,-83.74],'East Lansing,MI':[42.74,-84.48],
+  'Lexington,KY':[38.04,-84.50],'Louisville,KY':[38.25,-85.75],
+  'Raleigh,NC':[35.78,-78.64],'Chapel Hill,NC':[35.91,-79.06],'Durham,NC':[35.99,-78.90],
+  'Blacksburg,VA':[37.23,-80.41],'Charlottesville,VA':[38.03,-78.48],
+  'State College,PA':[40.79,-77.86],'Pittsburgh,PA':[40.44,-79.99],
+  'Los Angeles,CA':[34.05,-118.24],'Berkeley,CA':[37.87,-122.27],'Palo Alto,CA':[37.44,-122.14],
+  'South Bend,IN':[41.68,-86.25],'Bloomington,IN':[39.17,-86.53],
+  'Iowa City,IA':[41.66,-91.53],'Ames,IA':[42.03,-93.62],
+  'Lincoln,NE':[40.81,-96.70],'Madison,WI':[43.07,-89.40],'Minneapolis,MN':[44.98,-93.27]
+};
+
+function geoFor(city, state) {
+  if (!state) return null;
+  const st = String(state).toUpperCase().trim();
+  if (city) {
+    const key = String(city).trim() + ',' + st;
+    if (CITY_LATLNG[key]) return CITY_LATLNG[key];
+  }
+  if (STATE_CENTROIDS[st]) return STATE_CENTROIDS[st];
+  return null;
+}
+
+// Resolve a calendar row to [lat,lng]. Prefer CAMPS_DATA via source_ref,
+// then parse location 'City, ST' into geoFor().
+function locateCalendarEvent(ev) {
+  if (ev.source_ref && typeof CAMPS_DATA !== 'undefined') {
+    const found = CAMPS_DATA.find(c => String(c.id) === String(ev.source_ref));
+    if (found && found.lat && found.lng) return [found.lat, found.lng];
+  }
+  if (ev.location) {
+    const m = /^([^,]+),\s*([A-Z]{2})/.exec(String(ev.location).trim());
+    if (m) return geoFor(m[1], m[2]);
+  }
+  return null;
+}
+
+// Resolve a school name (from athlete_offers.college) by looking up COACHES_DATA.
+function locateSchool(collegeName) {
+  if (!collegeName || typeof COACHES_DATA === 'undefined') return null;
+  const needle = String(collegeName).toLowerCase();
+  const match = COACHES_DATA.find(c =>
+    (c.school && c.school.toLowerCase() === needle) ||
+    (c.nickname && c.nickname.toLowerCase() === needle) ||
+    (c.school && c.school.toLowerCase().includes(needle)) ||
+    (needle.includes((c.school || '').toLowerCase()))
+  );
+  if (match) return geoFor(match.city, match.state);
+  return null;
+}
+
+let dashMapSource = 'mine';
+let dashMapMarkers = [];
+
+function initDashMap() {
+  if (!dashMap) {
+    dashMap = L.map('dashMap', { zoomControl: true }).setView([37.0, -95.7], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(dashMap);
+    // Wire the toggle once
+    document.querySelectorAll('.map-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.map-toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        dashMapSource = btn.getAttribute('data-map-source');
+        renderDashMap();
+      });
+    });
+  }
+  dashMap.invalidateSize();
+  renderDashMap();
+}
+
+function renderDashMap() {
+  // Clear existing markers
+  dashMapMarkers.forEach(m => dashMap.removeLayer(m));
+  dashMapMarkers = [];
+  const hint = document.getElementById('mapToggleHint');
+
+  const markerColors = { camp:'#d4a843', visit:'#4a90d9', combine:'#50c878', game:'#c41e3a', practice:'#5bc0be', goal:'#a050c8', school:'#e8c547' };
+
+  let features = [];
+
+  if (dashMapSource === 'mine') {
+    // All athlete_calendar events with a resolvable location
+    features = calendarEvents.map(ev => {
+      const pos = locateCalendarEvent(ev);
+      if (!pos) return null;
+      return {
+        pos, type: ev.event_type,
+        title: ev.event_name,
+        sub: (ev.location || '') + (ev.event_date ? ' · ' + ev.event_date : '')
+      };
+    }).filter(Boolean);
+    if (hint) hint.textContent = features.length + ' event' + (features.length === 1 ? '' : 's') + ' mapped';
+  } else if (dashMapSource === 'upcoming') {
+    // Upcoming camps from CAMPS_DATA — filter to the next 120 days
+    if (typeof CAMPS_DATA === 'undefined') { features = []; }
+    else {
+      const now = new Date();
+      const horizon = new Date(now.getTime() + 120 * 86400000);
+      features = CAMPS_DATA
+        .filter(c => c.lat && c.lng)
+        .map(c => {
+          const d = new Date(String(c.dates || '').split('–')[0]);
+          if (isNaN(d) || d < now || d > horizon) return null;
+          return {
+            pos: [c.lat, c.lng],
+            type: 'camp',
+            title: c.name,
+            sub: (c.city || '') + ', ' + (c.stateAbbrev || '') + ' · ' + (c.dates || '')
+          };
+        })
+        .filter(Boolean)
+        .slice(0, 120); // cap for performance
+    }
+    if (hint) hint.textContent = features.length + ' upcoming camp' + (features.length === 1 ? '' : 's');
+  } else if (dashMapSource === 'schools') {
+    features = (offersList || []).map(o => {
+      const pos = locateSchool(o.college);
+      if (!pos) return null;
+      return {
+        pos, type: 'school',
+        title: o.college,
+        sub: (o.division || '') + (o.conference ? ' · ' + o.conference : '') + (o.status ? ' · ' + o.status : '')
+      };
+    }).filter(Boolean);
+    if (hint) hint.textContent = features.length + ' school' + (features.length === 1 ? '' : 's') + ' tracked (from your offers)';
+  }
+
+  if (!features.length) {
+    if (hint && dashMapSource === 'mine')     hint.textContent = 'No events on your calendar with a location yet.';
+    if (hint && dashMapSource === 'schools')  hint.textContent = 'No offers yet — add some to see your pinned schools.';
+  }
+
+  features.forEach(f => {
+    const color = markerColors[f.type] || '#d4a843';
+    const marker = L.circleMarker(f.pos, { radius: 8, color, fillColor: color, fillOpacity: 0.75, weight: 2 }).addTo(dashMap);
+    marker.bindPopup(`<div style="color:#fff;background:#0a0a14;padding:8px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;min-width:140px">
+      <strong style="color:${color}">${esc(f.title)}</strong>
+      ${f.sub ? `<br><span style="font-size:0.8rem;opacity:0.75">${esc(f.sub)}</span>` : ''}
+    </div>`);
+    dashMapMarkers.push(marker);
+  });
+
+  // Fit bounds if we have markers; otherwise default US view
+  if (features.length) {
+    const group = L.featureGroup(dashMapMarkers);
+    dashMap.fitBounds(group.getBounds(), { padding: [30, 30], maxZoom: 9 });
+  } else {
+    dashMap.setView([37.0, -95.7], 4);
+  }
+}
+
+// ---- Offers ----
+let offersList = [];
+async function loadOffers() {
+  if (!athleteId) return;
+  offersList = await getOffers(athleteId);
+  renderOffers();
+}
+
+function renderOffers() {
+  const el = document.getElementById('offersList');
+  if (!offersList.length) { el.innerHTML = '<div class="empty-state">No offers yet. Add your first offer above.</div>'; return; }
+  const SC = {'Active':'#50c878','Declined':'#c41e3a','Committed':'#FFD700'};
+  el.innerHTML = '<div class="offers-list">' + offersList.map(o => `
+    <div class="offer-item">
+      <div class="oi-college">${esc(o.college)}</div>
+      <div class="oi-div">${esc(o.division||'')} ${esc(o.conference ? '· ' + o.conference : '')}</div>
+      <div class="oi-div">${esc(o.offer_type||'')}</div>
+      <span class="oi-status" style="background:${SC[o.status]||'#888'}22;color:${SC[o.status]||'#888'}">${esc(o.status||'Active')}</span>
+      <button class="oi-remove" onclick="removeOffer('${o.id}')">✕</button>
+    </div>`).join('') + '</div>';
+}
+
+function toggleForm(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+async function saveOffer() {
+  const college = document.getElementById('of_college').value.trim();
+  if (!college) { alert('College name is required.'); return; }
+  await addOffer(athleteId, {
+    college,
+    division: document.getElementById('of_division').value,
+    conference: document.getElementById('of_conference').value,
+    offer_type: document.getElementById('of_type').value,
+    offer_date: new Date().toISOString().split('T')[0],
+    status: 'Active',
+  });
+  document.getElementById('of_college').value = '';
+  toggleForm('addOfferForm');
+  await loadOffers();
+  updateStatCards();
+}
+
+async function removeOffer(id) {
+  await deleteOffer(id);
+  await loadOffers();
+  updateStatCards();
+}
+
+// ---- Goals ----
+let goalsList = [];
+async function loadGoals() {
+  if (!athleteId) return;
+  goalsList = await getGoals(athleteId);
+  renderGoals();
+  renderOverviewGoals();        // no-op now that the div is removed (safe-guarded)
+  renderOverviewGoalsProgress(); // new home-page progress widget
+}
+
+function renderGoals() {
+  const el = document.getElementById('goalsList');
+  if (!goalsList.length) { el.innerHTML = '<div class="empty-state">No goals yet. Set your first goal above.</div>'; return; }
+  el.innerHTML = '<div class="goals-list">' + goalsList.map(g => `
+    <div class="goal-item">
+      <div class="goal-check ${g.completed ? 'done' : ''}" onclick="toggleGoalDone('${g.id}',${!g.completed})">${g.completed ? '✓' : ''}</div>
+      <div class="goal-text ${g.completed ? 'done' : ''}">${esc(g.title)}${g.target_value ? ' <span style="color:var(--text-muted)">→ ' + esc(g.target_value) + '</span>' : ''}</div>
+      <span class="goal-cat">${esc(g.category||'general')}</span>
+      <span class="goal-del" onclick="removeGoal('${g.id}')">✕</span>
+    </div>`).join('') + '</div>';
+}
+
+function renderOverviewGoals() {
+  // Overview now renders a progress widget via renderOverviewGoalsProgress().
+  // This legacy function stays as a no-op for callers that weren't updated.
+  return;
+}
+
+async function saveGoal() {
+  const title = document.getElementById('gl_title').value.trim();
+  if (!title) { alert('Goal description is required.'); return; }
+  await addGoal(athleteId, {
+    title,
+    category: document.getElementById('gl_category').value,
+    target_value: document.getElementById('gl_target').value,
+  });
+  document.getElementById('gl_title').value = '';
+  document.getElementById('gl_target').value = '';
+  toggleForm('addGoalForm');
+  await loadGoals();
+  updateStatCards();
+}
+
+async function toggleGoalDone(id, done) {
+  await toggleGoal(id, done);
+  await loadGoals();
+}
+
+async function removeGoal(id) {
+  await deleteGoal(id);
+  await loadGoals();
+  updateStatCards();
+}
+
+// ---- Profile ----
+function showProfileEdit() {
+  const p = athleteProfile || {};
+  document.getElementById('pr_name').value = p.name || '';
+  document.getElementById('pr_pos').value = p.position || '';
+  document.getElementById('pr_year').value = p.graduation_year || '';
+  document.getElementById('pr_state').value = p.state || '';
+  document.getElementById('pr_city').value = p.city || '';
+  document.getElementById('pr_school').value = p.school || '';
+  document.getElementById('pr_height').value = p.height || '';
+  document.getElementById('pr_weight').value = p.weight || '';
+  document.getElementById('pr_ig').value = p.instagram || '';
+  document.getElementById('pr_hudl').value = p.hudl_url || '';
+  document.getElementById('profileModal').style.display = 'flex';
+}
+
+function closeProfileEdit() {
+  document.getElementById('profileModal').style.display = 'none';
+}
+
+async function saveProfile() {
+  const data = {
+    name: document.getElementById('pr_name').value.trim(),
+    position: document.getElementById('pr_pos').value.trim(),
+    graduation_year: parseInt(document.getElementById('pr_year').value) || null,
+    state: document.getElementById('pr_state').value.trim().toUpperCase(),
+    city: document.getElementById('pr_city').value.trim(),
+    school: document.getElementById('pr_school').value.trim(),
+    height: document.getElementById('pr_height').value.trim(),
+    weight: parseInt(document.getElementById('pr_weight').value) || null,
+    instagram: document.getElementById('pr_ig').value.trim(),
+    hudl_url: document.getElementById('pr_hudl').value.trim(),
+  };
+
+  athleteProfile = await upsertAthleteProfile(currentUser.id, data);
+  if (athleteProfile) athleteId = athleteProfile.id;
+  updateHeaderFromProfile();
+  closeProfileEdit();
+}
+
+// ---- Stat cards ----
+function updateStatCards() {
+  const latestCombine = combineHistory[0];
+  const latestNil = nilHistory[0];
+  document.getElementById('statCombineGrade').textContent = latestCombine?.overall_grade || '—';
+  document.getElementById('statCombineGrade').style.color = gradeColor(latestCombine?.overall_grade);
+  document.getElementById('statNilScore').textContent = latestNil?.score ? latestNil.score : '—';
+  document.getElementById('statCamps').textContent = starredCamps.length;
+  document.getElementById('statOffers').textContent = offersList.length;
+  document.getElementById('statGoals').textContent = goalsList.filter(g => !g.completed).length;
+}
+
+function gradeColor(g) {
+  if (!g) return 'var(--text-muted)';
+  if (g.startsWith('A')) return '#FFD700';
+  if (g.startsWith('B')) return '#50c878';
+  if (g.startsWith('C')) return '#e8872b';
+  return '#c41e3a';
+}
+
+// ============================================
+// STAT EXPLAINER POPUP
+// ============================================
+const STAT_EXPLAINERS = {
+  combine: {
+    title: 'Combine Grade',
+    desc: 'An A–F grade on your latest combine evaluation — 40, vertical, shuttle, bench, broad. Higher combine grades drive the Measurables factor of your Camp 8 rating and can trigger the Elite Measurables modifier.',
+    improve: [
+      'Log a fresh combine every 6–8 weeks to track progress.',
+      'Focus on your weakest metric — most athletes gain the most points from improving starts (10-yard split) and vertical explosiveness.',
+      'Attend a verified third-party combine (Rivals, Adidas, Nike) so the result counts as verified data.'
+    ],
+    cta: { label: 'Open Combine Evaluator', href: 'combine-eval.html' },
+    tab: 'combine'
+  },
+  nil: {
+    title: 'NIL Score',
+    desc: 'A 0–100 snapshot of your NIL market value: audience reach, engagement, on-field performance, and brand fit. Feeds directly into the NIL Market Value factor of your Camp 8 rating.',
+    improve: [
+      'Cross 25k total followers across IG/Twitter/TikTok to trigger the High Social modifier.',
+      'Post one training clip + one game highlight per week. Consistency beats one-off big drops.',
+      'Tag brands and schools you\'re targeting — discoverability compounds over time.'
+    ],
+    cta: { label: 'Run NIL Rating', href: 'nil-rating.html' },
+    tab: 'nil'
+  },
+  camps: {
+    title: 'Starred Camps',
+    desc: 'Camps you\'ve added to your schedule. Attending Elite (tier 1) and Showcase (tier 2) camps is the fastest way to raise the Film & Exposure factor.',
+    improve: [
+      'Add at least one Elite tier camp to your plan — worth ~22 points of camp exposure.',
+      'Email coaches who will be at the camp a week in advance to ensure eyes on your reps.',
+      'Log results immediately after — camp results mirror into your combine history and refresh your score.'
+    ],
+    cta: { label: 'Browse Camps', href: 'camps.html' },
+    tab: 'camps'
+  },
+  offers: {
+    title: 'College Offers',
+    desc: 'Written scholarship/walk-on offers. Volume and level matter — FBS offers weigh ~12 pts each, FCS ~7, D2 ~4.',
+    improve: [
+      'Convert coaches who are actively communicating into written offers — follow up explicitly after camp season.',
+      'Visit-to-offer conversion: unofficial visits often tip an interest into an offer.',
+      'Send updated film + verified combine numbers to any FBS school showing interest.'
+    ],
+    cta: { label: 'Track Offers', href: '#offers' },
+    tab: 'offers'
+  },
+  goals: {
+    title: 'Active Goals',
+    desc: 'Open goals you\'re tracking. Completing goals signals discipline (Character & Leadership) and creates momentum the AI Action Plan learns from.',
+    improve: [
+      'Keep 3–5 active goals — more than that tends to stall progress.',
+      'Break large goals into weekly checkpoints so you can mark steady wins.',
+      'Review progress every Sunday and close stale goals — clutter hurts focus.'
+    ],
+    cta: { label: 'Manage Goals', href: '#goals' },
+    tab: 'goals'
+  }
+};
+
+function openStatExplainer(key) {
+  const info = STAT_EXPLAINERS[key];
+  if (!info) return;
+  const current = {
+    combine: () => document.getElementById('statCombineGrade').textContent,
+    nil:     () => document.getElementById('statNilScore').textContent,
+    camps:   () => document.getElementById('statCamps').textContent + ' starred',
+    offers:  () => document.getElementById('statOffers').textContent + ' offers',
+    goals:   () => document.getElementById('statGoals').textContent + ' open'
+  }[key]();
+  const sheet = document.getElementById('statExplainerSheet');
+  const modal = document.getElementById('statExplainerModal');
+  sheet.innerHTML = `
+    <button class="stat-explainer-close" onclick="closeStatExplainer()" aria-label="Close">✕</button>
+    <div class="stat-explainer-eyebrow">Current: ${esc(current)}</div>
+    <h3 class="stat-explainer-title">${esc(info.title)}</h3>
+    <p class="stat-explainer-desc">${esc(info.desc)}</p>
+    <div class="stat-explainer-section-title">Ways to improve</div>
+    <ul class="stat-explainer-list">${info.improve.map(i => `<li>${esc(i)}</li>`).join('')}</ul>
+    <div class="stat-explainer-actions">
+      <a class="dash-action-btn primary" href="${info.cta.href}" onclick="${info.cta.href.startsWith('#') ? `closeStatExplainer();showTab('${info.tab}');return false;` : ''}">${esc(info.cta.label)}</a>
+      <button class="dash-action-btn outline" onclick="closeStatExplainer();showTab('${info.tab}')">Go to ${esc(info.title)} tab</button>
+      <button class="dash-action-btn outline" onclick="closeStatExplainer();C8.dashChat.open('Tell me specifically how to improve my ${esc(info.title)} — give me 3 concrete steps for the next 7 days.')">Ask AI for a plan</button>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+function closeStatExplainer() {
+  document.getElementById('statExplainerModal').style.display = 'none';
+}
+
+// ============================================
+// NEW WIDGETS WIRING
+// ============================================
+
+// ---- Camp 8 Score (/api/score) ----
+let latestScoreCalc = null;
+async function loadLatestScore() {
+  if (!athleteId) return;
+  const sb2 = getSupabase();
+  const { data } = await sb2.from('score_calculations')
+    .select('*').eq('athlete_id', athleteId).order('created_at', { ascending: false }).limit(20);
+  const rows = data || [];
+  latestScoreCalc = rows[0] || null;
+  // Normalize the history into the shape nilBars expects: { score, grade, breakdown, created_at, notes }
+  window._scoreHistory = rows.map(r => ({
+    score: r.score,
+    grade: gradeForScore(r.score),
+    breakdown: r.factor_breakdown || {},
+    notes: (r.applied_modifiers || []).map(m => m.label).join(' · '),
+    created_at: r.created_at
+  })).reverse(); // oldest → newest for the bar chart
+  renderScoreHero();
+}
+
+function renderScoreHero() {
+  const el = document.getElementById('scoreHero');
+  if (!el) return;
+  if (!latestScoreCalc) {
+    el.innerHTML = '<div class="c8score-hero empty">No score calculated yet — finish your profile, then click <strong>Recalculate Score</strong> above to generate your first Camp 8 rating.</div>';
+    return;
+  }
+  const s = latestScoreCalc;
+  const drivers = s.what_drives_up || [];
+  const holdbacks = s.what_holds_back || [];
+  const actions = s.top_3_actions || [];
+  el.innerHTML = `
+    <div class="c8score-hero">
+      <div class="c8score-hero-main">
+        <div class="c8score-num">${s.score}</div>
+        <div class="c8score-scale">of 850</div>
+        <div class="c8score-version">formula v${esc(s.formula_version)} · modifiers v${esc(s.modifier_version)}</div>
+      </div>
+      <div class="c8score-body">
+        <div class="c8score-expl">${formatExplanation(s.explanation)}</div>
+        <div class="c8score-cols three">
+          <div class="c8score-col up">
+            <div class="c8score-col-head"><span class="c8score-col-icon">↑</span> Driving your score up</div>
+            ${drivers.length ? drivers.map(d => `<div class="c8score-col-row"><span class="c8score-col-label">${esc(d.label)}</span><span class="c8score-col-val">${d.pct_of_max}%</span></div>`).join('') : '<div class="c8score-empty-col">—</div>'}
+          </div>
+          <div class="c8score-col opp">
+            <div class="c8score-col-head"><span class="c8score-col-icon">⬈</span> Biggest opportunities</div>
+            ${holdbacks.length ? holdbacks.map(d => `<div class="c8score-col-row"><span class="c8score-col-label">${esc(d.label)}</span><span class="c8score-col-val">${d.pct_of_max}%</span></div>`).join('') : '<div class="c8score-empty-col">—</div>'}
+          </div>
+          <div class="c8score-col act">
+            <div class="c8score-col-head"><span class="c8score-col-icon">→</span> Next actions</div>
+            ${actions.length ? actions.map((a,i) => renderScoreAction(a, i)).join('') : '<div class="c8score-empty-col">—</div>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  // Wire checkbox + chat bubble handlers
+  el.querySelectorAll('[data-score-action-done]').forEach(cb => {
+    cb.addEventListener('change', async () => {
+      const idx = parseInt(cb.getAttribute('data-score-action-done'), 10);
+      const action = actions[idx];
+      if (!action) return;
+      cb.disabled = true;
+      try {
+        // Persist as a completed athlete_action so it appears in the action plan history
+        const sb2 = getSupabase();
+        await sb2.from('athlete_actions').insert({
+          athlete_id: athleteId,
+          title: action.title,
+          detail: action.rationale,
+          category: action.factor || 'general',
+          priority: 2,
+          source: 'score',
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        });
+        if (typeof showToast === 'function') showToast('Marked done — recalculating score…', 'info');
+        await recalcScore();
+      } catch (err) {
+        cb.checked = false; cb.disabled = false;
+        if (typeof showToast === 'function') showToast('Could not save: ' + err.message, 'error');
+      }
+    });
+  });
+  el.querySelectorAll('[data-score-action-ask]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.getAttribute('data-score-action-ask'), 10);
+      const action = actions[idx];
+      if (!action || !window.C8 || !C8.dashChat) return;
+      C8.dashChat.open('Help me with this action: "' + action.title + '". ' + (action.rationale || '') + ' Give me a specific step-by-step for the next 48 hours.');
+    });
+  });
+}
+
+function renderScoreAction(a, i) {
+  return `<div class="c8score-action">
+    <label class="c8score-action-check">
+      <input type="checkbox" data-score-action-done="${i}">
+      <span></span>
+    </label>
+    <div class="c8score-action-body">
+      <div class="c8score-action-title">${esc(a.title)}</div>
+      <div class="c8score-action-rat">${esc(a.rationale)}</div>
+      ${a.projected_uplift_points ? `<div class="c8score-action-lift">+${a.projected_uplift_points} pts projected</div>` : ''}
+    </div>
+    <button class="c8score-action-chat" data-score-action-ask="${i}" title="Ask Camp 8 AI about this action" aria-label="Ask AI">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    </button>
+  </div>`;
+}
+
+function formatExplanation(txt) {
+  return esc(txt || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+async function recalcScore() {
+  const btn = document.getElementById('recalcScoreBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Calculating…'; }
+  try {
+    const sb2 = getSupabase();
+    const { data: sess } = await sb2.auth.getSession();
+    const jwt = sess && sess.session ? sess.session.access_token : null;
+    if (!jwt) throw new Error('Not signed in.');
+    const res = await fetch('/api/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+      body: JSON.stringify({ trigger_source: 'user' })
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Score API error');
+    latestScoreCalc = {
+      ...result,
+      what_drives_up: result.what_drives_up,
+      what_holds_back: result.what_holds_back,
+      top_3_actions: result.top_3_actions
+    };
+    // Reload score history so bars reflect the new row
+    await loadLatestScore();
+    renderScoreHero();
+    renderScoreBandIn('overviewBand');
+    renderScoreBandIn('ratingBand');
+    renderOverviewBars();
+    renderRadarIn('overviewRadar');
+    renderRadarIn('ratingRadar');
+    if (typeof showToast === 'function') showToast('Score updated: ' + result.score + ' (' + result.grade + ')', 'success');
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('Could not recalculate: ' + err.message, 'error');
+    else alert('Could not recalculate: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Recalculate Score'; }
+  }
+}
+
+
+// ---- Rating snapshots (8-factor radar history) ----
+let ratingSnapshots = [];
+async function loadRatingSnapshots() {
+  if (!athleteId) return;
+  const sb2 = getSupabase();
+  const { data } = await sb2.from('athlete_rating_snapshots')
+    .select('*').eq('athlete_id', athleteId).order('created_at', { ascending: false });
+  ratingSnapshots = data || [];
+}
+
+function latestSnapshot() {
+  // Prefer the most recent score_calculations row — it has the engine's full
+  // factor_breakdown. Fall back to legacy rating_snapshots, then to
+  // profile-derived factors when the athlete hasn't scored yet.
+  if (latestScoreCalc) {
+    return {
+      score: latestScoreCalc.score,
+      grade: gradeForScore(latestScoreCalc.score),
+      factor_breakdown: latestScoreCalc.factor_breakdown || null,
+      factors: null
+    };
+  }
+  if (ratingSnapshots.length) return ratingSnapshots[0];
+  return C8.radar.deriveFactors(athleteProfile, combineHistory[0], nilHistory[0], offersList);
+}
+
+function gradeForScore(s) {
+  if (s == null) return '';
+  if (s >= 800) return 'A+'; if (s >= 760) return 'A'; if (s >= 720) return 'A-';
+  if (s >= 680) return 'B+'; if (s >= 640) return 'B'; if (s >= 600) return 'B-';
+  if (s >= 560) return 'C+'; if (s >= 520) return 'C'; if (s >= 460) return 'D+';
+  return 'D';
+}
+
+function renderRadarIn(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el || !window.C8) return;
+  const snap = latestSnapshot();
+  const opts = {
+    profile: athleteProfile || {},
+    lastCombineAt: combineHistory[0] && combineHistory[0].created_at,
+    activeGoalsCount: goalsList.filter(g => !g.completed).length,
+    completedGoalsCount: goalsList.filter(g => g.completed).length
+  };
+  C8.radar.render(el, snap, opts);
+}
+
+function renderScoreBandIn(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el || !window.C8) return;
+  const score = latestScoreCalc ? latestScoreCalc.score : null;
+  C8.scoreBand.render(el, score);
+}
+
+function renderNilHistoryChart(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el || !window.C8) return;
+  // On the Rating tab use engine scores (300–850) when available.
+  if (window._scoreHistory && window._scoreHistory.length) {
+    C8.nilBars.render(el, window._scoreHistory, { max: 850, min: 300 });
+  } else {
+    C8.nilBars.render(el, nilHistory);
+  }
+}
+
+// ---- Unified calendar events ----
+let calendarEvents = [];
+async function loadCalendarEvents() {
+  if (!athleteId) return;
+  const sb2 = getSupabase();
+  const { data, error } = await sb2.from('athlete_calendar')
+    .select('*').eq('athlete_id', athleteId).order('event_date', { ascending: true });
+  if (error) console.error('loadCalendarEvents', error);
+  calendarEvents = data || [];
+}
+
+// Deterministic fallback checklist by event type + days-out (used if AI unavailable).
+function buildFallbackChecklist(eventType, daysOut) {
+  const inDays = (daysOut == null || daysOut < 0) ? null : daysOut;
+  const itemsByType = {
+    camp: [
+      inDays != null && inDays > 14 ? 'Lock in a 3-week training block focused on position drills' : null,
+      inDays != null && inDays > 14 ? 'Update highlight reel with most recent film' : null,
+      'Email 3 coaches who will be watching to introduce yourself',
+      'Confirm registration + required paperwork',
+      inDays != null && inDays <= 7 ? 'Taper intensity — sleep 8h, hydrate, no new training stressors' : 'Book travel + lodging if needed',
+      inDays != null && inDays <= 7 ? 'Pack: cleats, mouthpiece, 2 jerseys, IDs, medical forms' : 'Pick outfit + jersey number',
+      'Arrive 45 minutes early, warm up with intent',
+      'Introduce yourself to every coach by name + position'
+    ],
+    visit: [
+      'Write down 5 questions you will ask the coaching staff',
+      'Review the roster, depth chart, offensive/defensive scheme',
+      'Bring updated transcript + test scores',
+      'Prepare a 60-second self intro (film highlights on phone)',
+      'Dress the part — clean, coachable, professional',
+      'Take notes during the tour — specifics matter for thank-you emails'
+    ],
+    combine: [
+      'Book a speed-training session focused on first 10 yards',
+      'Record a baseline forty earlier in the week',
+      'Hydrate + carb-load the day before',
+      'Warm-up routine: 10 min dynamic, 3× strides, plyos',
+      'Wear tested gear — no new cleats or gloves',
+      'Log every result in the Camp 8 dashboard after'
+    ],
+    practice: [
+      'Review film from last week and pick 1 thing to correct',
+      'Arrive 15 min early for pre-practice mobility',
+      'Compete on every rep — attitude is the technique multiplier'
+    ],
+    game: [
+      'Film study on the opponent — top 2 tendencies',
+      'Nutrition: pre-game meal 3–4 hours out',
+      'Mental rep of the first 3 scripted plays',
+      'Take 10 photos / clips for social content after'
+    ],
+    goal: [
+      'Break the goal into 3 weekly milestones',
+      'Write the target value in your dashboard goals',
+      'Pick a daily action that compounds toward it',
+      'Review progress every Sunday — adjust if off pace'
+    ]
+  };
+  return (itemsByType[eventType] || itemsByType.camp)
+    .filter(Boolean)
+    .map((item, i) => ({ id: 'p' + i, item: item, done: false, ai_generated: false }));
+}
+
+// Call Claude to generate a contextual checklist. Falls back on failure.
+async function generatePrepChecklist(ev) {
+  const start = ev.event_date ? new Date(ev.event_date + 'T00:00:00') : null;
+  const days = start ? Math.max(0, Math.round((start - new Date()) / 86400000)) : null;
+  if (typeof CAMP8_AI === 'undefined') return buildFallbackChecklist(ev.event_type, days);
+  try {
+    const ctx = buildAthleteContext();
+    const sys = 'You produce a JSON array of 6-8 prep checklist items tailored to a high school football athlete. Each item: { "item": "<specific, actionable sentence>" }. Return ONLY the JSON array, no prose.';
+    const user = 'Event: ' + ev.event_type + ' — "' + ev.event_name + '" on ' + ev.event_date
+      + (ev.location ? ' at ' + ev.location : '')
+      + (days != null ? ' (' + days + ' days out)' : '')
+      + (ev.notes ? '. Notes: ' + ev.notes : '')
+      + '\n\nAthlete context:\n' + ctx
+      + '\n\nGenerate the checklist.';
+    const reply = await CAMP8_AI.send({ messages: [{ role: 'user', content: user }], system: sys, max_tokens: 700 });
+    const match = reply.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('No JSON in AI response');
+    const arr = JSON.parse(match[0]);
+    return arr.slice(0, 10).map((x, i) => ({ id: 'p' + i, item: x.item || x.text || String(x), done: false, ai_generated: true }));
+  } catch (err) {
+    console.warn('Prep AI fallback:', err.message);
+    return buildFallbackChecklist(ev.event_type, days);
+  }
+}
+
+function renderCalendarIn(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el || !window.C8) return;
+  C8.calendar.render(el, calendarEvents, {
+    onAdd: async (payload) => {
+      const sb2 = getSupabase();
+      // Generate prep checklist up-front for camps/visits/combines.
+      const shell = { ...payload, athlete_id: athleteId, status: 'planned' };
+      if (['camp','visit','combine','game'].includes(payload.event_type)) {
+        try { shell.prep_checklist = await generatePrepChecklist({ ...shell, event_date: shell.event_date }); } catch (_) {}
+      }
+      const { data, error } = await sb2.from('athlete_calendar').insert(shell).select().single();
+      if (error) throw error;
+      calendarEvents.push(data);
+      renderCalendarIn(targetId);
+      renderOverviewCalendar();
+      if (dashMap) renderDashMap();
+      if (typeof showToast === 'function') showToast('Event added to calendar', 'success');
+    },
+    onRemove: async (ev) => {
+      const sb2 = getSupabase();
+      await sb2.from('athlete_calendar').delete().eq('id', ev.id);
+      calendarEvents = calendarEvents.filter(x => x.id !== ev.id);
+      renderCalendarIn(targetId);
+      renderOverviewCalendar();
+      if (dashMap) renderDashMap();
+    },
+    onShare: (ev) => {
+      // navigator.share / clipboard handled inside widget; dashboard can log here later.
+    },
+    onLogResults: async (eventId, results) => {
+      const sb2 = getSupabase();
+      const { data: updated, error } = await sb2.from('athlete_calendar')
+        .update({ results_logged: results, results_logged_at: new Date().toISOString(), status: 'attended' })
+        .eq('id', eventId).select().single();
+      if (error) { alert('Could not save results: ' + error.message); return; }
+      // Update local cache
+      const idx = calendarEvents.findIndex(x => x.id === eventId);
+      if (idx >= 0) calendarEvents[idx] = updated;
+      // If the event had combine measurables, mirror them into athlete_combine_scores
+      // so the scoring engine picks them up on next calc.
+      if (updated.event_type === 'combine' || updated.event_type === 'camp') {
+        const maybe = {};
+        ['forty','vertical','shuttle','cone','bench','broad'].forEach(k => {
+          if (results[k]) maybe[k] = isNaN(Number(results[k])) ? results[k] : Number(results[k]);
+        });
+        if (Object.keys(maybe).length) {
+          await sb2.from('athlete_combine_scores').insert({
+            athlete_id: athleteId,
+            pos: athleteProfile && athleteProfile.position,
+            ...maybe,
+            notes: 'Logged from ' + updated.event_name
+          });
+          await loadCombineHistory();
+        }
+      }
+      renderCalendarIn(targetId);
+      // Trigger a fresh score calc since results changed scoring inputs
+      recalcScore();
+      if (typeof showToast === 'function') showToast('Results saved — score updating', 'success');
+    },
+    onTogglePrepItem: async (eventId, itemId) => {
+      const ev = calendarEvents.find(x => x.id === eventId);
+      if (!ev) return;
+      const prep = Array.isArray(ev.prep_checklist) ? ev.prep_checklist.slice() : [];
+      const idx = prep.findIndex(p => String(p.id) === String(itemId));
+      if (idx < 0) return;
+      prep[idx] = { ...prep[idx], done: !prep[idx].done };
+      const sb2 = getSupabase();
+      await sb2.from('athlete_calendar').update({ prep_checklist: prep }).eq('id', eventId);
+      ev.prep_checklist = prep;
+    },
+    onGeneratePrep: async (eventId) => {
+      const ev = calendarEvents.find(x => x.id === eventId);
+      if (!ev) return;
+      if (typeof showToast === 'function') showToast('Generating AI checklist…', 'info');
+      const prep = await generatePrepChecklist(ev);
+      const sb2 = getSupabase();
+      await sb2.from('athlete_calendar').update({ prep_checklist: prep }).eq('id', eventId);
+      ev.prep_checklist = prep;
+      renderCalendarIn(targetId);
+    },
+    onAskAI: (ev) => {
+      if (C8.dashChat) C8.dashChat.open('Build me a focused prep plan for ' + ev.event_name + ' on ' + (ev.event_date || 'the scheduled date') + '. What should I prioritize starting today?');
+    }
+  });
+}
+
+// ---- Action plan ----
+let actionsList = [];
+async function loadActions() {
+  if (!athleteId) return;
+  const sb2 = getSupabase();
+  const { data } = await sb2.from('athlete_actions')
+    .select('*').eq('athlete_id', athleteId).order('priority', { ascending: true }).order('due_date', { ascending: true });
+  actionsList = data || [];
+  renderActionsIn('actionPlan');
+  renderActionsIn('overviewActions', { limit: 4 });
+}
+
+function renderActionsIn(targetId, opts) {
+  const el = document.getElementById(targetId);
+  if (!el || !window.C8) return;
+  let list = actionsList;
+  if (opts && opts.limit) list = actionsList.filter(a => a.status === 'open').slice(0, opts.limit);
+  C8.actionPlan.render(el, list, {
+    onComplete: async (item) => {
+      const sb2 = getSupabase();
+      await sb2.from('athlete_actions').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', item.id);
+      await loadActions();
+    },
+    onSnooze: async (item) => {
+      const sb2 = getSupabase();
+      const until = new Date(); until.setDate(until.getDate() + 7);
+      await sb2.from('athlete_actions').update({ status: 'snoozed', snoozed_until: until.toISOString().slice(0,10) }).eq('id', item.id);
+      await loadActions();
+    },
+    onReopen: async (item) => {
+      const sb2 = getSupabase();
+      await sb2.from('athlete_actions').update({ status: 'open', completed_at: null }).eq('id', item.id);
+      await loadActions();
+    },
+    onAsk: (item) => {
+      if (C8.dashChat) C8.dashChat.open('Help me with this action: "' + item.title + '". ' + (item.detail || '') + ' Give me a concrete step-by-step for the next 48 hours.');
+    }
+  });
+}
+
+async function requestAIActions() {
+  const btn = event && event.target;
+  if (btn) btn.textContent = 'Thinking…';
+  try {
+    if (typeof CAMP8_AI === 'undefined') throw new Error('AI not loaded');
+    const sys = 'You generate a JSON array of 3 recruiting action items tailored to this Camp 8 athlete. Each item: { "title": "", "detail": "", "category": "recruiting|nil|training|camp|academic|profile", "priority": 1|2|3, "due_days": 2-21 }. Return ONLY JSON, no prose.';
+    const ctx = buildAthleteContext();
+    const reply = await CAMP8_AI.send({
+      messages: [{ role:'user', content: 'Athlete context:\n\n' + ctx + '\n\nGenerate 3 high-value next actions.' }],
+      system: sys, max_tokens: 700
+    });
+    const match = reply.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('No JSON in response');
+    const items = JSON.parse(match[0]);
+    const sb2 = getSupabase();
+    const today = new Date();
+    for (const it of items.slice(0, 5)) {
+      const due = new Date(today); due.setDate(due.getDate() + (parseInt(it.due_days) || 7));
+      await sb2.from('athlete_actions').insert({
+        athlete_id: athleteId,
+        title: it.title, detail: it.detail || null,
+        category: it.category || 'general',
+        priority: Math.min(3, Math.max(1, parseInt(it.priority) || 2)),
+        due_date: due.toISOString().slice(0,10),
+        source: 'ai', status: 'open'
+      });
+    }
+    await loadActions();
+  } catch (err) {
+    alert('Could not generate actions: ' + (err && err.message || 'unknown error'));
+  } finally {
+    if (btn) btn.textContent = '↻ Refresh from AI';
+  }
+}
+
+// ---- Athlete context builder for the chat + AI actions ----
+function buildAthleteContext() {
+  const p = athleteProfile || {};
+  const snap = latestSnapshot();
+  const parts = [];
+  parts.push('Name: ' + (p.name || '—'));
+  parts.push('Position: ' + (p.position || '—') + (p.position_secondary ? ' / ' + p.position_secondary : ''));
+  parts.push('Class: ' + (p.graduation_year || '—') + ' | School: ' + (p.school || '—') + ' (' + (p.city || '—') + ', ' + (p.state || '—') + ')');
+  parts.push('Height/Weight: ' + (p.height || '—') + ' / ' + (p.weight || '—') + ' lbs');
+  parts.push('Combine: 40=' + (p.forty_time || '—') + ', vert=' + (p.vertical || '—') + ', stars=' + (p.stars || 0));
+  parts.push('Academics: GPA=' + (p.gpa || '—') + ', SAT=' + (p.sat_score || '—') + ', ACT=' + (p.act_score || '—'));
+  parts.push('Social: IG=' + (p.instagram_followers || 0) + ', TW=' + (p.twitter_followers || 0) + ', TT=' + (p.tiktok_followers || 0));
+  parts.push('Offers (' + offersList.length + '): ' + offersList.slice(0, 8).map(o => o.college + ' (' + (o.division || '') + ')').join(', '));
+  parts.push('Starred camps: ' + starredCamps.slice(0, 6).map(c => c.camp_name + ' — ' + (c.camp_dates || '') + ' [' + c.status + ']').join('; '));
+  if (snap) {
+    var snapScore = snap.score != null ? snap.score : snap.overall;
+    var snapFactors = snap.factor_breakdown || snap.factors || null;
+    parts.push('Camp 8 rating: ' + (snapScore != null ? snapScore : '—') + ' (' + (snap.grade || '') + '). Factors: ' + JSON.stringify(snapFactors));
+  }
+  if (nilHistory[0]) parts.push('Latest NIL score: ' + nilHistory[0].score + '/100 (' + (nilHistory[0].grade || '') + ')');
+  if (combineHistory[0]) parts.push('Latest combine grade: ' + combineHistory[0].overall_grade);
+  const openGoals = goalsList.filter(g => !g.completed);
+  if (openGoals.length) parts.push('Active goals: ' + openGoals.slice(0, 5).map(g => g.title).join('; '));
+  return parts.join('\n');
+}
+
+function initDashChat() {
+  if (!window.C8 || !C8.dashChat) return;
+  C8.dashChat.init({
+    context: buildAthleteContext(),
+    openerLabel: 'Ask Camp 8 AI',
+    suggestions: [
+      'What should I focus on this week?',
+      'Draft a coach email to my top offer.',
+      'How does my rating compare to other ' + (athleteProfile?.position || 'prospects') + ' in ' + (athleteProfile?.state || 'GA') + '?',
+      'What drills raise my 40 time?'
+    ]
+  });
+}
+
+// ---- Wire tab activations so widgets repaint when shown ----
+const _origShowTab = showTab;
+showTab = function(tab, btn) {
+  _origShowTab(tab, btn);
+  if (tab === 'calendar') renderCalendarIn('campsCalendar');
+  if (tab === 'rating')   {
+    renderScoreBandIn('ratingBand');
+    renderRadarIn('ratingRadar');
+    renderNilHistoryChart('ratingHistory');
+    renderScoreHero();
+  }
+  if (tab === 'actions')  renderActionsIn('actionPlan');
+};
+
+// ---- Boot ----
+document.addEventListener('DOMContentLoaded', async function() {
+  // Init Supabase
+  window._sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Check existing session
+  const user = await getCurrentUser();
+  if (user) {
+    currentUser = user;
+    athleteProfile = await getAthleteProfile(user.id);
+    if (athleteProfile) athleteId = athleteProfile.id;
+    await loadDashboard();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeProfileEdit();
+});
+</script>
+</body>
+</html>

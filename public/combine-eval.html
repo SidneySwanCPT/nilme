@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — Combine Evaluator</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+    .ce-wrap {
+      display: flex;
+      height: calc(100vh - var(--nav-height));
+      margin-top: var(--nav-height);
+    }
+
+    /* Info panel */
+    .ce-info {
+      width: 320px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-color);
+      background: linear-gradient(180deg, rgba(74,144,217,0.07) 0%, var(--bg-secondary) 40%);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: var(--space-xl) var(--space-lg);
+    }
+
+    .ce-eyebrow { font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; color:#4a90d9; margin-bottom:8px; }
+    .ce-title { font-family:var(--font-display); font-size:2.2rem; letter-spacing:0.04em; color:var(--text-primary); margin-bottom:10px; line-height:1; }
+    .ce-title span { color:#4a90d9; }
+    .ce-desc { font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:var(--space-lg); }
+
+    .ce-grades { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:var(--space-lg); }
+    .ce-grade-pill { padding:8px 10px; border-radius:var(--radius-sm); border:1px solid var(--border-color); text-align:center; }
+    .ce-grade-letter { font-family:var(--font-display); font-size:1.3rem; line-height:1; }
+    .ce-grade-desc { font-size:0.65rem; color:var(--text-muted); margin-top:2px; }
+
+    .ce-stats { display:flex; flex-direction:column; gap:6px; margin-bottom:var(--space-lg); }
+    .ce-stat { display:flex; align-items:center; gap:10px; padding:9px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:var(--radius-sm); font-size:0.8rem; color:var(--text-secondary); }
+    .ce-stat-icon { font-size:1rem; flex-shrink:0; }
+    .ce-stat strong { color:var(--text-primary); display:block; font-size:0.82rem; margin-bottom:1px; }
+
+    .ce-tip { background:rgba(74,144,217,0.08); border:1px solid rgba(74,144,217,0.2); border-radius:var(--radius-md); padding:var(--space-md); margin-bottom:var(--space-lg); font-size:0.8rem; color:#6aadea; line-height:1.5; }
+    .ce-tip strong { display:block; margin-bottom:4px; color:#4a90d9; }
+
+
+    /* Progress panel */
+    .ce-progress-panel {
+      width: 240px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      overflow-y: auto;
+    }
+    .np-header {}
+    .np-title { font-size:.82rem;font-weight:800;color:var(--text-primary);margin-bottom:2px; }
+    .np-subtitle { font-size:.72rem;color:var(--text-muted); }
+    .np-bar-wrap { height:8px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden; }
+    .np-bar-fill { height:100%;background:#4a90d9;border-radius:100px;transition:width .5s ease; }
+    .np-pct { font-size:.72rem;color:#4a90d9;font-weight:700; }
+    .np-factors { display:flex;flex-direction:column;gap:6px; }
+    .np-factor { display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--text-secondary); }
+    .np-factor.done { color:var(--text-primary); }
+    .npf-icon { font-size:.9rem;flex-shrink:0; }
+    .np-hint { font-size:.72rem;color:var(--text-muted);line-height:1.5;padding:10px;background:rgba(255,255,255,.03);border:1px solid var(--border-color);border-radius:var(--radius-sm); }
+    .np-hint strong { color:#4a90d9; }
+    @media(max-width:768px) { .ce-progress-panel { display:none; } }
+    .ce-progress-wrap { margin-bottom:var(--space-lg); }
+    .ce-progress-label { font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#4a90d9;margin-bottom:8px;display:flex;justify-content:space-between; }
+    .ce-progress-bar { height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:var(--space-md); }
+    .ce-progress-fill { height:100%;background:linear-gradient(90deg,#4a90d9,#6aadea);border-radius:3px;transition:width 0.4s ease; }
+    .ce-stat-row { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.78rem; }
+    .ce-stat-row:last-child { border-bottom:none; }
+    .ce-stat-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:all 0.3s; }
+    .ce-stat-dot.filled { background:#4a90d9; }
+    .ce-stat-dot.empty { background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15); }
+    .ce-stat-dot.required { border-color:#e8872b; }
+    .ce-stat-name { flex:1;color:var(--text-secondary); }
+    .ce-stat-tag { font-size:0.6rem;padding:1px 6px;border-radius:100px;font-weight:700; }
+    .ce-stat-tag.req { background:rgba(232,135,43,0.15);color:#e8872b; }
+    .ce-stat-tag.opt { background:rgba(255,255,255,0.06);color:var(--text-muted); }
+    .ce-stat-status { font-size:0.65rem;color:var(--text-muted); }
+    .ce-stat-status.got { color:#50c878; }
+    .ce-submit-hint { margin-top:var(--space-md);padding:10px 12px;background:rgba(74,144,217,0.06);border:1px solid rgba(74,144,217,0.15);border-radius:var(--radius-sm);font-size:0.75rem;color:var(--text-secondary);line-height:1.5; }
+    .ce-reset { margin-top:auto; padding-top:var(--space-lg); }
+    .ce-reset-btn { width:100%; padding:9px; font-size:0.78rem; font-family:var(--font-body); font-weight:600; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--text-muted); cursor:pointer; transition:all 0.15s; text-transform:uppercase; letter-spacing:0.05em; }
+    .ce-reset-btn:hover { color:var(--text-primary); border-color:var(--border-hover); }
+
+    /* Chat area */
+    .ce-chat { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    #ceContainer { flex:1; overflow:hidden; }
+
+    @media(max-width:768px){
+      .ce-info { display:none; }
+    }
+  </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth-guard.js"></script>
+</head>
+<body>
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<div class="ce-wrap">
+  <!-- Info panel -->
+  <div class="ce-info">
+    <div class="ce-eyebrow">Free Athlete Tool</div>
+    <div class="ce-title">Combine <span>Evaluator</span></div>
+    <p class="ce-desc">Our AI evaluates your combine stats against real position benchmarks — grades every measurable and builds a training plan for what to improve before your next camp.</p>
+
+    <!-- Progress Tracker -->
+    <div class="ce-progress-wrap">
+      <div class="ce-progress-label">
+        <span>Stats Collected</span>
+        <span id="ceProgressPct">0 / 4 required</span>
+      </div>
+      <div class="ce-progress-bar"><div class="ce-progress-fill" id="ceProgressFill" style="width:0%"></div></div>
+      <div id="ceStatList">
+        <div class="ce-stat-row"><span class="ce-stat-dot empty required" id="cedot-pos"></span><span class="ce-stat-name">Position</span><span class="ce-stat-tag req">Required</span><span class="ce-stat-status" id="cest-pos">Needed</span></div>
+        <div class="ce-stat-row"><span class="ce-stat-dot empty required" id="cedot-forty"></span><span class="ce-stat-name">40-Yard Dash</span><span class="ce-stat-tag req">Required</span><span class="ce-stat-status" id="cest-forty">Needed</span></div>
+        <div class="ce-stat-row"><span class="ce-stat-dot empty required" id="cedot-vert"></span><span class="ce-stat-name">Vertical Jump</span><span class="ce-stat-tag req">Required</span><span class="ce-stat-status" id="cest-vert">Needed</span></div>
+        <div class="ce-stat-row"><span class="ce-stat-dot empty required" id="cedot-broad"></span><span class="ce-stat-name">Broad Jump</span><span class="ce-stat-tag req">Required</span><span class="ce-stat-status" id="cest-broad">Needed</span></div>
+        <div class="ce-stat-row"><span class="ce-stat-dot empty" id="cedot-shuttle"></span><span class="ce-stat-name">Shuttle (5-10-5)</span><span class="ce-stat-tag opt">Optional</span><span class="ce-stat-status" id="cest-shuttle">—</span></div>
+        <div class="ce-stat-row"><span class="ce-stat-dot empty" id="cedot-bench"></span><span class="ce-stat-name">Bench Press</span><span class="ce-stat-tag opt">Optional</span><span class="ce-stat-status" id="cest-bench">—</span></div>
+        <div class="ce-stat-row"><span class="ce-stat-dot empty" id="cedot-size"></span><span class="ce-stat-name">Height &amp; Weight</span><span class="ce-stat-tag opt">Optional</span><span class="ce-stat-status" id="cest-size">—</span></div>
+      </div>
+      <div class="ce-submit-hint">
+        <strong style="color:#4a90d9">Ask for your grade at any time</strong> — type "Grade my numbers" after sharing the required stats. The more optional stats you add, the deeper the evaluation. Required stats are minimum for a grade.
+      </div>
+    </div>
+
+    <div class="ce-stats">
+      <div class="ce-stat"><span class="ce-stat-icon">⚡</span><div><strong>Required Stats</strong>40-yard dash, vertical, broad jump</div></div>
+      <div class="ce-stat"><span class="ce-stat-icon">🔍</span><div><strong>Optional Deep Dive</strong>Shuttle, cone, bench, strength</div></div>
+      <div class="ce-stat"><span class="ce-stat-icon">🎯</span><div><strong>Position-Specific</strong>Graded vs your position group</div></div>
+      <div class="ce-stat"><span class="ce-stat-icon">📋</span><div><strong>Action Plan</strong>What to train for each weak spot</div></div>
+    </div>
+
+    <div class="ce-tip">
+      <strong>Pro tip:</strong>
+      The more stats you share, the more accurate your grade. Start with the required three — the AI will ask for more if you want a deeper look.
+    </div>
+
+    <div class="ce-reset">
+      <button class="ce-reset-btn" onclick="resetCE()">↺ Start Over</button>
+    </div>
+  </div>
+
+  <!-- Progress Tracker -->
+  <div class="ce-progress-panel" id="ceProgress">
+    <div class="np-header">
+      <div class="np-title">Eval Confidence</div>
+      <div class="np-subtitle">More stats = more accurate grade</div>
+    </div>
+    <div class="np-bar-wrap">
+      <div class="np-bar-fill" id="ceProgressBar" style="width:0%"></div>
+    </div>
+    <div class="np-pct" id="ceProgressPct">0% data collected</div>
+    <div class="np-factors" id="ceFactors">
+      <div class="np-factor" id="cpf_position">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Position / Year</span>
+      </div>
+      <div class="np-factor" id="cpf_size">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Height / Weight</span>
+      </div>
+      <div class="np-factor" id="cpf_forty">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">40-Yard Dash</span>
+      </div>
+      <div class="np-factor" id="cpf_vertical">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Vertical Jump</span>
+      </div>
+      <div class="np-factor" id="cpf_broad">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Broad Jump</span>
+      </div>
+      <div class="np-factor" id="cpf_agility">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Shuttle / Cone</span>
+      </div>
+      <div class="np-factor" id="cpf_strength">
+        <span class="npf-icon">⬜</span>
+        <span class="npf-label">Bench Press / Strength</span>
+      </div>
+    </div>
+    <div class="np-hint">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Type <strong>"grade me now"</strong> at any time. The 40, vertical, and broad jump are the core three — the rest adds depth to your overall grade.
+    </div>
+  </div>
+
+  <!-- AI Chat -->
+  <div class="ce-chat">
+    <div id="ceContainer"></div>
+  </div>
+</div>
+
+<script src="ai-chat.js"></script>
+<script>
+const CE_SYSTEM = `PERSONALITY & TONE:
+You are a knowledgeable mentor who played college football. You're calm, wise, and measured. You use light youth slang naturally when it fits (words like "real talk," "no cap," "bet," "solid," "stay locked in") but you don't force it. You sound like an older player who made it and came back to give real knowledge to the next generation. Honest but with love — if numbers aren't there yet, say so with a clear path forward.
+
+OFF-TOPIC HANDLING:
+If someone asks something completely unrelated to this evaluation, redirect warmly: "Aye, I'm locked in on [NIL/combine] evaluations right now — let's keep it focused and get you a real score. What's your [situation/position]?" Don't answer off-topic questions. Keep the conversation moving through the evaluation.
+
+You are Camp 8's Combine Evaluator AI. Your job is to interview a high school football athlete about their combine stats and give them a detailed evaluation with grades and training advice.
+
+GRADING BENCHMARKS BY POSITION:
+
+40-Yard Dash (lower = better, in seconds):
+- QB: Elite<4.55, Good<4.70, Avg<4.85, Below≥4.85
+- RB: Elite<4.40, Good<4.52, Avg<4.62, Below≥4.62
+- WR/CB: Elite<4.38, Good<4.48, Avg<4.58, Below≥4.58
+- TE/S/LB: Elite<4.50, Good<4.62, Avg<4.75, Below≥4.75
+- DL/EDGE: Elite<4.75, Good<4.88, Avg<5.00, Below≥5.00
+- OL: Elite<4.85, Good<5.00, Avg<5.15, Below≥5.15
+
+Vertical Jump (higher = better, in inches):
+- Skill positions (WR/CB/S/RB): Elite≥40, Good≥36, Avg≥32, Below<32
+- LB/EDGE/TE/QB: Elite≥37, Good≥33, Avg≥29, Below<29
+- OL/DL: Elite≥30, Good≥26, Avg≥22, Below<22
+
+Broad Jump (higher = better, in inches):
+- Skill: Elite≥126, Good≥118, Avg≥110, Below<110
+- LB/TE/EDGE: Elite≥120, Good≥112, Avg≥104, Below<104
+- OL/DL: Elite≥108, Good≥100, Avg≥92, Below<92
+
+Shuttle 5-10-5 (lower = better):
+- Skill: Elite<4.10, Good<4.25, Avg<4.40, Below≥4.40
+- LB/TE/EDGE: Elite<4.20, Good<4.35, Avg<4.50, Below≥4.50
+- OL/DL: Elite<4.55, Good<4.70, Avg<4.85, Below≥4.85
+
+Bench Press (225 lb reps, higher = better):
+- OL/DL: Elite≥28, Good≥22, Avg≥16, Below<16
+- LB/TE: Elite≥22, Good≥17, Avg≥12, Below<12
+- Skill: Elite≥15, Good≥11, Avg≥7, Below<7
+
+GRADING SCALE: A+ (top 5%), A (top 20%), B+ (top 35%), B (average), C+ (below average), C (needs work), D (significant improvement needed)
+
+INTERVIEW FLOW — Ask one thing at a time:
+1. Position and graduation year
+2. Height and weight
+3. 40-yard dash time
+4. Vertical jump (inches)
+5. Broad jump (inches)
+6. "Want to go deeper? I can also evaluate shuttle, cone drill, and bench press for a more complete picture."
+7. Optional: shuttle, cone, bench
+8. Optional: squat/power clean, GPA, offers
+
+After collecting at least 40/vert/broad:
+- Give a letter grade for each stat with A+/A/B+/B/C+/C/D scale
+- Give an overall combined grade
+- Write a detailed paragraph about what their numbers say about them as a prospect
+- List 2-4 specific training recommendations for the weakest stats
+- Recommend they browse camps.html on the site to find upcoming camps
+
+Be specific, honest, and encouraging. Use real examples of what coaches look for.`;
+
+const CE_WELCOME = `I'm going to evaluate your combine numbers and tell you exactly where you stand at your position ⚡
+
+I'll grade you on a real scale against what coaches actually see at elite camps — and tell you precisely what to train to improve before your next one.
+
+Let's start simple. **What position do you play and what year do you graduate?**`;
+
+let ceChat = null;
+
+
+// Combine progress tracking
+var ceFactorsDone = {};
+var ceFactorMap = {
+  cpf_position: ['quarterback','qb','wide receiver','wr','running back','rb','cornerback','cb','linebacker','lb','safety','s','defensive end','de','offensive line','ol','defensive tackle','dt','tight end','te','position'],
+  cpf_size: ['height','weight','lbs','pounds','feet','inches','tall','6\'','5\'','6-'],
+  cpf_forty: ['40','forty','4.','dash'],
+  cpf_vertical: ['vertical','jump','inches','vert'],
+  cpf_broad: ['broad','broad jump'],
+  cpf_agility: ['shuttle','cone','5-10-5','agility'],
+  cpf_strength: ['bench','reps','squat','power clean','strength','lift']
+};
+
+function updateCeProgress(messages) {
+  var allText = messages.map(function(m){ return (m.content||'').toLowerCase(); }).join(' ');
+  var done = 0;
+  var total = Object.keys(ceFactorMap).length;
+  Object.keys(ceFactorMap).forEach(function(factor) {
+    var keywords = ceFactorMap[factor];
+    var found = keywords.some(function(kw){ return allText.includes(kw); });
+    var el = document.getElementById(factor);
+    if(found && el) {
+      ceFactorsDone[factor] = true;
+      el.classList.add('done');
+      el.querySelector('.npf-icon').textContent = '✅';
+    }
+    if(ceFactorsDone[factor]) done++;
+  });
+  var pct = Math.round((done/total)*100);
+  var bar = document.getElementById('ceProgressBar');
+  var pctEl = document.getElementById('ceProgressPct');
+  if(bar) bar.style.width = pct+'%';
+  if(pctEl) pctEl.textContent = pct+'% data collected';
+}
+function initCE() {
+  const container = document.getElementById('ceContainer');
+  ceChat = CAMP8_AI.buildChatUI({
+    container,
+    system: CE_SYSTEM,
+    welcomeMsg: CE_WELCOME,
+    placeholder: 'Type your answer…',
+    accentColor: '#4a90d9',
+    onResponse: function(reply, messages) { updateCeProgress(messages); }
+  });
+}
+
+function resetCE() {
+  if (ceChat) {
+    ceChat.reset();
+    updateCEProgress([]);
+  }
+}
+
+// ---- Combine Progress Tracker ----
+const CE_STATS = [
+  { id: 'pos',     required: true,  keywords: ['qb','quarterback','wr','receiver','rb','running','cb','cornerback','safety','linebacker','lb','lineman','te','tight','edge','de','dt','ol'] },
+  { id: 'forty',   required: true,  keywords: ['forty','4.','40-yard','40 yard','4.3','4.4','4.5','4.6','4.7','4.8','4.9'] },
+  { id: 'vert',    required: true,  keywords: ['vertical','vert','inch','jump',' in.','"'] },
+  { id: 'broad',   required: true,  keywords: ['broad','broad jump','broad-jump'] },
+  { id: 'shuttle', required: false, keywords: ['shuttle','5-10-5','5 10 5','agility'] },
+  { id: 'bench',   required: false, keywords: ['bench','reps','225','press'] },
+  { id: 'size',    required: false, keywords: ['height','weight','tall','lbs','pounds','foot','feet','6\'','5\'','6-'] },
+];
+
+function updateCEProgress(messages) {
+  const allText = messages.map(function(m){ return m.content.toLowerCase(); }).join(' ');
+  let filledReq = 0, totalReq = 0;
+  CE_STATS.forEach(function(s) {
+    const found = s.keywords.some(function(k){ return allText.includes(k); });
+    const dot = document.getElementById('cedot-' + s.id);
+    const st  = document.getElementById('cest-'  + s.id);
+    if (dot) {
+      dot.className = 'ce-stat-dot ' + (found ? 'filled' : ('empty' + (s.required ? ' required' : '')));
+    }
+    if (st) {
+      st.className  = 'ce-stat-status' + (found ? ' got' : '');
+      st.textContent = found ? '✓ Got it' : (s.required ? 'Needed' : '—');
+    }
+    if (s.required) { totalReq++; if (found) filledReq++; }
+  });
+  const pct = Math.round((filledReq / totalReq) * 100);
+  const fill = document.getElementById('ceProgressFill');
+  const lbl  = document.getElementById('ceProgressPct');
+  if (fill) fill.style.width = pct + '%';
+  if (lbl)  lbl.textContent  = filledReq + ' / ' + totalReq + ' required';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initCE();
+  const origSend = window._c8SendMsg;
+  if (origSend) {
+    window._c8SendMsg = async function() {
+      await origSend();
+      if (ceChat) updateCEProgress(ceChat.getMessages());
+    };
+  }
+});
+</script>
+</body>
+</html>

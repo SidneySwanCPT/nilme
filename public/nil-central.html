@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — NIL Central</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="nil-styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+  <style>
+    /* ---- Page base ---- */
+    body { overflow-y: auto; height: auto; }
+
+    /* ---- Page header ---- */
+    .nil-page-header { margin-top: var(--nav-height); padding: var(--space-xl) var(--space-xl) var(--space-lg); background: linear-gradient(180deg, rgba(212,168,67,0.08) 0%, transparent 100%); border-bottom: 1px solid var(--border-color); }
+    .nil-page-header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; }
+    .nil-eyebrow { font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; color:var(--gold); margin-bottom:8px; }
+    .nil-title { font-family:var(--font-display); font-size:clamp(2.5rem,5vw,4rem); letter-spacing:0.04em; color:var(--text-primary); margin-bottom:8px; }
+    .nil-title span { color:var(--gold); }
+    .nil-subtitle { font-size:0.92rem; color:var(--text-secondary); max-width:520px; line-height:1.6; }
+
+    /* Jump nav */
+    .nil-jump-nav { display:flex; flex-wrap:wrap; gap:6px; align-items:center; flex-shrink:0; }
+    .nil-jump-link { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; font-size:0.8rem; font-weight:600; color:var(--text-secondary); border:1px solid var(--border-color); border-radius:100px; text-decoration:none; transition:all 0.15s; white-space:nowrap; cursor:pointer; }
+    .nil-jump-link:hover { color:var(--gold); border-color:var(--gold); background:var(--gold-dim); }
+
+    /* ---- Section blocks ---- */
+    .nil-section-block { border-bottom: 1px solid var(--border-color); padding: var(--space-xl) 0; }
+    .nil-block-inner { max-width:1200px; margin:0 auto; padding:0 var(--space-xl); }
+    .nil-section-eyebrow { font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; color:var(--gold); opacity:0.8; margin-bottom:6px; }
+    .nil-section-heading { font-family:var(--font-display); font-size:clamp(1.8rem,3.5vw,2.8rem); letter-spacing:0.04em; color:var(--text-primary); margin-bottom:var(--space-sm); }
+    .nil-section-heading span { color:var(--gold); }
+    .nil-section-sub { font-size:0.88rem; color:var(--text-secondary); line-height:1.6; max-width:500px; }
+
+    /* ---- SECTION 1: Rating CTA ---- */
+    .nil-rating-block { background:linear-gradient(135deg,rgba(212,168,67,0.07) 0%,rgba(212,168,67,0.02) 100%); }
+    .nil-rating-hero { display:grid; grid-template-columns:1fr auto; gap:var(--space-xl); align-items:center; }
+    .nil-rating-hero-text p { font-size:0.95rem; color:var(--text-secondary); line-height:1.6; max-width:520px; margin-bottom:var(--space-lg); }
+    .nil-rating-features { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:var(--space-lg); }
+    .nrf-item { display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-secondary); }
+    .nrf-dot { width:8px; height:8px; border-radius:50%; background:var(--gold); flex-shrink:0; }
+    .nil-big-cta { display:inline-flex; align-items:center; gap:8px; padding:14px 28px; background:var(--gold); color:#0a0a12; border-radius:100px; font-size:1rem; font-weight:800; text-decoration:none; text-transform:uppercase; letter-spacing:0.06em; transition:all 0.15s; }
+    .nil-big-cta:hover { background:var(--gold-bright); transform:translateY(-2px); box-shadow:0 6px 24px rgba(212,168,67,0.35); }
+    .nil-cta-note { font-size:0.75rem; color:var(--text-muted); margin-top:var(--space-sm); }
+    .nil-rating-stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-sm); flex-shrink:0; }
+    .nrs-card { background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:var(--space-md) var(--space-lg); text-align:center; min-width:90px; }
+    .nrs-num { font-family:var(--font-display); font-size:2.2rem; color:var(--gold); line-height:1; }
+    .nrs-label { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-top:3px; }
+
+    /* ---- SECTION 2: Rules & Regs (side-by-side) ---- */
+    .rules-layout { display:grid; grid-template-columns:220px 1fr; gap:var(--space-xl); margin-top:var(--space-lg); align-items:start; }
+    .rules-state-nav { position:sticky; top:calc(var(--nav-height) + 40px); }
+    .rsn-label { font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-muted); margin-bottom:var(--space-sm); }
+    .rsn-btn {
+      display:flex; align-items:center; gap:10px; width:100%;
+      padding:12px 16px; margin-bottom:4px;
+      background:transparent; border:1px solid var(--border-color);
+      border-radius:var(--radius-md); color:var(--text-secondary);
+      font-size:0.88rem; font-weight:600; cursor:pointer;
+      transition:all 0.15s; font-family:var(--font-body); text-align:left;
+    }
+    .rsn-btn:hover { background:rgba(255,255,255,0.04); color:var(--text-primary); }
+    .rsn-btn.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
+    .rsn-emoji { font-size:1.1rem; }
+    .rsn-btn-text { flex:1; }
+    .rsn-btn-abbrev { font-size:0.72rem; opacity:0.7; }
+
+    .rules-panel { min-height:400px; }
+    .rules-panel-loading { display:flex; align-items:center; gap:10px; padding:var(--space-xl); color:var(--text-muted); font-size:0.88rem; }
+
+    /* Governing body card */
+    .gov-card-full {
+      background:var(--bg-card); border:1px solid var(--border-color);
+      border-radius:var(--radius-lg); overflow:hidden; margin-bottom:var(--space-lg);
+    }
+    .gcf-header {
+      display:flex; align-items:center; gap:var(--space-md);
+      padding:var(--space-lg); border-bottom:1px solid var(--border-color);
+      background:rgba(255,255,255,0.02); flex-wrap:wrap;
+    }
+    .gcf-emoji { font-size:2rem; }
+    .gcf-body-name { font-family:var(--font-display); font-size:1.6rem; letter-spacing:0.04em; }
+    .gcf-full-name { font-size:0.78rem; color:var(--text-muted); margin-top:2px; }
+    .gcf-official-btn {
+      margin-left:auto; padding:8px 18px; font-size:0.8rem; font-weight:700;
+      border:1px solid var(--border-color); border-radius:100px;
+      color:var(--text-secondary); text-decoration:none; transition:all 0.15s; white-space:nowrap;
+    }
+    .gcf-official-btn:hover { color:var(--gold); border-color:var(--gold); }
+    .gcf-summary { padding:var(--space-lg); font-size:0.9rem; color:var(--text-secondary); line-height:1.7; border-bottom:1px solid var(--border-color); }
+    .gcf-rules { padding:var(--space-sm) 0; }
+    .gcf-rule { padding:14px var(--space-lg); border-bottom:1px solid var(--border-color); display:flex; gap:var(--space-md); align-items:flex-start; }
+    .gcf-rule:last-child { border-bottom:none; }
+    .gcf-rule-num { font-family:var(--font-display); font-size:1.2rem; color:var(--gold); opacity:0.6; flex-shrink:0; min-width:28px; }
+    .gcf-rule-title { font-size:0.88rem; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+    .gcf-rule-text { font-size:0.82rem; color:var(--text-secondary); line-height:1.6; }
+    .gcf-footer { padding:var(--space-sm) var(--space-lg); font-size:0.72rem; color:var(--text-muted); border-top:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--space-sm); }
+
+    /* ---- SECTION 3: Quick Tips ---- */
+    .nil-tips-block { background:var(--bg-secondary); }
+    .tips-cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:var(--space-md); margin-top:var(--space-lg); }
+    .tip-card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:var(--space-lg); border-left:3px solid; transition:all 0.15s; }
+    .tip-card:hover { background:var(--bg-card-hover); }
+    .tip-card.high { border-left-color:#c41e3a; }
+    .tip-card.med  { border-left-color:#e8872b; }
+    .tip-card.info { border-left-color:#4a90d9; }
+    .tip-card-icon { font-size:1.5rem; margin-bottom:var(--space-sm); }
+    .tip-card h3 { font-size:0.92rem; font-weight:700; color:var(--text-primary); margin-bottom:var(--space-sm); }
+    .tip-card p { font-size:0.8rem; color:var(--text-secondary); line-height:1.6; }
+
+    /* ---- SECTION 4: FAQ ---- */
+    .faq-list { margin-top:var(--space-lg); display:flex; flex-direction:column; gap:var(--space-sm); }
+    .faq-item { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); overflow:hidden; }
+    .faq-q {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:var(--space-md) var(--space-lg); cursor:pointer;
+      font-size:0.92rem; font-weight:600; color:var(--text-primary);
+      transition:background 0.15s; gap:var(--space-md);
+    }
+    .faq-q:hover { background:rgba(255,255,255,0.03); }
+    .faq-q.open { color:var(--gold); }
+    .faq-chevron { flex-shrink:0; transition:transform 0.2s; color:var(--text-muted); }
+    .faq-q.open .faq-chevron { transform:rotate(180deg); color:var(--gold); }
+    .faq-a { display:none; padding:0 var(--space-lg) var(--space-lg); font-size:0.85rem; color:var(--text-secondary); line-height:1.7; border-top:1px solid var(--border-color); padding-top:var(--space-md); }
+    .faq-a.open { display:block; }
+    .faq-a a { color:var(--gold); text-decoration:underline; }
+
+    /* ---- SECTION 5: Contact placeholder ---- */
+    .contact-block { background:var(--bg-secondary); }
+    .contact-form-placeholder {
+      max-width:600px; margin:var(--space-lg) auto 0;
+      background:var(--bg-card); border:1px dashed rgba(212,168,67,0.3);
+      border-radius:var(--radius-lg); padding:var(--space-xl); text-align:center;
+    }
+    .contact-placeholder-icon { font-size:2.5rem; margin-bottom:var(--space-md); }
+    .contact-placeholder-title { font-family:var(--font-display); font-size:1.4rem; color:var(--gold); margin-bottom:var(--space-sm); }
+    .contact-placeholder-text { font-size:0.88rem; color:var(--text-secondary); line-height:1.6; margin-bottom:var(--space-lg); }
+    .contact-placeholder-note { font-size:0.75rem; color:var(--text-muted); font-style:italic; }
+    .contact-form-fields { text-align:left; margin-top:var(--space-lg); display:flex; flex-direction:column; gap:var(--space-md); }
+    .cf-group { display:flex; flex-direction:column; gap:6px; }
+    .cf-label { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); }
+    .cf-input, .cf-select, .cf-textarea {
+      padding:10px 14px; font-size:0.88rem; font-family:var(--font-body);
+      background:rgba(255,255,255,0.04); border:1px solid var(--border-color);
+      border-radius:var(--radius-sm); color:var(--text-primary); outline:none;
+      transition:border-color 0.15s;
+    }
+    .cf-input:focus,.cf-select:focus,.cf-textarea:focus { border-color:var(--gold); }
+    .cf-input::placeholder,.cf-textarea::placeholder { color:var(--text-muted); }
+    .cf-textarea { min-height:100px; resize:vertical; }
+    .cf-submit {
+      padding:12px 28px; background:var(--gold); color:#0a0a12;
+      border:none; border-radius:100px; font-size:0.9rem; font-weight:800;
+      cursor:pointer; font-family:var(--font-body); transition:all 0.15s;
+      text-transform:uppercase; letter-spacing:0.06em; align-self:flex-start;
+    }
+    .cf-submit:hover { background:var(--gold-bright); }
+    .cf-coming-soon { display:flex; align-items:center; gap:8px; padding:10px 16px; background:rgba(212,168,67,0.08); border:1px solid rgba(212,168,67,0.2); border-radius:var(--radius-sm); font-size:0.8rem; color:var(--gold); margin-top:var(--space-sm); }
+
+    /* ---- Deals popup button ---- */
+    .deals-popup-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:12px 24px; background:var(--bg-card);
+      border:1px solid var(--border-color); border-radius:var(--radius-md);
+      font-size:0.9rem; font-weight:700; color:var(--text-primary);
+      cursor:pointer; transition:all 0.15s; font-family:var(--font-body);
+      margin-top:var(--space-lg);
+    }
+    .deals-popup-btn:hover { border-color:var(--gold); color:var(--gold); background:var(--gold-dim); }
+
+    /* Deals modal */
+    .modal-overlay { display:none; position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); align-items:center; justify-content:center; padding:var(--space-lg); }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-lg); width:100%; max-width:1100px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,0.8); }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; padding:var(--space-md) var(--space-lg); border-bottom:1px solid var(--border-color); flex-shrink:0; background:var(--bg-primary); }
+    .modal-title { font-family:var(--font-display); font-size:1.4rem; letter-spacing:0.04em; color:var(--text-primary); }
+    .modal-title span { color:var(--gold); }
+    .modal-close { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid var(--border-color); color:var(--text-secondary); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem; transition:all 0.15s; }
+    .modal-close:hover { color:var(--text-primary); }
+    .modal-filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:var(--space-md) var(--space-lg); border-bottom:1px solid var(--border-color); background:var(--bg-primary); flex-shrink:0; }
+    .mf-select { padding:6px 10px; font-size:0.8rem; font-family:var(--font-body); background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--text-secondary); outline:none; cursor:pointer; }
+    .mf-input { padding:6px 12px; font-size:0.8rem; font-family:var(--font-body); background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--text-primary); outline:none; flex:1; min-width:160px; }
+    .mf-input:focus,.mf-select:focus { border-color:var(--gold); }
+    .mf-input::placeholder { color:var(--text-muted); }
+    .mf-badge { padding:3px 10px; font-size:0.7rem; font-weight:600; color:var(--text-muted); background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:100px; white-space:nowrap; }
+    .modal-body { flex:1; overflow:auto; }
+    .state-pill { display:inline-block; padding:2px 8px; border-radius:100px; font-size:0.68rem; font-weight:700; }
+
+    /* ---- SECTION 6: News (bottom) ---- */
+    .nil-news-block { background:var(--bg-secondary); }
+    .nil-news-state-toggle { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:var(--space-lg); }
+    .nst-btn { padding:6px 14px; font-size:0.78rem; font-weight:600; border:1px solid var(--border-color); border-radius:100px; color:var(--text-muted); background:transparent; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+    .nst-btn:hover { color:var(--text-secondary); }
+    .nst-btn.active { color:var(--gold); border-color:var(--gold); background:var(--gold-dim); }
+    .nil-news-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-sm); }
+    .news-card { display:flex; flex-direction:column; gap:6px; padding:var(--space-md); background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); transition:all 0.15s; text-decoration:none; color:inherit; position:relative; overflow:hidden; }
+    .news-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:transparent; transition:background 0.15s; }
+    .news-card:hover { background:var(--bg-card-hover); border-color:var(--border-hover); }
+    .news-card:hover::before { background:var(--gold); }
+    .news-card-featured { grid-column:1/-1; padding:var(--space-lg); }
+    .news-card-featured::before { background:var(--gold); }
+    .news-card-meta { display:flex; align-items:center; gap:8px; }
+    .news-source { font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); opacity:0.9; }
+    .news-date { font-size:0.68rem; color:var(--text-muted); }
+    .news-card-title { font-size:0.82rem; font-weight:500; color:var(--text-primary); line-height:1.4; flex:1; }
+    .news-card-desc { font-size:0.78rem; color:var(--text-secondary); line-height:1.5; }
+    .news-card-arrow { margin-top:auto; align-self:flex-end; color:var(--text-muted); transition:all 0.15s; }
+    .news-card:hover .news-card-arrow { color:var(--gold); transform:translateX(2px); }
+    .news-skeleton { height:100px; background:linear-gradient(90deg,var(--bg-card) 25%,var(--bg-card-hover) 50%,var(--bg-card) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:var(--radius-md); border:1px solid var(--border-color); }
+    .news-skeleton-featured { grid-column:1/-1; height:120px; }
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .news-error { display:flex; align-items:flex-start; gap:var(--space-md); padding:var(--space-lg); background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-muted); font-size:0.85rem; margin-top:var(--space-md); }
+    .fallback-links { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+    .fallback-links a { color:var(--gold); text-decoration:underline; font-size:0.8rem; }
+
+    /* ---- Footer ---- */
+    .site-footer { border-top:1px solid var(--border-color); background:var(--bg-secondary); padding:var(--space-lg) var(--space-xl); }
+    .footer-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:var(--space-lg); flex-wrap:wrap; }
+    .footer-brand { font-family:var(--font-display); font-size:1.3rem; letter-spacing:0.04em; color:var(--text-primary); text-decoration:none; flex-shrink:0; }
+    .footer-brand span { color:var(--gold); }
+    .footer-links { display:flex; gap:var(--space-md); flex-wrap:wrap; flex:1; }
+    .footer-links a { font-size:0.8rem; color:var(--text-muted); text-decoration:none; transition:color 0.15s; }
+    .footer-links a:hover { color:var(--gold); }
+    .ig-link { display:flex; align-items:center; gap:8px; margin-left:auto; font-size:0.8rem; font-weight:600; color:var(--text-secondary); text-decoration:none; padding:8px 16px; border:1px solid var(--border-color); border-radius:100px; transition:all 0.15s; flex-shrink:0; }
+    .ig-link:hover { color:#e1306c; border-color:#e1306c; }
+
+    /* ---- Responsive ---- */
+    @media(max-width:900px){
+      .rules-layout { grid-template-columns:1fr; }
+      .rules-state-nav { position:static; display:flex; flex-wrap:wrap; gap:6px; }
+      .rsn-label { display:none; }
+      .rsn-btn { width:auto; padding:8px 14px; }
+      .nil-rating-hero { grid-template-columns:1fr; }
+      .nil-rating-stats-grid { display:none; }
+      .nil-news-grid { grid-template-columns:1fr 1fr; }
+    }
+    @media(max-width:640px){
+      .nil-block-inner { padding:0 var(--space-md); }
+      .nil-section-block { padding:var(--space-lg) 0; }
+      .nil-page-header { padding:var(--space-lg) var(--space-md) var(--space-md); }
+      .nil-page-header-inner { flex-direction:column; }
+      .tips-cards-grid { grid-template-columns:1fr; }
+      .nil-news-grid { grid-template-columns:1fr; }
+      .footer-inner { flex-direction:column; align-items:flex-start; }
+      .ig-link { margin-left:0; }
+    }
+  </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<!-- Page Header -->
+<div class="nil-page-header">
+  <div class="nil-page-header-inner">
+    <div>
+      <div class="nil-eyebrow">High School Football</div>
+      <h1 class="nil-title">NIL <span>Central</span></h1>
+      <p class="nil-subtitle">Everything a high school athlete needs about NIL — rating tool, state rules, quick tips, FAQ, and the latest deals.</p>
+    </div>
+    <nav class="nil-jump-nav">
+      <a class="nil-jump-link" onclick="smoothTo('nil-rating')">⭐ NIL Rating</a>
+      <a class="nil-jump-link" onclick="smoothTo('nil-rules')">📋 Rules</a>
+      <a class="nil-jump-link" onclick="smoothTo('nil-tips')">💡 Quick Tips</a>
+      <a class="nil-jump-link" onclick="smoothTo('nil-faq')">❓ FAQ</a>
+      <a class="nil-jump-link" onclick="smoothTo('nil-contact')">📬 Get Advice</a>
+      <a class="nil-jump-link" onclick="openDeals()">💰 Deals</a>
+      <a class="nil-jump-link" onclick="smoothTo('nil-news')">📰 News</a>
+    </nav>
+  </div>
+</div>
+
+<!-- ===== 1. RATING CTA ===== -->
+<section class="nil-section-block nil-rating-block" id="nil-rating">
+  <div class="nil-block-inner">
+    <div class="nil-rating-hero">
+      <div class="nil-rating-hero-text">
+        <div class="nil-section-eyebrow">Free Athlete Tool</div>
+        <h2 class="nil-section-heading">See Where You <span>Rank</span></h2>
+        <p>Get a score out of 100 showing your NIL market value — based on location, star rating, social media, college offers, and more. Free, instant, no account needed.</p>
+        <div class="nil-rating-features">
+          <div class="nrf-item"><span class="nrf-dot"></span>Location &amp; market analysis</div>
+          <div class="nrf-item"><span class="nrf-dot"></span>Star rating impact score</div>
+          <div class="nrf-item"><span class="nrf-dot"></span>Social media valuation</div>
+          <div class="nrf-item"><span class="nrf-dot"></span>Personalized action plan</div>
+          <div class="nrf-item"><span class="nrf-dot"></span>Camp recommendations</div>
+        </div>
+        <a href="nil-rating.html" class="nil-big-cta">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Get My NIL Score →
+        </a>
+        <p class="nil-cta-note">Takes 2 minutes · GA, FL, TX, CA athletes</p>
+      </div>
+      <div class="nil-rating-stats-grid">
+        <div class="nrs-card"><div class="nrs-num">100</div><div class="nrs-label">Point Scale</div></div>
+        <div class="nrs-card"><div class="nrs-num">6</div><div class="nrs-label">Factors</div></div>
+        <div class="nrs-card"><div class="nrs-num">4</div><div class="nrs-label">States</div></div>
+        <div class="nrs-card"><div class="nrs-num">755</div><div class="nrs-label">Camps</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 2. RULES & REGULATIONS ===== -->
+<section class="nil-section-block" id="nil-rules">
+  <div class="nil-block-inner">
+    <div class="nil-section-eyebrow">Know Before You Sign</div>
+    <h2 class="nil-section-heading">Rules &amp; <span>Regulations</span></h2>
+    <p class="nil-section-sub">Select your state to see the full NIL rulebook for your governing body — including key rules, prohibited categories, and official resources.</p>
+
+    <div class="rules-layout">
+      <!-- State selector (left) -->
+      <div class="rules-state-nav">
+        <div class="rsn-label">Select Your State</div>
+        <button class="rsn-btn active" onclick="setRulesState('GA',this)"><span class="rsn-emoji">🍑</span><span class="rsn-btn-text">Georgia</span><span class="rsn-btn-abbrev">GHSA</span></button>
+        <button class="rsn-btn" onclick="setRulesState('FL',this)"><span class="rsn-emoji">🌴</span><span class="rsn-btn-text">Florida</span><span class="rsn-btn-abbrev">FHSAA</span></button>
+        <button class="rsn-btn" onclick="setRulesState('TX',this)"><span class="rsn-emoji">⭐</span><span class="rsn-btn-text">Texas</span><span class="rsn-btn-abbrev">UIL</span></button>
+        <button class="rsn-btn" onclick="setRulesState('CA',this)"><span class="rsn-emoji">🌊</span><span class="rsn-btn-text">California</span><span class="rsn-btn-abbrev">CIF</span></button>
+      </div>
+
+      <!-- Rules panel (right) — populated by JS -->
+      <div class="rules-panel" id="rulesPanel">
+        <div class="rules-panel-loading">Loading rules…</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3. QUICK TIPS ===== -->
+<section class="nil-section-block nil-tips-block" id="nil-tips">
+  <div class="nil-block-inner">
+    <div class="nil-section-eyebrow">Protect Your Eligibility</div>
+    <h2 class="nil-section-heading">Quick <span>Tips</span></h2>
+    <p class="nil-section-sub">The most important things every high school athlete needs to know before entering any NIL deal.</p>
+    <div class="tips-cards-grid">
+      <div class="tip-card high">
+        <div class="tip-card-icon">📋</div>
+        <h3>Always Disclose First</h3>
+        <p>Disclose all NIL deals to your school's athletic director before signing anything. Failure to disclose can jeopardize your eligibility.</p>
+      </div>
+      <div class="tip-card high">
+        <div class="tip-card-icon">🚫</div>
+        <h3>No School Marks</h3>
+        <p>Never use your school's logo, uniform, colors, or mascot in any NIL deal without explicit written permission from the principal and AD.</p>
+      </div>
+      <div class="tip-card med">
+        <div class="tip-card-icon">💰</div>
+        <h3>It's Taxable Income</h3>
+        <p>All NIL compensation is taxable. Once you start earning, consult a tax professional. Parents should be involved in this process.</p>
+      </div>
+      <div class="tip-card med">
+        <div class="tip-card-icon">📝</div>
+        <h3>Get It In Writing</h3>
+        <p>Verbal agreements are not enforceable. Every NIL deal needs a written contract. If you're a minor, a parent or guardian must co-sign.</p>
+      </div>
+      <div class="tip-card med">
+        <div class="tip-card-icon">⚠️</div>
+        <h3>No Pay-for-Play</h3>
+        <p>NIL compensation must be for your name, image, and likeness only — never tied to your athletic performance, stats, or wins.</p>
+      </div>
+      <div class="tip-card info">
+        <div class="tip-card-icon">🏷️</div>
+        <h3>Label Sponsored Content</h3>
+        <p>Any paid social media post must be labeled as a paid partnership using #ad or #sponsored. This is required by the FTC for all ages.</p>
+      </div>
+      <div class="tip-card info">
+        <div class="tip-card-icon">📱</div>
+        <h3>Your Social = Your Brand</h3>
+        <p>Brands look at your social media before reaching out. Keep public accounts professional, clean, and football-focused.</p>
+      </div>
+      <div class="tip-card info">
+        <div class="tip-card-icon">⭐</div>
+        <h3>Know Your Value First</h3>
+        <p>Use the NIL Rating Tool above to understand your market value before approaching any brand or signing any deal.</p>
+        <a href="nil-rating.html" style="display:inline-block;margin-top:8px;font-size:0.78rem;font-weight:700;color:var(--gold)">Get My Score →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 4. FAQ ===== -->
+<section class="nil-section-block" id="nil-faq">
+  <div class="nil-block-inner">
+    <div class="nil-section-eyebrow">Common Questions</div>
+    <h2 class="nil-section-heading">NIL <span>FAQ</span></h2>
+    <p class="nil-section-sub">Answers to the most common questions from high school athletes and their families about NIL.</p>
+    <div class="faq-list" id="faqList"></div>
+  </div>
+</section>
+
+<!-- ===== 5. GET ADVICE (Contact) ===== -->
+<section class="nil-section-block contact-block" id="nil-contact">
+  <div class="nil-block-inner">
+    <div class="nil-section-eyebrow">Need Help Navigating NIL?</div>
+    <h2 class="nil-section-heading">Get <span>Advice</span></h2>
+    <p class="nil-section-sub">Have a specific situation you need help with? Fill out the form below and we'll be in touch with guidance on navigating your NIL opportunity.</p>
+    <div class="contact-form-placeholder">
+      <div class="contact-placeholder-icon">📬</div>
+      <div class="contact-placeholder-title">NIL Advice Request</div>
+      <p class="contact-placeholder-text">Submit your question or situation and get personalized guidance on your specific NIL scenario — from deal review to eligibility questions.</p>
+      <div class="cf-coming-soon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Notification system coming soon — form submission will send an email to our team
+      </div>
+      <div class="contact-form-fields">
+        <div class="cf-group">
+          <label class="cf-label">Your Name</label>
+          <input type="text" class="cf-input" placeholder="First and last name">
+        </div>
+        <div class="cf-group">
+          <label class="cf-label">Email Address</label>
+          <input type="email" class="cf-input" placeholder="your@email.com">
+        </div>
+        <div class="cf-group">
+          <label class="cf-label">Your State</label>
+          <select class="cf-select">
+            <option>Georgia</option><option>Florida</option><option>Texas</option><option>California</option><option>Other</option>
+          </select>
+        </div>
+        <div class="cf-group">
+          <label class="cf-label">Topic</label>
+          <select class="cf-select">
+            <option>I have a deal I want reviewed</option>
+            <option>Eligibility question</option>
+            <option>How to find NIL opportunities</option>
+            <option>Understanding my NIL value</option>
+            <option>Contract / legal question</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="cf-group">
+          <label class="cf-label">Your Question or Situation</label>
+          <textarea class="cf-textarea" placeholder="Describe your situation in as much detail as you're comfortable sharing…"></textarea>
+        </div>
+        <button class="cf-submit" onclick="handleContactSubmit(event)">Submit Request</button>
+        <p class="contact-placeholder-note">By submitting you agree to be contacted by the Camp 8 team. We do not share your information.</p>
+      </div>
+    </div>
+
+    <!-- Deals Tracker button -->
+    <div style="text-align:center;margin-top:var(--space-xl)">
+      <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:var(--space-md)">Want to see known NIL deals from high school athletes across GA, FL, TX &amp; CA?</p>
+      <button class="deals-popup-btn" onclick="openDeals()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Open Deals Tracker
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><path d="M10 14L21 3"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 6. NEWS ===== -->
+<section class="nil-section-block nil-news-block" id="nil-news">
+  <div class="nil-block-inner">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-lg);flex-wrap:wrap;margin-bottom:var(--space-lg)">
+      <div>
+        <div class="nil-section-eyebrow">Stay Informed</div>
+        <h2 class="nil-section-heading" style="font-size:clamp(1.4rem,2.5vw,2rem)">NIL <span>News</span></h2>
+      </div>
+      <div class="nil-news-state-toggle">
+        <button class="nst-btn active" onclick="setNewsState('all',this)">All</button>
+        <button class="nst-btn" onclick="setNewsState('GA',this)">GA</button>
+        <button class="nst-btn" onclick="setNewsState('FL',this)">FL</button>
+        <button class="nst-btn" onclick="setNewsState('TX',this)">TX</button>
+        <button class="nst-btn" onclick="setNewsState('CA',this)">CA</button>
+      </div>
+    </div>
+    <div class="nil-news-grid" id="nilNewsGrid">
+      <div class="news-skeleton news-skeleton-featured"></div>
+      <div class="news-skeleton"></div>
+      <div class="news-skeleton"></div>
+      <div class="news-skeleton"></div>
+    </div>
+    <div class="news-error" id="nilNewsError" style="display:none;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div>Feed unavailable.
+        <div class="fallback-links">
+          <a href="https://www.on3.com/nil/" target="_blank" rel="noopener">On3 NIL →</a>
+          <a href="https://247sports.com" target="_blank" rel="noopener">247Sports →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a href="index.html" class="footer-brand">Camp <span>8</span></a>
+    <div class="footer-links">
+      <a href="nil-central.html">NIL Central</a>
+      <a href="camps.html">Prospect Camps</a>
+      <a href="recruits.html">Top Prospects</a>
+      <a href="powerhouse.html">Powerhouse Central</a>
+      <a href="nil-sponsors.html">Sponsor Directory</a>
+    </div>
+    <a href="https://www.instagram.com/n.i.l.me" target="_blank" rel="noopener" class="ig-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+      @n.i.l.me
+    </a>
+  </div>
+</footer>
+
+<!-- DEALS MODAL -->
+<div class="modal-overlay" id="dealsModal" onclick="if(event.target===this)closeDeals()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Deals <span>Tracker</span></div>
+      <button class="modal-close" onclick="closeDeals()">✕</button>
+    </div>
+    <div class="modal-filters">
+      <select class="mf-select" id="dmState" onchange="renderDeals()">
+        <option value="all">All States</option>
+        <option value="GA">Georgia</option>
+        <option value="FL">Florida</option>
+        <option value="TX">Texas</option>
+        <option value="CA">California</option>
+      </select>
+      <input class="mf-input" id="dmSearch" placeholder="Search athlete, brand, or school…" oninput="renderDeals()">
+      <span class="mf-badge" id="dmCount">— deals</span>
+    </div>
+    <div class="modal-body">
+      <table class="data-table">
+        <thead><tr>
+          <th onclick="sortDm('athlete')">Athlete</th>
+          <th onclick="sortDm('school')">School</th>
+          <th onclick="sortDm('state')">State</th>
+          <th onclick="sortDm('pos')">Pos</th>
+          <th onclick="sortDm('stars')">Stars</th>
+          <th onclick="sortDm('deal')">Deal</th>
+          <th onclick="sortDm('value')">Value</th>
+          <th onclick="sortDm('date')">Date</th>
+        </tr></thead>
+        <tbody id="dmBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="nil-data.js"></script>
+<script>
+// ============================================
+// SMOOTH SCROLL
+// ============================================
+function smoothTo(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  window.scrollTo({ top: el.offsetTop - 70, behavior: 'smooth' });
+}
+
+// ============================================
+// RULES — side-by-side
+// ============================================
+var _rulesState = 'GA';
+
+const GOV_INFO = {
+  GA: { emoji:'🍑', color:'#4caf50' },
+  FL: { emoji:'🌴', color:'#2196f3' },
+  TX: { emoji:'⭐', color:'#f44336' },
+  CA: { emoji:'🌊', color:'#ff9800' },
+};
+
+function setRulesState(state, btn) {
+  _rulesState = state;
+  document.querySelectorAll('.rsn-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderRulesPanel();
+}
+
+function renderRulesPanel() {
+  var r = NIL_RULES[_rulesState];
+  var g = GOV_INFO[_rulesState];
+  if (!r) return;
+  var el = document.getElementById('rulesPanel');
+  el.innerHTML =
+    '<div class="gov-card-full">' +
+      '<div class="gcf-header">' +
+        '<div class="gcf-emoji">' + g.emoji + '</div>' +
+        '<div>' +
+          '<div class="gcf-body-name" style="color:' + g.color + '">' + esc(r.abbrev) + ' — ' + esc(r.state) + '</div>' +
+          '<div class="gcf-full-name">' + esc(r.governingBody) + '</div>' +
+        '</div>' +
+        '<a href="' + r.governingUrl + '" target="_blank" rel="noopener" class="gcf-official-btn">Official Site →</a>' +
+      '</div>' +
+      '<div class="gcf-summary">' + esc(r.summary) + '</div>' +
+      '<div class="gcf-rules">' +
+        r.rules.map(function(rule, i) {
+          return '<div class="gcf-rule">' +
+            '<div class="gcf-rule-num">' + (i+1) + '</div>' +
+            '<div><div class="gcf-rule-title">' + esc(rule.title) + '</div>' +
+            '<div class="gcf-rule-text">' + esc(rule.text) + '</div></div>' +
+          '</div>';
+        }).join('') +
+      '</div>' +
+      '<div class="gcf-footer">' +
+        '<span>Last reviewed: ' + esc(r.lastUpdated) + '</span>' +
+        '<div style="display:flex;gap:10px;">' +
+          r.resources.map(function(res) {
+            return '<a href="' + esc(res.url) + '" target="_blank" rel="noopener" style="color:var(--gold);font-size:0.78rem;text-decoration:none;">' + esc(res.label) + ' →</a>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+// ============================================
+// FAQ
+// ============================================
+const FAQS = [
+  { q: "Can a high school athlete in Georgia sign an NIL deal right now?",
+    a: "Yes. Georgia high school athletes can participate in NIL activity under GHSA guidelines. You must disclose deals to your athletic director and ensure the deal doesn't use school marks without permission. See the Rules section above for full details." },
+  { q: "Does an NIL deal affect my college recruiting eligibility?",
+    a: "No — as long as the deal is for your personal name, image, and likeness only, it does not affect your eligibility under current NCAA rules. The deal cannot be pay-for-play and cannot be connected to your school enrollment decision." },
+  { q: "What counts as a NIL deal?",
+    a: "Any compensation for the use of your name, image, or likeness. This includes: social media sponsored posts, product endorsements, autograph signings, appearances, merchandise with your name/image, YouTube/TikTok/podcast ads, sports camps where you're featured, and more." },
+  { q: "Do I need a parent to sign my NIL contract?",
+    a: "Yes, if you are under 18. You are a minor under contract law, which means any legally binding contract requires a parent or legal guardian's signature. In California, this is additionally required by state law regardless of the contract terms." },
+  { q: "What brands are most likely to reach out to high school athletes?",
+    a: "Local businesses (restaurants, barbershops, car dealers), regional sports apparel brands, sports nutrition companies, training facilities, and social media apps. National brands typically focus on 4-star+ recruits with significant social media followings. Use the NIL Rating Tool to understand your market value." },
+  { q: "Can boosters fund NIL deals for athletes at their school?",
+    a: "No. This is one of the strictest prohibitions across all states. Boosters — parents, alumni, donors, or anyone affiliated with a school's athletic program — cannot fund NIL deals for athletes enrolled at or considering that school. This is considered an improper inducement." },
+  { q: "How much do high school NIL deals typically pay?",
+    a: "It varies widely. Most high school deals range from $100–$5,000. Top-ranked national recruits can earn $10,000–$50,000+. The most important factors are your star rating, social media following, local market size, and position (QBs command premium rates). Use the NIL Rating Tool to get your estimated market value." },
+  { q: "What's the difference between NIL and a scholarship?",
+    a: "An athletic scholarship is financial aid from a college for you to attend and play. NIL compensation is separate money you earn from businesses for using your name, image, or likeness. They are completely separate and do not affect each other, as long as your NIL deal isn't tied to your college enrollment decision." },
+  { q: "Do I owe taxes on NIL income?",
+    a: "Yes. NIL income is self-employment income and is fully taxable at both federal and state levels. You should report all NIL income. If you earn over $600 from any one source, you'll receive a 1099 form. Consult a tax professional — most families need to make estimated quarterly payments once NIL income starts." },
+  { q: "Can my NIL deal be canceled if I transfer schools?",
+    a: "It depends on your contract terms. Most deals are personal brand deals tied to you, not your school, so they typically survive a transfer. However, if your deal was contingent on your school affiliation or if you transfer and the brand's target market changes, they may have grounds to modify or terminate. Always read termination clauses carefully before signing." },
+];
+
+function renderFAQ() {
+  var list = document.getElementById('faqList');
+  list.innerHTML = FAQS.map(function(item, i) {
+    return '<div class="faq-item">' +
+      '<div class="faq-q" onclick="toggleFAQ(' + i + ',this)">' +
+        '<span>' + esc(item.q) + '</span>' +
+        '<svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
+      '</div>' +
+      '<div class="faq-a" id="faq-a-' + i + '">' + esc(item.a) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+window.toggleFAQ = function(i, btn) {
+  var ans = document.getElementById('faq-a-' + i);
+  var isOpen = ans.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-a').forEach(function(a){ a.classList.remove('open'); });
+  document.querySelectorAll('.faq-q').forEach(function(q){ q.classList.remove('open'); });
+  if (!isOpen) {
+    ans.classList.add('open');
+    btn.classList.add('open');
+  }
+};
+
+// ============================================
+// CONTACT FORM (placeholder)
+// ============================================
+function handleContactSubmit(e) {
+  e.preventDefault();
+  // Placeholder — will wire to notification backend
+  var btn = e.target;
+  btn.textContent = '✓ Submitted — we\'ll be in touch!';
+  btn.style.background = '#50c878';
+  btn.disabled = true;
+}
+
+// ============================================
+// DEALS MODAL
+// ============================================
+var _dmSort = { f:'date', asc:false };
+
+function openDeals() {
+  document.getElementById('dealsModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderDeals();
+}
+function closeDeals() {
+  document.getElementById('dealsModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderDeals() {
+  if (typeof NIL_DEALS === 'undefined') return;
+  var state = document.getElementById('dmState').value;
+  var q = (document.getElementById('dmSearch').value || '').toLowerCase();
+  var SC={GA:'#4caf50',FL:'#2196f3',TX:'#f44336',CA:'#ff9800'};
+  var STAR_C={5:'#FFD700',4:'#c41e3a',3:'#4a90d9'};
+  var data = NIL_DEALS.filter(function(d) {
+    if (state !== 'all' && d.state !== state) return false;
+    if (q && ![d.athlete,d.school,d.brand,d.deal,d.state].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  data.sort(function(a,b){
+    var av=a[_dmSort.f]||'', bv=b[_dmSort.f]||'';
+    return typeof av==='string'?(_dmSort.asc?av.localeCompare(bv):bv.localeCompare(av)):(_dmSort.asc?av-bv:bv-av);
+  });
+  document.getElementById('dmCount').textContent = data.length + ' deals';
+  var tb = document.getElementById('dmBody');
+  tb.innerHTML = '';
+  data.forEach(function(d) {
+    var sc=SC[d.state]||'#888', stc=STAR_C[d.stars]||'#888';
+    var tr=document.createElement('tr');
+    tr.innerHTML=
+      '<td style="font-weight:700;color:var(--text-primary)">'+esc(d.athlete)+'</td>'+
+      '<td>'+esc(d.school)+'</td>'+
+      '<td><span class="state-pill" style="background:'+sc+'22;color:'+sc+'">'+esc(d.state)+'</span></td>'+
+      '<td>'+esc(d.pos)+'</td>'+
+      '<td style="color:'+stc+';letter-spacing:-1px">'+'★'.repeat(d.stars||0)+'</td>'+
+      '<td>'+esc(d.deal)+'</td>'+
+      '<td style="color:var(--gold)">'+esc(d.value)+'</td>'+
+      '<td style="color:var(--text-muted);font-size:0.74rem">'+esc(d.date||'')+'</td>';
+    tb.appendChild(tr);
+  });
+}
+
+window.sortDm = function(f){ if(_dmSort.f===f)_dmSort.asc=!_dmSort.asc; else{_dmSort.f=f;_dmSort.asc=true;} renderDeals(); };
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeDeals(); }
+});
+
+// ============================================
+// NEWS FEED
+// ============================================
+var _newsState = 'all';
+var newsCache = {};
+var RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+var NEWS_QUERIES = {
+  all: ['NIL high school football 2026','high school athlete NIL name image likeness'],
+  GA:  ['Georgia high school NIL football GHSA 2026'],
+  FL:  ['Florida high school NIL FHSAA football 2026'],
+  TX:  ['Texas high school NIL UIL football 2026'],
+  CA:  ['California high school NIL CIF football 2026']
+};
+
+function setNewsState(state, btn) {
+  _newsState = state;
+  document.querySelectorAll('.nst-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  loadNilNews(state);
+}
+
+async function loadNilNews(stateKey) {
+  var grid = document.getElementById('nilNewsGrid');
+  var errEl = document.getElementById('nilNewsError');
+  errEl.style.display = 'none';
+  grid.innerHTML = '<div class="news-skeleton news-skeleton-featured"></div>' + Array(3).fill('<div class="news-skeleton"></div>').join('');
+  var key = stateKey || 'all';
+  if (newsCache[key]) { renderNilNews(newsCache[key]); return; }
+  var queries = NEWS_QUERIES[key] || NEWS_QUERIES.all;
+  var results = await Promise.allSettled(
+    queries.map(function(q){ return fetch(RSS2JSON + encodeURIComponent('https://news.google.com/rss/search?q=' + encodeURIComponent(q) + '&hl=en-US&gl=US&ceid=US:en') + '&count=10').then(function(r){return r.json();}).then(function(d){return d.items||[];}); })
+  );
+  var items = [];
+  results.forEach(function(r){ if(r.status==='fulfilled') items = items.concat(r.value); });
+  var seen = new Set();
+  items = items.filter(function(it){ var k=(it.title||'').slice(0,60); if(seen.has(k)) return false; seen.add(k); return true; });
+  items.sort(function(a,b){ return new Date(b.pubDate||0)-new Date(a.pubDate||0); });
+  if (!items.length) { grid.innerHTML=''; errEl.style.display='flex'; return; }
+  newsCache[key] = items;
+  renderNilNews(items);
+}
+
+function renderNilNews(items) {
+  var grid = document.getElementById('nilNewsGrid');
+  grid.innerHTML = '';
+  items.slice(0,9).forEach(function(item,i) {
+    var date = item.pubDate ? fmtDate(item.pubDate) : '';
+    var src = item.author || xDomain(item.link) || '';
+    var title = strip(item.title||'');
+    var desc = strip(item.description||'').slice(0,120)+'…';
+    var a = document.createElement('a');
+    a.className = 'news-card' + (i===0?' news-card-featured':'');
+    a.href = item.link||'#'; a.target='_blank'; a.rel='noopener noreferrer';
+    a.innerHTML = '<div class="news-card-meta"><span class="news-source">'+esc(src)+'</span><span class="news-date">'+esc(date)+'</span></div><div class="news-card-title">'+esc(title)+'</div>'+(i===0?'<div class="news-card-desc">'+esc(desc)+'</div>':'')+'<div class="news-card-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>';
+    grid.appendChild(a);
+  });
+}
+
+// ============================================
+// UTILS
+// ============================================
+function esc(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+function fmtDate(s){try{var d=new Date(s),n=new Date(),df=Math.floor((n-d)/1000);if(df<3600)return Math.floor(df/60)+'m ago';if(df<86400)return Math.floor(df/3600)+'h ago';if(df<604800)return Math.floor(df/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch{return'';}}
+function xDomain(u){try{return new URL(u).hostname.replace('www.','');}catch{return'';}}
+function strip(h){var d=document.createElement('div');d.innerHTML=h;return d.textContent||d.innerText||'';}
+
+// ============================================
+// BOOT
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+  renderRulesPanel();
+  renderFAQ();
+  loadNilNews('all');
+});
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

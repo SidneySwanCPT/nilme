@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camp 8 — NIL Sponsor Directory</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="tracker-styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth-guard.js"></script>
+</head>
+<body class="tracker-page">
+
+<div id="nav-root"></div>
+<script src="nav.js"></script>
+
+<!-- Header -->
+<div class="tracker-header">
+  <div class="tracker-header-inner">
+    <div>
+      <div class="tracker-eyebrow">NIL Central</div>
+      <h1 class="tracker-title">Sponsor <span>Directory</span></h1>
+      <p class="tracker-subtitle">Local and regional brands actively looking to partner with high school football athletes in GA, FL, TX &amp; CA.</p>
+    </div>
+    <a href="nil-central.html" class="tracker-link-btn">← NIL Central</a>
+  </div>
+
+  <div class="tracker-filters">
+    <div class="filter-row">
+      <div class="filter-pill-group" id="sponsorStateFilter">
+        <button class="filter-pill active" data-val="all" onclick="setFilter('state','all',this)">All States</button>
+        <button class="filter-pill" data-val="GA" onclick="setFilter('state','GA',this)">Georgia</button>
+        <button class="filter-pill" data-val="FL" onclick="setFilter('state','FL',this)">Florida</button>
+        <button class="filter-pill" data-val="TX" onclick="setFilter('state','TX',this)">Texas</button>
+        <button class="filter-pill" data-val="CA" onclick="setFilter('state','CA',this)">California</button>
+      </div>
+      <div class="filter-pill-group" id="categoryFilter">
+        <button class="filter-pill active" data-val="all" onclick="setFilter('cat','all',this)">All Types</button>
+        <button class="filter-pill" data-val="Training" onclick="setFilter('cat','Training',this)">Training</button>
+        <button class="filter-pill" data-val="Apparel" onclick="setFilter('cat','Apparel',this)">Apparel</button>
+        <button class="filter-pill" data-val="Food & Bev" onclick="setFilter('cat','Food & Bev',this)">Food &amp; Bev</button>
+        <button class="filter-pill" data-val="Media" onclick="setFilter('cat','Media',this)">Media</button>
+        <button class="filter-pill" data-val="Nutrition" onclick="setFilter('cat','Nutrition',this)">Nutrition</button>
+        <button class="filter-pill" data-val="Finance" onclick="setFilter('cat','Finance',this)">Finance</button>
+        <button class="filter-pill" data-val="Healthcare" onclick="setFilter('cat','Healthcare',this)">Healthcare</button>
+      </div>
+      <input type="text" class="tracker-search" id="sponsorSearch" placeholder="Search brand, city…" oninput="renderSponsors()">
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="tracker-stats-bar" id="sponsorStatsBar"></div>
+
+<!-- Content -->
+<div class="tracker-content">
+  <div class="sponsors-grid" id="sponsorsGrid"></div>
+  <div class="tracker-sidebar">
+    <div class="tracker-widget">
+      <div class="tracker-widget-title">By State</div>
+      <div id="sponsorsByState"></div>
+    </div>
+    <div class="tracker-widget">
+      <div class="tracker-widget-title">By Category</div>
+      <div id="sponsorsByCat"></div>
+    </div>
+    <div class="tracker-widget" style="background:rgba(212,168,67,0.06);border-color:rgba(212,168,67,0.2)">
+      <div class="tracker-widget-title" style="color:var(--gold)">Want to be listed?</div>
+      <div style="padding:var(--space-md);font-size:0.82rem;color:var(--text-secondary);line-height:1.6">
+        If you're a brand looking to partner with high school athletes, contact us to be added to this directory.
+      </div>
+      <a href="mailto:nil@camp8.com" class="nil-widget-btn" style="display:block;text-align:center;padding:10px;font-size:0.8rem;font-weight:700;color:var(--gold);background:var(--gold-dim);border-top:1px solid rgba(212,168,67,0.15);text-decoration:none">Contact Us →</a>
+    </div>
+    <div class="tracker-widget">
+      <div class="tracker-widget-title">NIL Tips for Athletes</div>
+      <div class="tips-list">
+        <div class="tip-item"><span class="tip-icon">📧</span><span>Reach out professionally — introduce yourself, share your Hudl, and explain your value</span></div>
+        <div class="tip-item"><span class="tip-icon">📱</span><span>Brands want athletes with engaged audiences, not just big follower counts</span></div>
+        <div class="tip-item"><span class="tip-icon">📋</span><span>Always disclose any deal to your school AD before signing</span></div>
+        <div class="tip-item"><span class="tip-icon">⭐</span><span>Check your NIL Rating to understand your market value first</span></div>
+      </div>
+      <a href="nil-rating.html" class="nil-widget-btn" style="display:block;text-align:center;padding:10px;font-size:0.8rem;font-weight:700;color:var(--gold);background:var(--gold-dim);border-top:1px solid rgba(212,168,67,0.15);text-decoration:none">Get My NIL Rating →</a>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a href="index.html" class="footer-brand">Camp <span>8</span></a>
+    <div class="footer-links">
+      <a href="nil-central.html">NIL Central</a>
+      <a href="camps.html">Prospect Camps</a>
+      <a href="recruits.html">Recruiting Central</a>
+      <a href="powerhouse.html">Powerhouse Central</a>
+    </div>
+    <a href="https://www.instagram.com/n.i.l.me" target="_blank" rel="noopener" class="ig-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+      @n.i.l.me
+    </a>
+  </div>
+</footer>
+
+<script src="sponsors-data.js"></script>
+<script>
+const STATE_COLORS={GA:'#4caf50',FL:'#2196f3',TX:'#f44336',CA:'#ff9800'};
+const CAT_ICONS={Training:'💪',Apparel:'👕','Food & Bev':'🍔',Media:'📸',Nutrition:'⚡',Finance:'💰',Tech:'💻',Automotive:'🚗','Real Estate':'🏠',Healthcare:'🏥',Other:'📦'};
+
+let sFilters={state:'all',cat:'all'};
+
+function setFilter(key,val,btn){
+  sFilters[key]=val;
+  btn.closest('.filter-pill-group').querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSponsors();
+}
+
+function getFiltered(){
+  const q=(document.getElementById('sponsorSearch')?.value||'').toLowerCase();
+  return SPONSORS.filter(s=>{
+    if(sFilters.state!=='all'&&s.state!==sFilters.state) return false;
+    if(sFilters.cat!=='all'&&s.category!==sFilters.cat) return false;
+    if(q&&![s.brand,s.city,s.state,s.category,s.description].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderSponsors(){
+  const data=getFiltered();
+
+  document.getElementById('sponsorStatsBar').innerHTML=`
+    <div class="tracker-stat"><span class="ts-num">${data.length}</span><span class="ts-label">Brands</span></div>
+    <div class="tracker-stat"><span class="ts-num">${data.filter(s=>s.openToHS).length}</span><span class="ts-label">Open to HS</span></div>
+    <div class="tracker-stat"><span class="ts-num">${[...new Set(data.map(s=>s.state))].length}</span><span class="ts-label">States</span></div>
+    <div class="tracker-stat"><span class="ts-num">${[...new Set(data.map(s=>s.category))].length}</span><span class="ts-label">Categories</span></div>
+  `;
+
+  const grid=document.getElementById('sponsorsGrid');
+  grid.innerHTML='';
+  if(!data.length){grid.innerHTML='<div class="tracker-empty">No brands match your filters.</div>';return;}
+
+  data.forEach(s=>{
+    const sc=STATE_COLORS[s.state]||'#aaa';
+    const icon=CAT_ICONS[s.category]||'📦';
+    const card=document.createElement('div');
+    card.className='sponsor-card';
+    const dealBadges=s.dealTypes.map(d=>`<span class="deal-badge">${esc(d)}</span>`).join('');
+    const sportBadges=s.sportsInterest.map(sp=>`<span class="sport-badge">${esc(sp)}</span>`).join('');
+    card.innerHTML=`
+      <div class="sponsor-card-top">
+        <div class="sponsor-icon">${icon}</div>
+        <div>
+          <div class="sponsor-name">${esc(s.brand)}</div>
+          <div class="sponsor-meta">
+            <span class="sponsor-cat">${esc(s.category)}</span> &middot;
+            <span style="color:${sc}">${esc(s.city)}, ${esc(s.state)}</span>
+          </div>
+        </div>
+        ${s.starsMin>0?`<div class="stars-min-badge">${s.starsMin}★+ only</div>`:'<div class="stars-min-badge" style="background:rgba(80,200,120,0.1);color:#50c878;border-color:rgba(80,200,120,0.2)">All Levels</div>'}
+      </div>
+      <p class="sponsor-desc">${esc(s.description)}</p>
+      <div class="sponsor-deals-row">${dealBadges}</div>
+      <div class="sponsor-sports-row">${sportBadges}</div>
+      ${s.notes?`<div class="sponsor-notes">💡 ${esc(s.notes)}</div>`:''}
+      <div class="sponsor-actions">
+        ${s.website?`<a href="${esc(s.website)}" target="_blank" rel="noopener" class="sponsor-btn primary">Visit Website →</a>`:''}
+        ${s.contactEmail?`<a href="mailto:${esc(s.contactEmail)}" class="sponsor-btn">Email →</a>`:''}
+        ${s.instagram?`<a href="https://instagram.com/${s.instagram.replace('@','')}" target="_blank" rel="noopener" class="sponsor-btn">${esc(s.instagram)}</a>`:''}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // By state
+  const stateCounts={};SPONSORS.forEach(s=>{stateCounts[s.state]=(stateCounts[s.state]||0)+1;});
+  document.getElementById('sponsorsByState').innerHTML=Object.entries(stateCounts).sort((a,b)=>b[1]-a[1]).map(([s,c])=>`<div class="stat-row"><span class="stat-label" style="color:${STATE_COLORS[s]||'#aaa'}">${esc(s)}</span><span class="stat-value">${c}</span></div>`).join('');
+
+  // By category
+  const catCounts={};SPONSORS.forEach(s=>{catCounts[s.category]=(catCounts[s.category]||0)+1;});
+  document.getElementById('sponsorsByCat').innerHTML=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).map(([c,n])=>`<div class="stat-row"><span class="stat-label">${CAT_ICONS[c]||'📦'} ${esc(c)}</span><span class="stat-value">${n}</span></div>`).join('');
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+document.addEventListener('DOMContentLoaded',renderSponsors);
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

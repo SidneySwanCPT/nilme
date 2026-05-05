@@ -31,23 +31,14 @@
       return;
     }
 
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        flowType: 'pkce',
-        detectSessionInUrl: true,
-        persistSession: true,
-        storage: window.localStorage
-      }
-    });
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     sb.auth.getSession().then(function (result) {
       const session = result.data?.session;
 
       if (!session) {
-        // Save where they were trying to go (relative path so Capacitor's
-        // capacitor://localhost origin doesn't get baked into the redirect).
-        var here = window.location.pathname.split('/').pop() || 'index.html';
-        sessionStorage.setItem('camp8_redirect', here + window.location.search + window.location.hash);
+        // Save where they were trying to go
+        sessionStorage.setItem('camp8_redirect', window.location.href);
         window.location.replace('login.html');
         return;
       }
