@@ -9,10 +9,28 @@
   <style>
     body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
+    /* Hero strip — gives the My Score tab a visible page background like
+       the other tabs. Sits above the chat layout. */
+    .nr-hero {
+      position: relative;
+      height: 140px;
+      margin-top: calc(var(--nav-height) + env(safe-area-inset-top));
+      flex-shrink: 0;
+      background:
+        linear-gradient(180deg, rgba(8,8,16,0.45) 0%, rgba(8,8,16,0.85) 100%),
+        url('nil-rating-hero.png') center/cover no-repeat;
+      display: flex; align-items: center;
+      padding: 0 var(--space-xl);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .nr-hero-eyebrow { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.18em; color: var(--gold); margin-bottom: 4px; }
+    .nr-hero-title { font-family: var(--font-display); font-size: clamp(1.6rem, 3vw, 2.4rem); letter-spacing: 0.04em; color: #fff; line-height: 1; }
+    .nr-hero-title span { color: var(--gold); }
+
     .nil-rate-wrap {
       display: flex;
-      height: calc(100vh - var(--nav-height));
-      margin-top: var(--nav-height);
+      height: calc(100vh - var(--nav-height) - 140px - env(safe-area-inset-top));
+      /* margin-top now handled by .nr-hero above */
     }
 
     /* Info panel */
@@ -102,6 +120,13 @@
 
 <div id="nav-root"></div>
 <script src="nav.js"></script>
+
+<div class="nr-hero">
+  <div>
+    <div class="nr-hero-eyebrow">Camp 8 AI</div>
+    <h1 class="nr-hero-title">My <span>Score</span></h1>
+  </div>
+</div>
 
 <div class="nil-rate-wrap" style="display:flex">
   <!-- Info panel -->

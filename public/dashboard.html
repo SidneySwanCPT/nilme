@@ -64,12 +64,16 @@
     .dashboard-wrap { display: none; margin-top: var(--nav-height); }
 
     .dash-header {
-      background: linear-gradient(135deg, rgba(212,168,67,0.08) 0%, transparent 100%);
+      position: relative;
       border-bottom: 1px solid var(--border-color);
       padding: var(--space-xl);
+      background:
+        linear-gradient(180deg, rgba(8,8,16,0.55) 0%, rgba(8,8,16,0.88) 100%),
+        url('dashboard-hero.png') center/cover no-repeat;
     }
 
     .dash-header-inner {
+      position: relative; z-index: 1;
       max-width: 1200px; margin: 0 auto;
       display: flex; align-items: center; gap: var(--space-xl); flex-wrap: wrap;
     }

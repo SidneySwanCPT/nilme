@@ -6,6 +6,25 @@
 (function () {
   'use strict';
 
+  // ---- Ensure the viewport meta opts into safe-area insets. Without
+  // viewport-fit=cover, env(safe-area-inset-top) evaluates to 0 and the
+  // iOS status bar (clock, battery) overlaps our top nav. We upgrade
+  // here so we don't have to edit every HTML page individually.
+  (function ensureViewportFitCover() {
+    var meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'viewport');
+      meta.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover');
+      document.head.appendChild(meta);
+      return;
+    }
+    var content = meta.getAttribute('content') || '';
+    if (content.indexOf('viewport-fit') === -1) {
+      meta.setAttribute('content', content + (content.trim().slice(-1) === ',' ? ' ' : ', ') + 'viewport-fit=cover');
+    }
+  })();
+
   // ---- Page map: filename → { label, parent, parentLabel } ----
   const PAGE_MAP = {
     'index.html':          { label: 'Home',                parent: null,        parentLabel: null },
@@ -311,4 +330,68 @@
 
   // Inject bubble after a short delay so it doesn't flash on load
   setTimeout(injectChatBubble, 800);
+
+  // ============================================
+  // Bottom tab bar — Capacitor (iOS app) only
+  // ============================================
+  function isCapacitor() {
+    return typeof window !== 'undefined' && typeof window.Capacitor !== 'undefined';
+  }
+
+  function injectBottomTabs() {
+    if (!isCapacitor()) return;
+
+    var path = window.location.pathname.split('/').pop() || 'index.html';
+    var TABS = [
+      { href: 'index.html',      label: 'Home',      icon: '<path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/>' },
+      { href: 'camps.html',      label: 'Camps',     icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
+      { href: 'nil-rating.html', label: 'My Score',  icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
+      { href: 'coaches.html',    label: 'Coaches',   icon: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>' },
+      { href: 'dashboard.html',  label: 'Dashboard', icon: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>' }
+    ];
+
+    var nav = document.createElement('nav');
+    nav.id = 'camp8-tab-bar';
+    nav.setAttribute('aria-label', 'Primary');
+    nav.innerHTML = TABS.map(function (t) {
+      var active = (t.href === path) ? ' active' : '';
+      return '<a href="' + t.href + '" class="c8-tab' + active + '">'
+        + '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + t.icon + '</svg>'
+        + '<span class="c8-tab-lbl">' + t.label + '</span>'
+        + '</a>';
+    }).join('');
+    document.body.appendChild(nav);
+    document.body.classList.add('has-tab-bar');
+
+    var style = document.createElement('style');
+    style.textContent = ''
+      + '#camp8-tab-bar {'
+      + '  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000;'
+      + '  display: flex; justify-content: space-around; align-items: stretch;'
+      + '  background: rgba(10,10,22,0.96);'
+      + '  border-top: 1px solid rgba(255,255,255,0.08);'
+      + '  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);'
+      + '  padding-bottom: env(safe-area-inset-bottom);'
+      + '  height: calc(58px + env(safe-area-inset-bottom));'
+      + '}'
+      + '#camp8-tab-bar .c8-tab {'
+      + '  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;'
+      + '  gap: 3px; padding: 6px 4px; text-decoration: none;'
+      + '  color: rgba(255,255,255,0.55); font-size: 0.65rem; font-weight: 600;'
+      + '  letter-spacing: 0.02em; transition: color 0.15s ease;'
+      + '  -webkit-tap-highlight-color: transparent;'
+      + '}'
+      + '#camp8-tab-bar .c8-tab.active { color: #d4a843; }'
+      + '#camp8-tab-bar .c8-tab:active { color: #d4a843; opacity: 0.7; }'
+      + '#camp8-tab-bar .c8-tab-lbl { font-size: 0.65rem; line-height: 1; }'
+      + 'body.has-tab-bar { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }'
+      + 'body.has-tab-bar #camp8-chat-bubble { bottom: calc(74px + env(safe-area-inset-bottom)); }';
+    document.head.appendChild(style);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectBottomTabs);
+  } else {
+    injectBottomTabs();
+  }
 })();

@@ -25,6 +25,162 @@
 <div id="nav-root"></div>
 <script src="nav.js"></script>
 
+<!-- ============================================
+     APP HOME — only renders inside the Capacitor
+     iOS app or on narrow mobile widths. The rich
+     web home below is hidden when body.app-mode.
+     ============================================ -->
+<style>
+  .app-home { display: none; }
+  body.app-mode .app-home { display: block; }
+  body.app-mode .web-home-wrap { display: none !important; }
+
+  .app-home-hero {
+    position: relative;
+    min-height: 60vh;
+    margin-top: var(--nav-height);
+    /* Match the web home's hero treatment: same hero-bg.jpg, same
+       light-to-dark gradient (rgba 0.3 → 0.6 → 0.95) so the
+       football-field/lightning-bolt image actually reads through. */
+    background:
+      linear-gradient(to bottom, rgba(8,8,16,0.3) 0%, rgba(8,8,16,0.6) 60%, rgba(8,8,16,0.95) 100%),
+      url('hero-bg.jpg') center/cover no-repeat;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 32px 24px 36px;
+    color: #fff;
+  }
+  .app-home-brand {
+    font-family: var(--font-display, 'Anton', 'Bebas Neue', sans-serif);
+    font-size: 4.5rem; line-height: 1; letter-spacing: 0.04em;
+    color: #fff; margin: 0 0 6px;
+  }
+  .app-home-brand span { color: #d4a843; }
+  .app-home-tagline {
+    font-size: 0.95rem; line-height: 1.4; color: rgba(255,255,255,0.78);
+    max-width: 320px; margin: 0 auto 28px;
+  }
+  .app-home-cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; max-width: 320px; padding: 16px 24px;
+    background: #d4a843; color: #0a0a12;
+    border-radius: 14px; text-decoration: none;
+    font-size: 1rem; font-weight: 800; letter-spacing: 0.03em;
+    box-shadow: 0 6px 24px rgba(212,168,67,0.45);
+    transition: transform 0.12s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app-home-cta:active { transform: scale(0.97); }
+  .app-home-cta svg { stroke: #0a0a12; }
+
+  .app-home-grid {
+    padding: 24px 16px 32px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    background: #0a0a12;
+  }
+  .app-home-card {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+    background: linear-gradient(155deg, rgba(212,168,67,0.10) 0%, rgba(255,255,255,0.03) 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 18px;
+    text-decoration: none; color: #fff;
+    overflow: hidden;
+    transition: transform 0.12s ease, border-color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+  .app-home-card:active { transform: scale(0.97); border-color: rgba(212,168,67,0.5); }
+  .app-home-card-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: rgba(212,168,67,0.18);
+    display: flex; align-items: center; justify-content: center;
+    color: #d4a843;
+  }
+  .app-home-card-title {
+    font-size: 1.05rem; font-weight: 800; line-height: 1.15;
+    color: #fff; margin: 0 0 4px;
+  }
+  .app-home-card-sub {
+    font-size: 0.72rem; color: rgba(255,255,255,0.6); line-height: 1.3;
+  }
+  .app-home-card[data-needs-auth="true"] .app-home-card-lock {
+    position: absolute; top: 12px; right: 12px;
+    font-size: 0.6rem; color: rgba(255,255,255,0.45);
+    display: flex; align-items: center; gap: 3px;
+  }
+  body.is-authed .app-home-card-lock { display: none !important; }
+
+  @media (max-width: 768px) {
+    body:not(.app-mode-disabled) .app-home { display: block; }
+    body:not(.app-mode-disabled) .web-home-wrap { display: none; }
+  }
+</style>
+
+<section class="app-home">
+  <div class="app-home-hero">
+    <h1 class="app-home-brand">Camp <span>8</span></h1>
+    <p class="app-home-tagline">Georgia football intelligence — recruiting, camps, NIL, and your athlete dashboard.</p>
+    <a href="login.html" id="appHomeCta" class="app-home-cta">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      <span id="appHomeCtaLabel">Get Started</span>
+    </a>
+  </div>
+
+  <div class="app-home-grid">
+    <a href="nil-rating.html" class="app-home-card" data-needs-auth="true">
+      <div class="app-home-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div>
+        <div class="app-home-card-title">NIL Rating</div>
+        <div class="app-home-card-sub">Score your market value</div>
+      </div>
+      <span class="app-home-card-lock"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Sign in</span>
+    </a>
+
+    <a href="combine-eval.html" class="app-home-card" data-needs-auth="true">
+      <div class="app-home-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div>
+        <div class="app-home-card-title">Combine Evaluator</div>
+        <div class="app-home-card-sub">Grade your numbers</div>
+      </div>
+      <span class="app-home-card-lock"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Sign in</span>
+    </a>
+
+    <a href="coaches.html" class="app-home-card" data-needs-auth="true">
+      <div class="app-home-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div>
+        <div class="app-home-card-title">Coaches Directory</div>
+        <div class="app-home-card-sub">Contacts &amp; programs</div>
+      </div>
+      <span class="app-home-card-lock"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Sign in</span>
+    </a>
+
+    <a href="camps.html" class="app-home-card" data-needs-auth="true">
+      <div class="app-home-card-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div>
+        <div class="app-home-card-title">Camp Calendar</div>
+        <div class="app-home-card-sub">755 prospect camps</div>
+      </div>
+      <span class="app-home-card-lock"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Sign in</span>
+    </a>
+  </div>
+</section>
+
+<!-- Web home wrapper — hidden when body.app-mode -->
+<div class="web-home-wrap">
+
 <!-- Hero -->
 <section class="hero-slider">
   <div class="slider-track">
@@ -402,6 +558,8 @@
   </div>
 </footer>
 
+</div><!-- /.web-home-wrap -->
+
 <script src="camps-data.js"></script>
 <script>
 // ============================================
@@ -693,14 +851,84 @@ function renderCampsTeaser() {
 }
 
 // ============================================
+// APP MODE — show simplified home for Capacitor
+// or narrow mobile widths. Hides the web home.
+// ============================================
+function isCapacitor() {
+  return typeof window !== 'undefined' && typeof window.Capacitor !== 'undefined';
+}
+function isMobileWidth() {
+  return typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia('(max-width: 768px)').matches
+    : false;
+}
+function applyAppMode() {
+  if (isCapacitor() || isMobileWidth()) {
+    document.body.classList.add('app-mode');
+  } else {
+    document.body.classList.remove('app-mode');
+  }
+}
+applyAppMode();
+window.addEventListener('resize', applyAppMode);
+
+// ============================================
+// APP HOME — auth-aware CTA + card gating
+// ============================================
+async function bootAppHome() {
+  if (typeof window.supabase === 'undefined') return;
+  var sb = window.supabase.createClient(
+    'https://afikpptrkkfpoatadhyg.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmaWtwcHRya2tmcG9hdGFkaHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDM4MjIsImV4cCI6MjA5MDU3OTgyMn0.fSpFH4kP_iyDAptTlTIQLL5tjhzjFe6PWFDMdWV55uI'
+  );
+  var session = null;
+  try { session = (await sb.auth.getSession()).data.session; } catch (_) {}
+  var authed = !!session;
+  if (authed) document.body.classList.add('is-authed');
+  // Note: we do NOT auto-redirect authed users to dashboard.html here.
+  // The Home tab in the bottom tab bar points at index.html, and
+  // bouncing immediately to dashboard makes Home feel broken (taps go
+  // nowhere visible). The CTA below is swapped to "My Dashboard" so
+  // the affordance is still there. The post-login redirect to the
+  // dashboard is handled in login.html, which is the right place.
+
+  var cta = document.getElementById('appHomeCta');
+  var ctaLabel = document.getElementById('appHomeCtaLabel');
+  if (cta && ctaLabel) {
+    if (authed) {
+      cta.href = 'dashboard.html';
+      ctaLabel.textContent = 'My Dashboard';
+    } else {
+      cta.href = 'login.html';
+      ctaLabel.textContent = 'Get Started';
+    }
+  }
+
+  // Gate the 4 feature cards behind auth: tapping while signed out
+  // sends the user to login. After login they always land on the
+  // dashboard (see login.html doSignIn), per the 2026-05-09 brief.
+  document.querySelectorAll('.app-home-card[data-needs-auth="true"]').forEach(function (card) {
+    card.addEventListener('click', function (e) {
+      if (document.body.classList.contains('is-authed')) return;
+      e.preventDefault();
+      window.location.href = 'login.html';
+    });
+  });
+}
+
+// ============================================
 // BOOT
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
-  loadNews('ga-football');
-  renderCampsWidget();
-  renderFeaturedCamps();
-  renderCampsTeaser();
-  checkHomeAuth();
+  bootAppHome();
+  // Web-only widgets — skip the work when we're in app mode.
+  if (!document.body.classList.contains('app-mode')) {
+    loadNews('ga-football');
+    renderCampsWidget();
+    renderFeaturedCamps();
+    renderCampsTeaser();
+    checkHomeAuth();
+  }
 });
 
 // ============================================

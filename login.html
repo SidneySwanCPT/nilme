@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Camp 8 — Sign In</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
@@ -441,7 +441,7 @@ async function doResetPassword() {
     sucEl.style.display = 'block';
     // Strip recovery tokens from the URL so a refresh doesn't re-enter recovery mode.
     history.replaceState(null, '', window.location.pathname);
-    setTimeout(function() { window.location.replace('index.html'); }, 1200);
+    setTimeout(function() { window.location.replace('dashboard.html'); }, 1200);
   } catch (err) {
     btn.disabled = false;
     btn.textContent = 'Update Password';
@@ -501,14 +501,86 @@ async function doSignIn() {
   btn.disabled = true;
   btn.textContent = 'Signing in…';
 
-  const { data, error } = await signIn(email, pass);
+  var data, error;
+  try {
+    var result = await signIn(email, pass);
+    data = result && result.data;
+    error = result && result.error;
+  } catch (thrown) {
+    // signIn() itself can throw on a network/CORS failure (common in the
+    // iOS simulator if the Supabase host is unreachable). Surface that as
+    // an error object so the raw-dump branch below renders it.
+    error = thrown || new Error('signIn threw a falsy value');
+  }
 
   if (error) {
     btn.disabled = false;
     btn.textContent = 'Sign In';
-    showError(errEl, error.message === 'Invalid login credentials'
-      ? 'Incorrect email or password. Try again.'
-      : error.message);
+    var rawDump = '';
+    try {
+      // Walk the full prototype chain so we capture everything supabase-js
+      // hangs on the AuthError class (status, code, __isAuthError, etc.) plus
+      // anything inherited from Error.
+      var collected = {};
+      var cur = error;
+      while (cur && cur !== Object.prototype) {
+        Object.getOwnPropertyNames(cur).forEach(function (k) {
+          if (k in collected) return;
+          try {
+            var v = error[k];
+            if (typeof v === 'function') return;
+            collected[k] = v;
+          } catch (_) { /* getter threw */ }
+        });
+        cur = Object.getPrototypeOf(cur);
+      }
+      var dumpObj = {
+        __constructor__: error && error.constructor && error.constructor.name,
+        __string__: String(error),
+        __typeof__: typeof error,
+        message: error && error.message,
+        name: error && error.name,
+        status: error && error.status,
+        statusCode: error && error.statusCode,
+        code: error && error.code,
+        cause: error && error.cause
+      };
+      Object.keys(collected).forEach(function (k) {
+        if (!(k in dumpObj)) dumpObj[k] = collected[k];
+      });
+      // Include diagnostic context for the iOS simulator: which Supabase URL we
+      // tried, the page origin (capacitor://localhost vs https://…), UA, online state.
+      dumpObj.__diagnostics__ = {
+        origin: (typeof window !== 'undefined' && window.location) ? window.location.origin : null,
+        href: (typeof window !== 'undefined' && window.location) ? window.location.href : null,
+        userAgent: (typeof navigator !== 'undefined') ? navigator.userAgent : null,
+        onLine: (typeof navigator !== 'undefined') ? navigator.onLine : null,
+        supabaseUrl: (typeof window !== 'undefined' && window.SUPABASE_URL) || null
+      };
+      rawDump = JSON.stringify(dumpObj, function (_k, v) {
+        if (v instanceof Error) {
+          var o = {
+            __constructor__: v.constructor && v.constructor.name,
+            message: v.message,
+            name: v.name,
+            stack: v.stack
+          };
+          Object.getOwnPropertyNames(v).forEach(function (kk) {
+            if (!(kk in o)) { try { o[kk] = v[kk]; } catch (_) {} }
+          });
+          return o;
+        }
+        return v;
+      }, 2);
+    } catch (e) {
+      rawDump = 'Failed to serialize error: ' + (e && e.message) + '\n' + String(error);
+    }
+    errEl.innerHTML = '<div style="font-weight:700;margin-bottom:6px;text-align:left;">Sign-in failed — raw Supabase error:</div>'
+      + '<pre style="margin:0;padding:10px;background:rgba(0,0,0,0.35);border:1px solid rgba(196,30,58,0.4);border-radius:4px;color:#ffb3bf;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:0.72rem;text-align:left;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;">'
+      + (rawDump || '').replace(/[&<>]/g, function (c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c]; })
+      + '</pre>';
+    errEl.style.display = 'block';
+    try { console.error('[doSignIn] raw error:', error, '\nserialized:', rawDump); } catch (_) {}
     return;
   }
 
@@ -523,10 +595,15 @@ async function doSignIn() {
   } catch (_) { /* splash is non-blocking */ }
 
   // Show motivational splash before redirect.
-  // The stored redirect is a relative path (see auth-guard.js) so it works on
-  // both fbintel-central.com and Capacitor's capacitor://localhost origin.
-  const redirect = sessionStorage.getItem('camp8_redirect') || 'index.html';
+  // Default post-login destination is the athlete dashboard. Honor
+  // sessionStorage.camp8_redirect when auth-guard sent a deep-link target,
+  // but ignore index.html (we never want to bounce back to the marketing
+  // home after login — see brief 2026-05-09).
+  var stored = sessionStorage.getItem('camp8_redirect');
   sessionStorage.removeItem('camp8_redirect');
+  var redirect = (stored && stored !== 'index.html' && stored.indexOf('index.html') !== 0)
+    ? stored
+    : 'dashboard.html';
   if (typeof showLoginSplash === 'function') {
     try { await showLoginSplash(splashOpts); } catch (_) {}
   }
@@ -593,9 +670,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (signupTab) setTab('signup', signupTab);
   }
 
-  // If already logged in, redirect home
+  // If already logged in, send straight to the athlete dashboard.
   const user = await getCurrentUser();
-  if (user) window.location.replace('index.html');
+  if (user) window.location.replace('dashboard.html');
 });
 </script>
 </body>

@@ -47,6 +47,9 @@ html, body {
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  /* Momentum-scroll on iOS WKWebView. Without this, long pages
+     (coaches list, camps list) often feel "stuck" inside Capacitor. */
+  -webkit-overflow-scrolling: touch;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -62,18 +65,24 @@ img { display: block; max-width: 100%; }
    ============================================ */
 :root { --nav-height: 60px; }
 
+/* Push page content below the iOS status bar / notch. The fixed top
+   nav already grows by env(safe-area-inset-top); this rule shifts
+   any in-flow content (e.g. pages that set margin-top: var(--nav-height)
+   on their wrapper) down by the same inset so the math still adds up. */
+body { padding-top: env(safe-area-inset-top); }
+
 .nav {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1000;
-  height: var(--nav-height);
+  height: calc(var(--nav-height) + env(safe-area-inset-top));
   background: rgba(8,8,16,0.97);
   border-bottom: 1px solid var(--border-color);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
-  padding: 0 var(--space-lg);
+  padding: env(safe-area-inset-top) var(--space-lg) 0;
   gap: var(--space-md);
 }
 
@@ -183,7 +192,7 @@ img { display: block; max-width: 100%; }
    ============================================ */
 .breadcrumb-bar {
   position: fixed;
-  top: var(--nav-height);
+  top: calc(var(--nav-height) + env(safe-area-inset-top));
   left: 0; right: 0;
   z-index: 990;
   background: rgba(8,8,16,0.92);
@@ -223,14 +232,14 @@ img { display: block; max-width: 100%; }
   cursor: default;
 }
 
-/* Pages with breadcrumb need extra top offset */
+/* Pages with breadcrumb need extra top offset (plus iOS safe-area) */
 body.has-breadcrumb .hero-slider,
 body.has-breadcrumb .nil-page-header,
 body.has-breadcrumb .combine-header,
 body.has-breadcrumb .main-content,
 body.has-breadcrumb .page-header {
-  margin-top: calc(var(--nav-height) + 34px) !important;
-  top: calc(var(--nav-height) + 34px) !important;
+  margin-top: calc(var(--nav-height) + 34px + env(safe-area-inset-top)) !important;
+  top: calc(var(--nav-height) + 34px + env(safe-area-inset-top)) !important;
 }
 
 
@@ -285,7 +294,7 @@ body.has-breadcrumb .page-header {
    ============================================ */
 .main-content {
   position: fixed;
-  top: var(--nav-height);
+  top: calc(var(--nav-height) + env(safe-area-inset-top));
   left: 0; right: 0; bottom: 0;
   overflow: hidden;
 }
@@ -732,7 +741,7 @@ button, a, input, select, textarea, [role="button"] {
   .nav-links {
     display: none;
     position: absolute;
-    top: var(--nav-height);
+    top: calc(var(--nav-height) + env(safe-area-inset-top));
     left: 0; right: 0;
     flex-direction: column;
     align-items: stretch;
@@ -742,7 +751,7 @@ button, a, input, select, textarea, [role="button"] {
     padding: var(--space-sm) 0;
     backdrop-filter: blur(20px);
     margin-left: 0;
-    max-height: calc(100vh - var(--nav-height));
+    max-height: calc(100vh - var(--nav-height) - env(safe-area-inset-top));
     overflow-y: auto;
   }
 

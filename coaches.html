@@ -9,12 +9,23 @@
   <script src="auth-guard.js"></script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🏈</text></svg>">
   <style>
-    body { overflow-y: auto; height: auto; }
+    /* Override the global html,body{height:100%} so the page can grow
+       with its content and the document scrolls naturally. We don't
+       set overflow-y on body — making body the scroll container can
+       break momentum scrolling inside Capacitor's WKWebView. */
+    body { height: auto; min-height: 100%; }
     .coaches-page { margin-top: var(--nav-height); }
 
     /* Header */
-    .coaches-header { padding: var(--space-xl); background: linear-gradient(135deg,rgba(212,168,67,0.07) 0%,transparent 100%); border-bottom: 1px solid var(--border-color); }
-    .coaches-header-inner { max-width: 1100px; margin: 0 auto; }
+    .coaches-header {
+      position: relative;
+      padding: var(--space-xl);
+      border-bottom: 1px solid var(--border-color);
+      background:
+        linear-gradient(180deg, rgba(8,8,16,0.55) 0%, rgba(8,8,16,0.85) 100%),
+        url('coaches-hero.png') center/cover no-repeat;
+    }
+    .coaches-header-inner { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
     .coaches-disclaimer {
       display:flex;align-items:flex-start;gap:8px;
       padding:10px 14px;margin-bottom:var(--space-lg);
@@ -31,7 +42,7 @@
     .cs-lbl { font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:2px; }
 
     /* Controls */
-    .coaches-controls { position:sticky;top:var(--nav-height);z-index:100;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);padding:10px var(--space-xl); }
+    .coaches-controls { position:sticky;top:calc(var(--nav-height) + env(safe-area-inset-top));z-index:100;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);padding:10px var(--space-xl); }
     .coaches-controls-inner { max-width:1100px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center; }
     .search-wrap { position:relative;flex:1;min-width:200px; }
     .search-icon { position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none; }
@@ -111,9 +122,12 @@
     .coaches-empty { text-align:center;padding:var(--space-xl);color:var(--text-muted);font-size:.88rem; }
 
     /* ---- COACH DETAIL MODAL ---- */
-    .coach-modal { display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.87);align-items:center;justify-content:center;padding:var(--space-lg); }
+    /* z-index above the Capacitor bottom tab bar (#camp8-tab-bar is 9000) so
+       the modal fully covers the tab bar while open — otherwise the bottom
+       of the modal (Email button, Generate button) lands behind the tabs. */
+    .coach-modal { display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.87);align-items:center;justify-content:center;padding:var(--space-lg);padding-bottom:calc(var(--space-lg) + env(safe-area-inset-bottom)); }
     .coach-modal.open { display:flex; }
-    .coach-modal-box { background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-lg);width:100%;max-width:760px;max-height:92vh;overflow-y:auto; }
+    .coach-modal-box { background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-lg);width:100%;max-width:760px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch; }
 
     .cm-header { padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--border-color);position:sticky;top:0;background:var(--bg-secondary);z-index:1;display:flex;align-items:center;gap:var(--space-md); }
     .cm-logo { width:52px;height:52px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
@@ -470,7 +484,19 @@ function openCoachModal(idx){
 function closeCoachModal(){document.getElementById('coachModal').classList.remove('open');}
 
 function toggleEmailSection(){
-  document.getElementById('cmEmailSection').classList.toggle('open');
+  var sec = document.getElementById('cmEmailSection');
+  var box = document.getElementById('coachModalBox');
+  sec.classList.toggle('open');
+  // When opening, the form renders below the visible area inside the
+  // modal box. Without scrolling the modal box down, mobile users see
+  // the trigger button do "nothing" — the form is just off-screen.
+  if (sec.classList.contains('open')) {
+    setTimeout(function () {
+      if (box && typeof sec.offsetTop === 'number') {
+        box.scrollTo({ top: sec.offsetTop - 60, behavior: 'smooth' });
+      }
+    }, 30);
+  }
 }
 
 async function generateEmail(){
