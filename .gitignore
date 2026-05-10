@@ -1,2 +1,5 @@
 # macOS Finder metadata
 .DS_Store
+
+# npm — reinstalled from package.json / package-lock.json
+node_modules/
